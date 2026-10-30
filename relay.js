@@ -14,6 +14,7 @@ window.KMRelay=(function(){
  async function dec(key,s){const [a,b]=String(s).split('.');const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(a)},key,unb64(b));return JSON.parse(td.decode(pt))}
  /* role: 'dm' | 'p'; me: id игрока; onMsg(from,msg); onStatus(text,ok) */
  async function open(code,role,me,onMsg,onStatus){
+  if(!window.mqtt){try{await new Promise((ok,no)=>{const sc=document.createElement('script');const pj=document.querySelector('script[src*="peerjs.min.js"]');sc.src=pj?new URL('mqtt.min.js',pj.src).href:new URL('vendor/mqtt.min.js',location.href).href;sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)})}catch(e){}}
   if(!window.mqtt||!window.crypto||!crypto.subtle){onStatus&&onStatus('ретранслятор недоступен в этом браузере',false);return null}
   const {h,key}=await keys(code);const T='kmr1/'+h+'/';const mine=role==='dm'?T+'dm':T+'p/'+me;
   let bi=0,cl=null,ended=false,ok=false,fails=0;

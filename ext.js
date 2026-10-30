@@ -211,4 +211,4 @@ function mapMenu(){const m=curMap();openSheet(`<div class="sb-title">${esc(m.nam
 function exportPNG(m){const CS=48,c=document.createElement('canvas');c.width=m.W*CS;c.height=m.H*CS;const g=c.getContext('2d');g.scale(CS/32,CS/32);drawMap(g,m,32,1);
   c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=(m.name||'map')+'.png';document.body.append(a);a.click();a.remove();
    openSheet(`<div class="sb-title">Экспорт</div><div class="sb-sub">Зажми картинку, чтобы сохранить в Фото</div><img src="${u}" style="width:100%;margin-top:12px;border-radius:12px">`)},'image/png')}
-window.__boot();
+setTimeout(()=>window.__boot(),0);
