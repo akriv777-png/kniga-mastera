@@ -105,3 +105,7 @@ html.calm #fxAmb,html.calm .fx-par,html.calm .inkbleed{display:none}
 .ph .ring2{top:4px}.ph .ring2.r3{top:-3px}
 .ph .fx-gear{right:auto;left:auto;top:auto;bottom:8px;right:12px}
 .en,.card .en{display:none!important}
+.hq{display:inline-grid;place-items:center;width:17px;height:17px;margin-left:5px;border-radius:50%;font:700 11px/1 var(--ui);color:#2a1208;background:radial-gradient(circle at 35% 30%,#f5dc9a,#b48a42);border:1px solid #7a5a2a;vertical-align:1px;padding:0;text-transform:none;letter-spacing:0}
+#hpop{position:fixed;left:16px;right:16px;z-index:120;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#f0dfbd,#d9c193);color:#2a1208;border:1px solid #8b6a35;box-shadow:0 14px 40px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;transition:opacity .25s,transform .4s var(--spring)}
+#hpop.on{opacity:1;transform:none;pointer-events:auto}#hpop b{font-family:"Cormorant Garamond",serif;font-size:19px;color:#7d0f0a}#hpop p{margin:4px 0 0;font-size:14px;line-height:1.45}
+.inp::placeholder,textarea::placeholder,input::placeholder{color:rgba(201,176,138,.45);font-style:italic}
