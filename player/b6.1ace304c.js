@@ -1,46 +1,5 @@
 ;/*bundle*/
-/* handout.js */
-// Общий рендер раздаток (Книга Мастера + Книга Игрока): пергамент, печать, картинка, полноэкранный просмотр с зумом.
-(()=>{const e=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const hash=s=>{let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return Math.abs(h)};
-const SEALS=['✶','⚜','☽','✠','❂','♆','⚔','✦'];
-function body(h,mini){const sd=hash((h.n||'')+(h.t||'').length),seal=SEALS[sd%SEALS.length],tilt=((sd%5)-2)*.6;
- const txt=e(h.t||'').replace(/\n/g,'<br>');
- return `<div class="hx-p${h.img?' hx-img':''}${mini?' hx-mini':''}" style="--tilt:${tilt}deg">${h.n?`<div class="hx-n">${e(h.n)}</div>`:''}${h.img?`<div class="hx-fr"><img src="${h.img}" alt="" draggable="false"></div>`:''}${h.t?`<div class="hx-t">${txt}</div>`:''}<div class="hx-seal" aria-hidden="true">${seal}</div></div>`}
-function open(h){const o=document.createElement('div');o.className='handout hx-o';o.innerHTML=`<div class="hx-z">${body(h)}</div><button class="hx-x" aria-label="Закрыть">✕</button><div class="hx-tip">двойной тап или щипок — масштаб</div>`;document.body.append(o);
- const z=o.querySelector('.hx-z');let s=1,x=0,y=0,P=new Map(),d0=0,s0=1,lx=0,ly=0,moved=0,lastT=0;
- const ap=()=>{z.style.transform=`translate(${x}px,${y}px) scale(${s})`};
- o.addEventListener('pointerdown',ev=>{if(ev.target.closest('.hx-x'))return;o.setPointerCapture?.(ev.pointerId);P.set(ev.pointerId,[ev.clientX,ev.clientY]);moved=0;lx=ev.clientX;ly=ev.clientY;if(P.size===2){const[a,b]=[...P.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1]);s0=s}});
- o.addEventListener('pointermove',ev=>{if(!P.has(ev.pointerId))return;P.set(ev.pointerId,[ev.clientX,ev.clientY]);if(P.size===2){const[a,b]=[...P.values()];s=Math.min(5,Math.max(1,s0*Math.hypot(a[0]-b[0],a[1]-b[1])/d0));moved=1}else if(s>1){x+=ev.clientX-lx;y+=ev.clientY-ly;moved=1}lx=ev.clientX;ly=ev.clientY;if(s===1){x=0;y=0}ap()});
- const up=ev=>{P.delete(ev.pointerId);if(P.size)return;if(moved)return;const t=Date.now();if(t-lastT<320){s=s>1?1:2.5;if(s===1){x=y=0}z.style.transition='transform .25s';ap();setTimeout(()=>z.style.transition='',260);lastT=0}else{lastT=t;setTimeout(()=>{if(lastT===t&&s===1&&!ev.target.closest('.hx-p'))close()},330)}};
- o.addEventListener('pointerup',up);o.addEventListener('pointercancel',ev=>P.delete(ev.pointerId));
- o.addEventListener('wheel',ev=>{ev.preventDefault();s=Math.min(5,Math.max(1,s*(ev.deltaY<0?1.15:.87)));if(s===1)x=y=0;ap()},{passive:false});
- const close=()=>{o.classList.add('out');setTimeout(()=>o.remove(),250)};o.querySelector('.hx-x').onclick=close;return o}
-window.KMH={body,open,card:(h,attr)=>`<div class="hx-card" ${attr||''}>${body(h,1)}</div>`};
-const st=document.createElement('style');st.textContent=`
-.hx-o{animation:hxf .3s ease;touch-action:none;overflow:hidden;flex-direction:column}
-.hx-o.out{opacity:0;transition:opacity .25s}
-.hx-z{max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;transform-origin:center;will-change:transform}
-.hx-p{position:relative;max-width:min(560px,92vw);max-height:84vh;overflow:auto;background:radial-gradient(ellipse at 30% 20%,#f4e7c5 0,#e8d4a4 45%,#d6bb83 85%,#b8975c 100%);color:#2b1a0b;padding:34px 26px 46px;border-radius:3px;box-shadow:inset 0 0 70px rgba(110,70,20,.55),inset 0 0 12px rgba(80,45,10,.5),0 18px 50px rgba(0,0,0,.85);transform:rotate(var(--tilt));animation:hxu .55s cubic-bezier(.2,.8,.2,1);clip-path:polygon(0 1%,4% 0,11% 1.2%,19% .2%,28% 1%,37% 0,48% 1.1%,58% .1%,69% 1%,79% 0,90% 1.2%,100% .3%,99.2% 12%,100% 27%,99.3% 44%,100% 61%,99.1% 78%,100% 99%,90% 98.8%,78% 100%,64% 99%,50% 100%,37% 98.9%,22% 100%,9% 99%,0 100%,.8% 82%,0 63%,.9% 45%,0 28%,.7% 12%)}
-.hx-p::before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(90,60,20,.035) 0 2px,transparent 2px 5px),radial-gradient(circle at 80% 85%,rgba(120,70,20,.18),transparent 30%),radial-gradient(circle at 12% 70%,rgba(120,70,20,.12),transparent 22%)}
-.hx-n{font:400 26px 'Ruslan Display','Cormorant Garamond',serif;text-align:center;color:#5a1f12;margin-bottom:14px;letter-spacing:.5px;border-bottom:1px solid rgba(90,31,18,.35);padding-bottom:8px}
-.hx-t{font:400 22px/1.38 'Marck Script','Cormorant Garamond',serif;white-space:normal;word-wrap:break-word}
-.hx-t::first-letter{font:400 46px/1 'Ruslan Display',serif;color:#7a1d10;float:left;margin:2px 6px 0 0}
-.hx-fr{padding:8px;background:#3a2412;box-shadow:0 0 0 2px #a87b3e inset,0 6px 18px rgba(0,0,0,.5);margin:0 auto 12px;max-width:100%}
-.hx-fr img{display:block;width:100%;height:auto;max-height:62vh;object-fit:contain;filter:sepia(.18) contrast(1.05)}
-.hx-seal{position:absolute;right:16px;bottom:10px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d2453a,#8e1a12 60%,#5e0d08);color:#f6cbb8;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 -3px 6px rgba(0,0,0,.4);transform:rotate(-14deg)}
-.hx-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:1px solid #a87b3e;background:rgba(20,12,6,.8);color:#e8c77a;font-size:20px;z-index:2}
-.hx-tip{position:absolute;bottom:calc(12px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#a99;font-size:12px;pointer-events:none}
-.hx-card{cursor:pointer;margin:8px 0;max-height:220px;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(#000 75%,transparent)}
-.hx-mini{max-width:100%;padding:18px 16px 30px;transform:rotate(0);animation:none}
-.hx-mini .hx-n{font-size:19px;margin-bottom:8px}.hx-mini .hx-t{font-size:18px}.hx-mini .hx-t::first-letter{font-size:32px}.hx-mini .hx-seal{width:34px;height:34px;font-size:16px}
-.hx-new{animation:hxg 1.6s ease 2}
-@keyframes hxf{from{opacity:0}}
-@keyframes hxu{from{transform:rotate(var(--tilt)) scaleY(.06);opacity:0}60%{opacity:1}}
-@keyframes hxg{50%{filter:drop-shadow(0 0 14px #e8c77a)}}`;document.head.append(st)})();
-
-;
-/* builder.js */
+/* ../builder.js */
 /* Мастер создания героя + повышение уровня (общий для обеих книг). KMB.open(done), KMB.random(), KMB.levelUp(hero,done) */
 (()=>{
 const e=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -91,10 +50,12 @@ let W,done,host;
 const STEPS=[['race','Происхождение'],['cls','Класс'],['bg','Предыстория'],['ab','Характеристики'],['sk','Навыки'],['sp','Заклинания'],['eq','Снаряжение'],['who','Внешность и имя'],['rev','Проверка']];
 const cur=()=>STEPS[W.i][0];
 const baseSt=()=>W.base.map((v,i)=>v+((RACES.find(r=>r.n===W.race)||{a:[0,0,0,0,0,0]}).a[i]||0));
+const SUBS=n=>(((window.BUILDER_EXTRA||{}).subclasses||{})[n]||[]),FEATS=()=>((window.BUILDER_EXTRA||{}).feats||[]);
+const subF=(cn,sn,a,b)=>{const x=SUBS(cn).find(y=>y.n===sn);return x?x.f.filter(f=>f[0]>=a&&f[0]<=b).map(f=>f[1]):[]};
 function hero(){const c=CLASSES.find(x=>x.n===W.cls)||CLASSES[0],r=RACES.find(x=>x.n===W.race)||RACES[0];const st=baseSt();
  const inv=[];if(W.eqm==='kit')c.eq.forEach(([id,q])=>{const it=itm(id);if(it)inv.push({id:Math.random().toString(36).slice(2,9),item:id,n:it.n,q:q||1,w:it.w||0})});
  const coins={мм:0,см:0,эм:0,зм:W.eqm==='kit'?10:W.gold,пм:0};
- const h={id:W.id||Math.random().toString(36).slice(2,9),name:W.name||pk(r.names),race:r.n,cls:c.n,bg:W.bg,lvl:1,st,spd:r.sp,conds:[],inv,coins,gold:coins.зм,spells:W.spells.slice(),prof:[...new Set(W.sk)],svp:c.sv.slice(),thp:0,xp:0,ds:{s:0,f:0},insp:false,notes:'',journal:[],look:W.look,trait:W.trait,profs:''};
+ const h={id:W.id||Math.random().toString(36).slice(2,9),name:W.name||pk(r.names),race:r.n,cls:c.n,bg:W.bg,lvl:1,st,spd:r.sp,conds:[],inv,coins,gold:coins.зм,spells:W.spells.slice(),prof:[...new Set(W.sk)],svp:c.sv.slice(),thp:0,xp:0,ds:{s:0,f:0},insp:false,notes:'',journal:[],look:W.look,trait:W.trait,profs:'',sub:W.sub||'',feats:[]};if(h.sub){const f=subF(c.n,h.sub,1,1);h.notes='Подкласс: '+h.sub+(f.length?'\n— '+f.join('\n— '):'')}
  h.slots=slotsFor(c.n,1);h.maxhp=hpOf(h);h.hp=h.maxhp;h.ac=acOf(h);h.pp=10+md(st[4])+(h.prof.includes(3)?2:0);h.init=md(st[1]);return h}
 function autoAssign(){const c=CLASSES.find(x=>x.n===W.cls)||CLASSES[0];const order=[...c.prim,...[0,1,2,3,4,5].filter(i=>!c.prim.includes(i))];W.base=[8,8,8,8,8,8];order.forEach((a,i)=>W.base[a]=STD[i])}
 function fixedSk(){const r=RACES.find(x=>x.n===W.race)||{},b=BGS.find(x=>x[0]===W.bg);return [...new Set([...(r.sk||[]),...(b?b[1]:[])])]}
@@ -102,7 +63,7 @@ function skMax(){const c=CLASSES.find(x=>x.n===W.cls)||{skn:2},r=RACES.find(x=>x
 const card=(on,attr,t,sub)=>`<button class="kb-c${on?' on':''}" ${attr}><b>${t}</b>${sub?`<small>${sub}</small>`:''}</button>`;
 function body(){const s=cur(),c=CLASSES.find(x=>x.n===W.cls),r=RACES.find(x=>x.n===W.race);
  if(s==='race')return `<p class="kb-tip">Происхождение — ваш народ. Оно даёт прибавки к характеристикам и особые черты. Не знаете — берите <b>Человека</b>.</p><div class="kb-g">${RACES.map(x=>card(W.race===x.n,`data-race="${e(x.n)}"`,e(x.n),e(x.t)+'<br><i>'+x.a.map((v,i)=>v?AB[i]+' +'+v:'').filter(Boolean).join(', ')+' · скорость '+String(x.sp).replace('.',',')+' м</i>')).join('')}</div>`;
- if(s==='cls')return `<p class="kb-tip">Класс — ваша роль в отряде. Новичкам проще всего <b>Воин</b> (бой) или <b>Жрец</b> (поддержка и лечение).</p><div class="kb-g">${CLASSES.map(x=>card(W.cls===x.n,`data-cls="${e(x.n)}"`,e(x.n),e(x.t)+`<br><i>кость хитов к${x.hd} · спасброски ${x.sv.map(i=>AB[i]).join(', ')}${x.ca!=null?' · магия: '+AB[x.ca]:''}</i>`)).join('')}</div>`;
+ if(s==='cls')return `<p class="kb-tip">Класс — ваша роль в отряде. Новичкам проще всего <b>Воин</b> (бой) или <b>Жрец</b> (поддержка и лечение).</p><div class="kb-g">${CLASSES.map(x=>card(W.cls===x.n,`data-cls="${e(x.n)}"`,e(x.n),e(x.t)+`<br><i>кость хитов к${x.hd} · спасброски ${x.sv.map(i=>AB[i]).join(', ')}${x.ca!=null?' · магия: '+AB[x.ca]:''}</i>`)).join('')}</div>${(()=>{const L=SUBS(W.cls);if(!L.length)return'';const l1=L.filter(x=>x.lvl<=1);return l1.length?`<h4 class="kb-h">Подкласс (с 1 уровня)</h4><div class="kb-g">${l1.map(x=>card(W.sub===x.n,`data-sub="${e(x.n)}"`,e(x.n),e(x.t))).join('')}</div>`:`<p class="kb-tip">Подкласс выбирается на ${L[0].lvl}-м уровне — при повышении уровня.</p>`})()}`;
  if(s==='bg')return `<p class="kb-tip">Предыстория — кем вы были до приключений. Даёт два навыка и зацепку для отыгрыша.</p><div class="kb-g">${BGS.map(x=>card(W.bg===x[0],`data-bg="${e(x[0])}"`,e(x[0]),e(x[2])+'<br><i>'+x[1].map(i=>SK[i][0]).join(', ')+'</i>')).join('')}</div>`;
  if(s==='ab'){const st=baseSt(),used=W.base.reduce((a,v)=>a+(PBC[v]||0),0);return `<p class="kb-tip">Шесть характеристик определяют всё. Модификатор (в скобках) прибавляется к броскам. Главная для класса «${e(W.cls)}»: <b>${c?ABF[c.prim[0]]:''}</b>.</p>
   <div class="chips kb-m">${[['std','Стандартный набор'],['pb','Покупка очков'],['roll','Бросок 4к6']].map(([k,t])=>`<button class="chip${W.abm===k?' on':''}" data-abm="${k}">${t}</button>`).join('')}</div>
@@ -121,7 +82,7 @@ function ok(){const s=cur(),c=CLASSES.find(x=>x.n===W.cls);if(s==='race')return 
 function paint(r){const pct=Math.round(W.i/(STEPS.length-1)*100);r.innerHTML=`<div class="kb"><div class="sb-title">🧙 Создание героя</div><div class="kb-pr"><i style="width:${pct}%"></i></div><div class="kb-steps">${STEPS.map((s,i)=>`<button class="kb-dot${i===W.i?' on':''}${i<W.i?' ok':''}" data-go="${i}" aria-label="${s[1]}">${i+1}</button>`).join('')}</div><h3 class="kb-ttl">Шаг ${W.i+1}. ${STEPS[W.i][1]}</h3><div class="kb-b">${body()}</div><div class="kb-nav"><button class="btn" data-prev ${W.i?'':'disabled'}>← Назад</button><button class="btn ${W.i===STEPS.length-1?'red':'ac red'} grow" data-next ${ok()?'':'disabled'}>${W.i===STEPS.length-1?'✓ Готово':'Далее →'}</button></div></div>`;
  const q=r.querySelector('[data-spq]');if(q&&W._f){q.focus();q.setSelectionRange(q.value.length,q.value.length);W._f=0}}
 function bind(r){r.onclick=ev=>{const t=ev.target.closest('button');if(!t)return;const d=t.dataset;
-  if(d.race){W.race=d.race;W.sk=W.sk.filter(i=>!fixedSk().includes(i))}if(d.cls){if(W.cls!==d.cls){W.cls=d.cls;W.spells=[];W.sk=[];if(W.abm==='std')autoAssign()}}if(d.bg){W.bg=d.bg;W.sk=W.sk.filter(i=>!fixedSk().includes(i))}
+  if(d.race){W.race=d.race;W.sk=W.sk.filter(i=>!fixedSk().includes(i))}if(d.cls){if(W.cls!==d.cls){W.cls=d.cls;W.sub='';W.spells=[];W.sk=[];if(W.abm==='std')autoAssign()}}if(d.sub!=null){W.sub=d.sub}if(d.bg){W.bg=d.bg;W.sk=W.sk.filter(i=>!fixedSk().includes(i))}
   if(d.abm){W.abm=d.abm;if(d.abm==='pb')W.base=[8,8,8,8,8,8];if(d.abm==='std')autoAssign();if(d.abm==='roll')W.base=W.base.map(()=>roll4())}if(d.auto!=null)autoAssign();if(d.roll!=null)W.base=W.base.map(()=>roll4());
   if(d.pbd!=null){const i=+d.pbd,n=W.base[i]+(+d.d);const used=W.base.reduce((a,v,j)=>a+(PBC[j===i?n:v]||0),0);if(n>=8&&n<=15&&used<=27)W.base[i]=n;else if(n>15||n<8)0;else return toastK('Не хватает очков')}
   if(d.sk!=null){const i=+d.sk,ch=W.sk.filter(x=>!fixedSk().includes(x));if(W.sk.includes(i))W.sk=W.sk.filter(x=>x!==i);else if(ch.length<skMax())W.sk.push(i);else return toastK('Уже выбрано '+skMax())}
@@ -144,15 +105,18 @@ function random(){fresh();W.race=pk(RACES).n;W.cls=pk(CLASSES).n;W.bg=pk(BGS)[0]
  if(c.ca!=null){const sp=SPELLS().filter(x=>(x.cl||[]).includes(c.n));const st=baseSt();const pickN=(l,n)=>sp.filter(x=>x.l===l).sort(()=>Math.random()-.5).slice(0,n).map(x=>x.id);W.spells=[...pickN(0,c.can),...pickN(1,c.prep?Math.max(1,md(st[c.ca])+1):c.known)]}
  const r=RACES.find(x=>x.n===W.race);W.name=pk(r.names);W.look=pk(LOOKS);W.trait=pk(TRAITS);return hero()}
 /* ---- повышение уровня ---- */
-function levelUp(h0,cb){const h=JSON.parse(JSON.stringify(h0));const c=CLASSES.find(x=>h.cls&&String(h.cls).includes(x.n))||{hd:8,n:h.cls};const nl=(h.lvl||1)+1;if(nl>20)return toastK('Уже 20-й уровень');const asi=[4,8,12,16,19].includes(nl);const avg=Math.floor(c.hd/2)+1;const k=md(h.st[2])+((RACES.find(x=>x.n===h.race)||{}).hpb||0);let hpm='avg',rolled=R(c.hd),A=[-1,-1];
+function levelUp(h0,cb){const h=JSON.parse(JSON.stringify(h0));const c=CLASSES.find(x=>h.cls&&String(h.cls).includes(x.n))||{hd:8,n:h.cls};const nl=(h.lvl||1)+1;if(nl>20)return toastK('Уже 20-й уровень');const asi=[4,8,12,16,19].includes(nl);const avg=Math.floor(c.hd/2)+1;const k=md(h.st[2])+((RACES.find(x=>x.n===h.race)||{}).hpb||0);let hpm='avg',rolled=R(c.hd),A=[-1,-1],SB=h.sub||'',AM='ab',FT='';const SL=SUBS(c.n),needSub=!h.sub&&SL.some(x=>x.lvl<=nl);
  const pnt=r=>{const gain=Math.max(1,(hpm==='avg'?avg:rolled)+k);const old=slotsFor(c.n,h.lvl),nw=slotsFor(c.n,nl);const sd=Object.keys(nw).filter(l=>!old[l]||old[l].max!==nw[l].max).map(l=>l+' кр.: '+nw[l].max).join(', ');
   r.innerHTML=`<div class="kb"><div class="sb-title">⬆ Новый уровень: ${nl}</div><div class="sb-sub">${e(h.name)} · ${e(h.cls)}</div>
   <h4 class="kb-h">1. Хиты</h4><p class="kb-tip">Каждый уровень добавляет кость хитов к${c.hd} + модификатор ТЕЛ (${fm(k)}).</p><div class="chips"><button class="chip${hpm==='avg'?' on':''}" data-hm="avg">Среднее: ${avg}</button><button class="chip${hpm==='roll'?' on':''}" data-hm="roll">🎲 Бросок: ${rolled}</button></div><input class="inp" type="number" inputmode="numeric" data-hin placeholder="или своя кость к${c.hd}" style="margin-top:6px"><p>Итого: <b>+${gain}</b> → макс. хиты ${h.maxhp+gain}</p>
   ${sd?`<h4 class="kb-h">2. Ячейки заклинаний</h4><p>${sd}</p>`:''}${pb(nl)>pb(h.lvl)?`<p class="kb-tip">Бонус мастерства растёт до <b>+${pb(nl)}</b>.</p>`:''}
-  ${asi?`<h4 class="kb-h">Увеличение характеристик</h4><p class="kb-tip">+2 к одной характеристике или +1 к двум (максимум 20).</p><div class="chips" style="flex-wrap:wrap">${AB.map((a,i)=>`<button class="chip${A.includes(i)?' on':''}" data-as="${i}">${a} ${h.st[i]}${A.filter(x=>x===i).length?'→'+(h.st[i]+A.filter(x=>x===i).length):''}</button>`).join('')}</div>`:''}
+  ${needSub?`<h4 class="kb-h">Подкласс</h4><p class="kb-tip">На этом уровне вы выбираете подкласс — специализацию класса.</p><div class="kb-g">${SL.filter(x=>x.lvl<=nl).map(x=>card(SB===x.n,`data-sb="${e(x.n)}"`,e(x.n),e(x.t)+'<br><i>'+x.f.filter(f=>f[0]<=nl).map(f=>e(f[1])).join('<br>')+'</i>')).join('')}</div>`:(h.sub&&subF(c.n,h.sub,nl,nl).length?`<h4 class="kb-h">Подкласс «${e(h.sub)}»</h4><p>${subF(c.n,h.sub,nl,nl).map(e).join('<br>')}</p>`:'')}
+  ${asi&&FEATS().length?`<div class="chips" style="margin-top:10px"><button class="chip${AM==='ab'?' on':''}" data-am="ab">Увеличить характеристики</button><button class="chip${AM==='feat'?' on':''}" data-am="feat">Взять черту</button></div>`:''}
+  ${asi&&AM==='feat'?`<h4 class="kb-h">Черта</h4><div class="kb-g">${FEATS().filter(f=>!(h.feats||[]).includes(f.n)).map(f=>card(FT===f.n,`data-ft="${e(f.n)}"`,e(f.n),e(f.t)+(f.req&&f.req!=='—'?'<br><i>Требование: '+e(f.req)+'</i>':''))).join('')}</div>`:''}
+  ${asi&&AM==='ab'?`<h4 class="kb-h">Увеличение характеристик</h4><p class="kb-tip">+2 к одной характеристике или +1 к двум (максимум 20).</p><div class="chips" style="flex-wrap:wrap">${AB.map((a,i)=>`<button class="chip${A.includes(i)?' on':''}" data-as="${i}">${a} ${h.st[i]}${A.filter(x=>x===i).length?'→'+(h.st[i]+A.filter(x=>x===i).length):''}</button>`).join('')}</div>`:''}
   ${c.ca!=null||HALF.includes(c.n)?`<p class="kb-tip">Не забудьте выбрать новые заклинания на вкладке «Чары» — доступны круги до ${Math.max(0,...Object.keys(nw).map(Number))}.</p>`:''}
   <div class="kb-nav"><button class="btn red grow" data-lok>✓ Повысить до ${nl} уровня</button></div></div>`;
-  r.onclick=ev=>{const t=ev.target.closest('button');if(!t)return;if(t.dataset.hm){hpm=t.dataset.hm;if(hpm==='roll')rolled=R(c.hd);pnt(r)}if(t.dataset.as!=null){const i=+t.dataset.as;if(A[0]===-1)A=[i,-1];else if(A[1]===-1)A=[A[0],i];else A=[i,-1];pnt(r)}if(t.dataset.lok!=null){if(asi&&A[0]===-1)return toastK('Выберите характеристику');A.filter(x=>x>=0).forEach(i=>h.st[i]=Math.min(20,h.st[i]+1));if(asi&&A[1]===-1&&A[0]>=0)h.st[A[0]]=Math.min(20,h.st[A[0]]+1);h.lvl=nl;h.maxhp+=gain;h.hp=(h.hp||0)+gain;h.slots=Object.assign({},slotsFor(c.n,nl));Object.keys(h.slots).forEach(l=>{if(h0.slots&&h0.slots[l])h.slots[l].used=Math.min(h0.slots[l].used||0,h.slots[l].max)});try{closeSheet()}catch(_){}cb&&cb(h)}};
+  r.onclick=ev=>{const t=ev.target.closest('button');if(!t)return;if(t.dataset.hm){hpm=t.dataset.hm;if(hpm==='roll')rolled=R(c.hd);pnt(r)}if(t.dataset.sb!=null){SB=t.dataset.sb;pnt(r)}if(t.dataset.am){AM=t.dataset.am;pnt(r)}if(t.dataset.ft!=null){FT=t.dataset.ft;pnt(r)}if(t.dataset.as!=null){const i=+t.dataset.as;if(A[0]===-1)A=[i,-1];else if(A[1]===-1)A=[A[0],i];else A=[i,-1];pnt(r)}if(t.dataset.lok!=null){if(needSub&&!SB)return toastK('Выберите подкласс');if(asi&&AM==='feat'&&!FT)return toastK('Выберите черту');if(asi&&AM==='ab'&&A[0]===-1)return toastK('Выберите характеристику');const add=[];if(needSub){h.sub=SB;add.push('Подкласс: '+SB,...subF(c.n,SB,1,nl).map(x=>'— '+x))}else if(h.sub)add.push(...subF(c.n,h.sub,nl,nl).map(x=>'— '+x));if(asi&&AM==='feat'){A=[-1,-1];const f=FEATS().find(x=>x.n===FT);h.feats=(h.feats||[]).concat(FT);add.push('Черта: '+FT+(f?' — '+f.t:''))}if(add.length)h.notes=((h.notes||'')+'\n\nУр. '+nl+':\n'+add.join('\n')).trim();A.filter(x=>x>=0).forEach(i=>h.st[i]=Math.min(20,h.st[i]+1));if(asi&&A[1]===-1&&A[0]>=0)h.st[A[0]]=Math.min(20,h.st[A[0]]+1);h.lvl=nl;h.maxhp+=gain;h.hp=(h.hp||0)+gain;h.slots=Object.assign({},slotsFor(c.n,nl));Object.keys(h.slots).forEach(l=>{if(h0.slots&&h0.slots[l])h.slots[l].used=Math.min(h0.slots[l].used||0,h.slots[l].max)});try{closeSheet()}catch(_){}cb&&cb(h)}};
   r.oninput=ev=>{if(ev.target.dataset.hin!=null){const v=+ev.target.value;if(v>=1&&v<=c.hd){hpm='roll';rolled=v;const p=r.querySelector('p b');}}};r.onchange=ev=>{if(ev.target.dataset.hin!=null)pnt(r)}};
  openSheet('<div id="kbl"></div>',r=>pnt(r.querySelector('#kbl')))}
 window.KMB={open,random,levelUp,acOf,hpOf,slotsFor,RACES,CLASSES,BGS};
@@ -168,7 +132,7 @@ const st=document.createElement('style');st.textContent=`
 .kb-m{margin-bottom:8px;flex-wrap:wrap}`;document.head.append(st)})();
 
 ;
-/* android.js */
+/* ../android.js */
 // Android/Chrome: кнопка «Назад» закрывает окна, установка PWA, dvh. Без iOS-only API.
 (()=>{const ua=navigator.userAgent,isAnd=/Android/i.test(ua),isIOS=/iPhone|iPad|iPod/i.test(ua)&&!/Android/i.test(ua);
 const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
