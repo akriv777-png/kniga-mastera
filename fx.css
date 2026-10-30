@@ -253,3 +253,21 @@ body[data-wx=storm] #page,body[data-wx=rain] #page{filter:saturate(.85) brightne
 .tr-card{position:absolute;left:16px;right:16px;padding:16px;border-radius:18px;border:1px solid #c4a15a;background:linear-gradient(#26140f,#140a08);color:#eadfca;box-shadow:0 18px 50px rgba(0,0,0,.6);animation:trIn .35s ease}
 .tr-card small{color:#c4a15a;letter-spacing:1px}.tr-card b{display:block;font:600 24px 'Cormorant Garamond',Georgia,serif;color:#f1e4c8;margin:4px 0}.tr-card p{margin:0 0 12px;font-size:15px;line-height:1.45}
 @keyframes trIn{from{opacity:0;transform:translateY(10px)}}
+/* Импровизатор */
+.imp-p{padding:12px 14px!important}
+.imp-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.imp-h b{font-family:var(--fd,serif);color:var(--gold,#d8b25a);font-size:17px}
+.imp-h .m{font-size:12px;opacity:.6}
+.imp-g{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.imp-g button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 1px;min-width:0;overflow:hidden;border-radius:12px;border:1px solid rgba(216,178,90,.25);background:rgba(0,0,0,.25);color:inherit;font-family:inherit;font-weight:600;font-size:10.5px;line-height:1.15;letter-spacing:-.2px;transition:transform .15s,background .2s}
+.imp-g button i{font-style:normal;font-size:18px;line-height:1}
+.imp-g button:active{transform:scale(.93);background:rgba(216,178,90,.18)}
+.imp-o{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+.imp-o .chip{padding:6px 11px;border-radius:999px;border:1px solid rgba(216,178,90,.3);background:transparent;color:inherit;font-family:inherit;font-weight:600;font-size:13px}
+.imp-o .chip.on{background:linear-gradient(#c9a24a,#9a7524);color:#1b120a;border-color:transparent}
+.imp-res{border:1px solid rgba(216,178,90,.25);border-radius:14px;padding:14px;background:rgba(0,0,0,.2);animation:impIn .35s cubic-bezier(.2,.9,.3,1.2)}
+.imp-t{font-family:var(--fd,serif);font-size:20px;color:var(--gold,#e6c477);margin-bottom:2px}
+.imp-res p{margin:10px 0;line-height:1.5}
+.imp-res details{margin:6px 0 10px}
+.imp-act{display:flex;flex-wrap:wrap;gap:6px}
+@keyframes impIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
