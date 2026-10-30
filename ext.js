@@ -183,7 +183,7 @@ function tileIcon(k){return {door:'▮',stairs:'≡',chest:'▣',trap:'✕',tree
 function drawMap(g,m,CS,fogA){
   for(let y=0;y<m.H;y++)for(let x=0;x<m.W;x++){const t=m.g[y*m.W+x];const X=x*CS,Y=y*CS;
     if(!t){g.fillStyle=(x+y)%2?'#100c0b':'#0d0a09';g.fillRect(X,Y,CS,CS);continue}
-    const base=t==='chest'||t==='trap'?'floor':t;g.fillStyle=TC[base][2];g.fillRect(X,Y,CS,CS);
+    const base=t==='chest'||t==='trap'?'floor':t;g.fillStyle=(TC[base]||(window.KM_GROUND&&KM_GROUND[base])||TC.floor||[0,0,'#3a3028'])[2]||'#3a3028';g.fillRect(X,Y,CS,CS);
     if(t==='wall'){g.fillStyle='#2a2320';g.fillRect(X+1,Y+1,CS-2,CS/2-2);g.fillRect(X+1,Y+CS/2+1,CS-2,CS/2-2);g.fillStyle='#0a0807';g.fillRect(X+CS/2,Y,1,CS/2);g.fillRect(X+CS/4,Y+CS/2,1,CS/2)}
     if(t==='floor'||t==='chest'||t==='trap'){g.strokeStyle='rgba(255,255,255,.04)';g.strokeRect(X+.5,Y+.5,CS-1,CS-1)}
     if(t==='water'||t==='lava'){g.strokeStyle=t==='water'?'rgba(140,200,255,.35)':'rgba(255,220,120,.55)';g.lineWidth=1.5;for(let k=0;k<2;k++){g.beginPath();g.moveTo(X+4,Y+10+k*12);g.quadraticCurveTo(X+10,Y+5+k*12,X+16,Y+10+k*12);g.quadraticCurveTo(X+22,Y+15+k*12,X+28,Y+10+k*12);g.stroke()}g.lineWidth=1}

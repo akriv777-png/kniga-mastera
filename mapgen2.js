@@ -327,3 +327,5 @@ const _mm=window.mapMenu||mapMenu;window.mapMenu=mapMenu=function(){_mm.apply(th
 const _nm=window.newMap||newMap;window.newMap=newMap=function(){_nm.apply(this,arguments);const r=$('#sheetPage');if(r&&!$('#ng2')){const t=r.querySelector('.sb-sub');t&&t.insertAdjacentHTML('afterend',`<button class="btn red" id="ng2" style="width:100%;margin-top:10px;min-height:48px">✦ Расширенный генератор (${LT.length} типов мест)</button>`);$('#ng2').onclick=()=>genUI(0)}};
 window.KM&&(KM.gen2=generate);
 }
+
+;(()=>{const _d=window.drawMap;if(typeof _d!=='function'||_d._safe)return;const f=function(g,m){try{return _d.apply(this,arguments)}catch(e){try{(m&&m.g||[]).forEach((t,i)=>{if(t&&!TC[t])m.g[i]=TC.floor?'floor':''});return _d.apply(this,arguments)}catch(e2){console.warn('drawMap',e2);try{window.KM_err&&KM_err('Карта: '+e2.message)}catch(_){}}}};f._safe=1;window.drawMap=f;try{drawMap=f}catch(e){}})();
