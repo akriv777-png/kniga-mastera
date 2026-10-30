@@ -9,7 +9,7 @@ save();
 const invW=p=>Math.round(p.inv.reduce((a,x)=>a+(x.w||0)*x.q,0)*10)/10;
 const kg=n=>String(Math.round(n*10)/10).replace('.',',')+' кг';
 function rPcs(){page.oninput=null;
-  page.innerHTML=header('Игроки','стол, запросы и герои','tri',1)+players.map((p,i)=>`<div class="hero" data-i="${i}">
+  page.innerHTML=header('Герои','листы персонажей отряда · онлайн-стол — кнопка ◎','tri',1)+players.map((p,i)=>`<div class="hero" data-i="${i}">
    <div class="hero-top"><label class="portrait">${p.photo?`<img src="${p.photo}" alt="">`:`<span>${esc((p.name||'?')[0])}</span>`}<input type="file" accept="image/*" data-photo hidden><i>📷</i></label>
     <div class="hero-id"><input class="pcn" data-k="name" value="${esc(p.name)}" placeholder="Имя"><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="pcc" data-k="cls" value="${esc(p.cls)}" placeholder="Класс" style="flex:1;margin:0"><span class="lvl">ур.<input data-k="lvl" type="number" inputmode="numeric" value="${p.lvl}"></span></div>
     <div class="hpline"><div class="hpbar"><i style="width:${Math.max(0,Math.min(100,p.hp/p.maxhp*100))}%"></i></div></div></div></div>
