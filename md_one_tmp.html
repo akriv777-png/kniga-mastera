@@ -1,3 +1,0 @@
-<html><head><link rel="icon" href="data:,"></head><body style="margin:0;background:#c9b48a"><canvas id=c width=900 height=200></canvas>
-<script src="data/mapdecor0.js"></script><script src="data/mapdecor1.js"></script><script src="data/mapdecor2.js"></script><script src="data/mapdecor3.js"></script><script src="data/mapdecor4.js"></script><script src="data/mapdecor5.js"></script><script src="data/mapdecor6.js"></script>
-<script>const c=document.getElementById('c').getContext('2d');let x=10;for(const id of location.hash.slice(1).split(',')){const it=MAPDECOR.byId[decodeURIComponent(id)];c.save();c.translate(x,10);MAPDECOR.render(c,it.id,56,{});c.restore();x+=it.w*56+20}document.title='done'</script></body></html>
