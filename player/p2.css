@@ -20,3 +20,9 @@ body:has(#sheet.open) #link{display:none}
 #sheetPage h3{font:600 22px 'Cormorant Garamond',Georgia,serif;color:var(--gold,#d9b46a)}#sheetPage .inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(10,6,5,.7);color:#eee;padding:10px;font-size:16px}
 .undob{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:99;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:#2a2118;color:#f4e9d4;box-shadow:0 8px 24px rgba(0,0,0,.35)}.undob span{flex:1}
 .jr .btn.sm{padding:4px 8px;min-width:0}
+.pe-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:18px 10px;color:#c9b08a;animation:peIn .4s ease}
+.pe-empty .pe-i{font-size:30px;opacity:.85;filter:sepia(.4)}
+.pe-empty b{font:600 18px 'Cormorant Garamond',serif;color:#e8c77a}
+.pe-empty small{font-size:13px;color:#a8977f;max-width:280px;line-height:1.4}
+@keyframes peIn{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){.pe-empty{animation:none}}
