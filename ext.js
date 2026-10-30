@@ -24,7 +24,7 @@ function rPcs(){page.oninput=null;
    <details class="pnotes"><summary>Заметки</summary><textarea class="inp" data-k="notes">${esc(p.notes||'')}</textarea></details>
    ${players.length>1?'<button class="btn sm dark" data-del style="margin-top:8px">Удалить героя</button>':''}</div>`).join('')+`<button class="btn red" id="addPc">＋ Новый герой</button><div class="row" style="gap:8px;margin-top:8px"><button class="btn grow" id="bldPc">🧙 Мастер создания</button><button class="btn grow" id="rndPc">🎲 Случайный</button></div><button class="btn" id="pRest" style="width:100%;margin-top:8px">⛺ Отдых отряда</button><div style="height:20px"></div>`;
   const P=e=>players[+e.target.closest('.hero').dataset.i];
-  page.oninput=e=>{const t=e.target;const p=P(e);if(t.dataset.k){const k=t.dataset.k;p[k]=t.type==='number'?+t.value:t.value;if(k==='hp'||k==='maxhp'){const b=t.closest('.hero').querySelector('.hpbar i');b.style.width=Math.max(0,Math.min(100,p.hp/p.maxhp*100))+'%'}save()}
+  page.oninput=e=>{const t=e.target;if(!t.closest('.hero'))return;const p=P(e);if(t.dataset.k){const k=t.dataset.k;p[k]=t.type==='number'?+t.value:t.value;if(k==='hp'||k==='maxhp'){const b=t.closest('.hero').querySelector('.hpbar i');b.style.width=Math.max(0,Math.min(100,p.hp/p.maxhp*100))+'%'}save()}
    if(t.dataset.st!=null){p.st[+t.dataset.st]=+t.value||0;t.nextElementSibling.textContent=fmod(mod(+t.value||0));save()}};
   page.onchange=e=>{const t=e.target;if(t.dataset.photo==null||!t.files[0])return;const p=P(e);const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');const S0=320;c.width=c.height=S0;const g=c.getContext('2d');const s=Math.min(im.width,im.height);g.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,S0,S0);p.photo=c.toDataURL('image/jpeg',.8);save();rPcs();toast('Портрет сохранён')};im.src=fr.result};fr.readAsDataURL(t.files[0])};
   page.onclick=e=>{const t=e.target;const h=t.closest('.hero');if(!h)return;const p=players[+h.dataset.i];
@@ -124,7 +124,7 @@ function sampleMap(){const W=20,H=20,g=Array(W*H).fill('');const set=(x,y,t)=>{i
   set(15,8,'chest');set(13,12,'trap');set(4,4,'stairs');for(let x=3;x<7;x++)set(x,9,'water');for(let y=13;y<20;y++)for(let x=0;x<8;x++)if(rnd(3)===1)set(x,y,'tree');else set(x,y,'grass');set(15,17,'lava');set(16,17,'lava');set(16,18,'lava');
   return {id:uid(),name:'Логово гоблинов',W,H,g,fog:Array(W*H).fill(0),tok:[{id:uid(),x:5,y:6,n:'Э',c:'#d6b26a',k:'pc'},{id:uid(),x:6,y:6,n:'Б',c:'#d6b26a',k:'pc'},{id:uid(),x:5,y:7,n:'Л',c:'#d6b26a',k:'pc'},{id:uid(),x:14,y:9,n:'Г',c:'#d42a22',k:'mon'},{id:uid(),x:15,y:11,n:'Г',c:'#d42a22',k:'mon'}]}}
 const curMap=()=>maps.find(m=>m.id===mapCur)||maps[0];
-const saveMaps=()=>{try{LS.set('maps',maps);LS.set('mapcur',mapCur)}catch(e){toast('Хранилище переполнено')}};
+const saveMaps=()=>{try{const cm=maps.find(x=>x.id===mapCur);if(cm)cm.rev=(cm.rev||0)+1;LS.set('maps',maps);LS.set('mapcur',mapCur)}catch(e){toast('Хранилище переполнено')}};
 function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>

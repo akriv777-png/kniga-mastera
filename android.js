@@ -11,7 +11,7 @@ const sync=()=>{const m=top();if(m&&!guard){guard=true;history.pushState({kmModa
 new MutationObserver(()=>setTimeout(sync,0)).observe(document.body,{childList:true,subtree:false,attributes:true,attributeFilter:['class'],});
 const s0=document.getElementById('sheet');s0&&new MutationObserver(()=>setTimeout(sync,0)).observe(s0,{attributes:true,attributeFilter:['class']});
 const tabs=[];window.KMTab=prev=>{if(guard)return;tabs.push(prev);if(tabs.length>30)tabs.shift();history.pushState({kmTab:1},'')};
-addEventListener('popstate',()=>{if(skip){skip--;return}if(guard){guard=false;const m=top();if(m)m.c();return}if(tabs.length&&window.KM){const t=tabs.pop();KM.go.fromBack=1;KM.go(t)}});
+addEventListener('popstate',()=>{if(skip){skip--;return}if(guard){guard=false;const m=top();if(m)m.c();return}if(tabs.length&&window.KM){const t=tabs.pop();window.__kmFromBack=1;KM.go(t)}});
 /* --- портрет --- */
 const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}};lock();document.addEventListener('click',lock,{once:true});
 {const o=document.createElement('div');o.id='km-rot';o.setAttribute('role','alert');o.innerHTML='<div class="km-rot-b"><div class="km-rot-i">📱</div><b>Поверните телефон вертикально</b><small>Книга читается только в портретной ориентации</small></div>';document.body.append(o)}

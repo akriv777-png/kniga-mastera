@@ -15,7 +15,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none;border:0;backgro
 #app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;background:url(img/runecircle.png) no-repeat 130% -60px/360px;filter:grayscale(1) invert(1)}
 #book{position:absolute;inset:0;overflow:hidden}
 #gutter,#candle{display:none}
-.page{position:absolute;inset:0;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + var(--tab-h) + 24px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;will-change:transform,opacity}
+.page{position:absolute;inset:0;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + var(--tab-h) + 84px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;will-change:transform,opacity}
 /* header */
 .ph{position:relative;margin:4px 2px 14px;padding-right:56px}
 .ph .sig{position:absolute;right:0;top:2px;width:44px;height:44px;opacity:.9}
