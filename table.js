@@ -14,7 +14,7 @@ function start(){if(!window.Peer)return toast('Модуль связи не за
  peer.on('open',()=>{status='открыт';retry=0;T.on=true;sv();upd()});
  peer.on('connection',c=>{c.on('open',()=>{conns[c.peer]={c,name:'?',pid:null};upd()});c.on('data',d=>onData(c,d));c.on('close',()=>{delete conns[c.peer];upd()});c.on('error',()=>{})});
  peer.on('disconnected',()=>{status='переподключение…';upd();setTimeout(()=>{try{peer&&!peer.destroyed&&peer.reconnect()}catch(e){}},1500)});
- peer.on('error',e=>{status=e.type==='unavailable-id'?'код занят — повтор…':'ошибка: '+e.type;upd();if(['unavailable-id','network','server-error','socket-error','socket-closed'].includes(e.type)){clearTimeout(start.t);start.t=setTimeout(()=>T.on&&start(),Math.min(30000,2000*(++retry)))}})}
+ peer.on('error',e=>{status=e.type==='unavailable-id'?'код занят — повтор…':'ошибка: '+e.type;upd();if(['unavailable-id','network','server-error','socket-error','socket-closed'].includes(e.type)){clearTimeout(start.t);start.t=setTimeout(()=>T.on&&start(),Math.min(15000,2000*(++retry)))}})}
 let relay=null,rst='',seen={};
 async function startRelay(){if(relay)return;try{relay=await KMRelay.open(T.code,'dm','dm',onRelay,(t,ok)=>{rst=t;upd()})}catch(e){rst='ретранслятор: ошибка';upd()}}
 function onRelay(pid,m){pid=String(pid).slice(0,40);const id='mq:'+pid;seen[id]=Date.now();
@@ -24,7 +24,7 @@ function onRelay(pid,m){pid=String(pid).slice(0,40);const id='mq:'+pid;seen[id]=
  onData(conns[id].c,m)}
 setInterval(()=>{const now=Date.now();let ch=0;Object.keys(conns).forEach(k=>{if(k.startsWith('mq:')&&now-(seen[k]||0)>75000){delete conns[k];ch=1}});if(ch)upd()},15000);
 function stop(keep){if(!keep)Object.values(conns).forEach(k=>{try{k.c.send({t:'closed'})}catch(e){}});try{relay&&relay.end()}catch(e){}relay=null;rst='';try{peer&&peer.destroy()}catch(e){}peer=null;conns={};if(!keep){T.on=false;sv();status='выкл'}upd()}
-function onData(c,d){const k=conns[c.peer];if(!k||!d||typeof d!=='object')return;
+function onData(c,d){const k=conns[c.peer];if(!k||!d||typeof d!=='object')return;if(d.t==='ping'){try{c.send({t:'pong'})}catch(e){}return}
  if(d.t==='hello'){k.name=String(d.name||'Игрок').slice(0,40);k.pid=String(d.pid||c.peer).slice(0,40);
   if(!T.link[k.pid]){const h=players.find(p=>p.id===d.hero?.id)||players.find(p=>p.name===d.hero?.name);if(h){T.link[k.pid]=h.id;sv()}}
   last[c.peer]='';upd();toast('За стол сел: '+k.name);push(true)}
@@ -48,7 +48,7 @@ function heroView(h){if(!h)return null;const o={};['id','name','cls','lvl','hp',
 function push(force){if(!peer)return;const camp=LS.get('camp',{});const ho=(camp.h||[]).filter(x=>x.sh).map(x=>({n:x.n,t:x.t,img:x.img}));const iv=initView(),mv=mapView();
  Object.entries(conns).forEach(([id,k])=>{if(!k.pid)return;const msg={t:'state',hero:heroView(heroOf(k.pid)),perm:permOf(k.pid),lock:!!T.lock[k.pid],party:players.filter(p=>p.id!==T.link[k.pid]).map(p=>({id:p.id,n:p.name})),init:iv,handouts:ho,rest:(()=>{const e=LS.get('restEv',null);return e&&e.ids&&e.ids.includes(T.link[k.pid])?{n:e.n,k:e.k,t:e.t,L:e.L}:null})(),strict:!!T.strict,map:mv,shows:LS.get('shows',[]).filter(x=>!x.hid).slice(0,15),shop:KM.shops?KM.shops.view():null,dm:'Мастер'};const s=JSON.stringify(msg);if(!force&&s===last[id])return;last[id]=s;try{k.c.send(msg)}catch(e){}})}
 setInterval(()=>push(false),1200);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&T.on&&(!peer||peer.destroyed||peer.disconnected))start()});
+const wake=()=>{if(!document.hidden&&T.on&&(!peer||peer.destroyed||peer.disconnected))start();else if(T.on&&peer){try{push(true)}catch(e){}}};document.addEventListener('visibilitychange',wake);addEventListener('pageshow',wake);addEventListener('online',()=>setTimeout(wake,500));addEventListener('focus',wake);setInterval(()=>{if(T.on&&(!peer||peer.destroyed||peer.disconnected))start()},12000);
 /* --- интерфейс Мастера --- */
 function qrSvg(t){try{const q=qrcode(0,'M');q.addData(t);q.make();return q.createSvgTag({cellSize:5,margin:2,scalable:true})}catch(e){return ''}}
 function code(h){return 'KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(heroView(h)))))}

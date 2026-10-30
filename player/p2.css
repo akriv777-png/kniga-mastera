@@ -28,3 +28,5 @@ body:has(#sheet.open) #link{display:none}
 @media (prefers-reduced-motion:reduce){.pe-empty{animation:none}}
 
 .km-newdm #ribbons .rib:last-child{position:relative}.km-newdm #ribbons .rib:last-child::after{content:'';position:absolute;top:4px;right:22%;width:9px;height:9px;border-radius:50%;background:#d22;box-shadow:0 0 8px #f33;animation:kmpulse 1.2s ease-in-out infinite}@keyframes kmpulse{50%{transform:scale(1.4);opacity:.7}}
+
+#link.lk.on{color:#5fd27a;text-shadow:0 0 8px #3c6}#link.lk.wait{color:#e8c04a;animation:kmpulse 1.4s infinite}#link.lk.off{color:#c44}
