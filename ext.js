@@ -31,8 +31,8 @@ function rPcs(){page.oninput=null;
    if(t.closest('[data-conds]'))return heroConds(p);
    if(t.closest('[data-addinv]'))return pickItem(it=>{giveItem(p,it);rPcs()});
    const r=t.closest('.inv-r');if(r){const x=p.inv[+r.dataset.k];
-    if(t.dataset.q){x.q=Math.max(1,x.q+ +t.dataset.q);save();rPcs()}else if(t.closest('[data-rm]')){p.inv.splice(+r.dataset.k,1);save();rPcs();toast('Убрано')}else if(t.closest('[data-open]')&&x.item)showItem(x.item)}
-   if(t.closest('[data-del]')&&confirm('Удалить героя «'+p.name+'»?')){players.splice(+h.dataset.i,1);save();rPcs()}};
+    if(t.dataset.q){x.q=Math.max(1,x.q+ +t.dataset.q);save();rPcs()}else if(t.closest('[data-rm]')){const k=+r.dataset.k;p.inv.splice(k,1);save();rPcs();KM.undoToast('«'+x.n+'» убрано',()=>{p.inv.splice(k,0,x);save();rPcs()})}else if(t.closest('[data-open]')&&x.item)showItem(x.item)}
+   if(t.closest('[data-del]')){const i=+h.dataset.i;players.splice(i,1);save();rPcs();KM.undoToast('Герой «'+p.name+'» удалён',()=>{players.splice(i,0,p);save();rPcs()})}};
   $('#addPc').onclick=()=>{players.push({id:uid(),name:'Новый герой',cls:'Класс',lvl:1,hp:10,maxhp:10,ac:12,pp:10,init:0,st:[10,10,10,10,10,10],conds:[],gold:0,inv:[],notes:''});save();rPcs();page.scrollTo({top:page.scrollHeight,behavior:'smooth'})}}
 function heroConds(p){openSheet(`<div class="sb-title">Состояния</div><div class="sb-sub">${esc(p.name)}</div><div class="row" style="margin-top:12px">${CONDS.map(x=>`<button class="chip${p.conds.includes(x)?' on':''}" data-c="${x}">${x}</button>`).join('')}</div><div class="row" style="margin-top:18px"><button class="btn red" id="cok">Готово</button></div>`,r=>{
   $$('[data-c]',r).forEach(b=>b.onclick=()=>{const x=b.dataset.c;p.conds=p.conds.includes(x)?p.conds.filter(y=>y!==x):[...p.conds,x];b.classList.toggle('on');save()});$('#cok',r).onclick=()=>{closeSheet();rPcs()}})}
@@ -190,7 +190,7 @@ function mapMenu(){const m=curMap();openSheet(`<div class="sb-title">${esc(m.nam
   $('#mx2',r).onclick=()=>{const n=prompt('Название',m.name);if(n){m.name=n;saveMaps();closeSheet();rMap()}};
   $('#mx3',r).onclick=()=>{const c=JSON.parse(JSON.stringify(m));c.id=uid();c.name+=' (копия)';maps.push(c);mapCur=c.id;saveMaps();closeSheet();rMap()};
   $('#mx5',r).onclick=()=>{histPush(m);m.g=m.g.map(t=>t||'floor');saveMaps();closeSheet();rMap()};
-  $('#mx4',r).onclick=()=>{if(maps.length<2)return toast('Должна остаться хотя бы одна карта');if(confirm('Удалить «'+m.name+'»?')){maps=maps.filter(x=>x!==m);mapCur=maps[0].id;saveMaps();closeSheet();rMap()}}})}
+  $('#mx4',r).onclick=()=>{if(maps.length<2)return toast('Должна остаться хотя бы одна карта');const old=maps.slice();maps=maps.filter(x=>x!==m);mapCur=maps[0].id;saveMaps();closeSheet();rMap();KM.undoToast('Карта «'+m.name+'» удалена',()=>{maps=old;mapCur=m.id;saveMaps();rMap()})}})}
 function exportPNG(m){const CS=48,c=document.createElement('canvas');c.width=m.W*CS;c.height=m.H*CS;const g=c.getContext('2d');g.scale(CS/32,CS/32);drawMap(g,m,32,1);
   c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=(m.name||'map')+'.png';document.body.append(a);a.click();a.remove();
    openSheet(`<div class="sb-title">Экспорт</div><div class="sb-sub">Зажми картинку, чтобы сохранить в Фото</div><img src="${u}" style="width:100%;margin-top:12px;border-radius:12px">`)},'image/png')}

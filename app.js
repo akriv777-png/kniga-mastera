@@ -137,7 +137,7 @@ function showMon(id){const m=findMon(id);if(!m)return;const ab=['Сил','Лов
   <div class="row" style="margin-top:18px"><button class="btn red" id="toFight">⚔ В бой</button>${m.own?'<button class="btn" id="edN">Изменить</button><button class="btn dark" id="delN">Удалить</button>':'<button class="btn" id="cpN">Копировать в мои</button>'}</div>
   `,r=>{
    $('#toFight',r).onclick=()=>{addCombatant(m);toast(`«${m.n}» в бою`)};
-   if(m.own){$('#edN',r).onclick=()=>editNpc(m);$('#delN',r).onclick=()=>{if(confirm('Удалить «'+m.n+'»?')){ownNpcs=ownNpcs.filter(x=>x.id!==m.id);save();closeSheet();rNpc()}}}
+   if(m.own){$('#edN',r).onclick=()=>editNpc(m);$('#delN',r).onclick=()=>{const old=ownNpcs.slice();ownNpcs=ownNpcs.filter(x=>x.id!==m.id);save();closeSheet();rNpc();KM.undoToast('«'+m.n+'» удалён',()=>{ownNpcs=old;save();rNpc()})}}
    else $('#cpN',r).onclick=()=>{const c=JSON.parse(JSON.stringify(m));c.id='own-'+uid();c.n=m.n+' (мой)';delete c.top;delete c.own;ownNpcs.unshift(c);save();toast('Скопировано в «Мои»');editNpc(c)}})}
 function editNpc(m){const isNew=!m;m=m||{id:'own-'+uid(),n:'',sz:'Средний',ty:'гуманоид',al:'',ac:12,hp:10,sp:'9 м',st:[10,10,10,10,10,10],cr:0.25,f:[],a:[],notes:''};
   const fl=L=>(L||[]).map(f=>f.n+': '+f.d).join('\n');const ab=['Сил','Лов','Тел','Инт','Мдр','Хар'];
@@ -233,7 +233,7 @@ function combatMenu(){openSheet(`<div class="sb-title">Управление бо
   $('#m1',r).onclick=()=>{combat.list.forEach(c=>c.init=rnd(20)+(c.dex||0));combat.turn=0;sortC();combat.turn=0;save();closeSheet();rCombat()};
   $('#m2',r).onclick=()=>{combat.round=1;combat.turn=0;save();closeSheet();rCombat()};
   $('#m3',r).onclick=()=>{combat.list=combat.list.filter(c=>c.pc||c.hp>0);combat.turn=0;save();closeSheet();rCombat()};
-  $('#m4',r).onclick=()=>{if(confirm('Завершить бой?')){combat={list:[],turn:0,round:1};save();closeSheet();rCombat()}}})}
+  $('#m4',r).onclick=()=>{const old=combat;combat={list:[],turn:0,round:1};save();closeSheet();rCombat();KM.undoToast('Бой завершён',()=>{combat=old;save();rCombat()})}})}
 
 /* ---------- DICE ---------- */
 const DIE_SH={4:'<path class="f" d="M50 8 94 88H6z"/><path class="l" d="M50 8v80"/>',6:'<rect class="f" x="12" y="12" width="76" height="76" rx="6"/><path class="l" d="M12 12l10 10h56l10-10M22 22v56"/>',8:'<path class="f" d="M50 4 92 50 50 96 8 50z"/><path class="l" d="M8 50h84M50 4 30 50 50 96 70 50z"/>',
@@ -336,7 +336,7 @@ function editNote(n){const isNew=!n;n=n||{id:uid(),tag:S.noteTag||'Заметк�
   <div class="row" style="margin-top:14px"><button class="btn red" id="ns">Запечатать</button>${isNew?'':'<button class="btn dark" id="nd">Удалить</button>'}</div>`,r=>{let tag=n.tag;
    bindChips(r,(k,v)=>{tag=v;$$('[data-chips=ntag] .chip',r).forEach(c=>c.classList.toggle('on',c.dataset.v===v))});
    $('#ns',r).onclick=()=>{n.title=$('#nt',r).value||'Без названия';n.text=$('#nx',r).value;n.tag=tag;n.t=Date.now();if(isNew)notes.unshift(n);save();closeSheet();rNotes()};
-   if(!isNew)$('#nd',r).onclick=()=>{if(confirm('Удалить запись?')){notes=notes.filter(x=>x.id!==n.id);save();closeSheet();rNotes()}}})}
+   if(!isNew)$('#nd',r).onclick=()=>{const old=notes.slice();notes=notes.filter(x=>x.id!==n.id);save();closeSheet();rNotes();KM.undoToast('Запись удалена',()=>{notes=old;save();rNotes()})}})}
 
 /* ---------- RULES ---------- */
 const RULES=[

@@ -1,0 +1,59 @@
+'use strict';{
+/* ===== B: original artifacts  +  C: loot generator  +  D: delete/undo ===== */
+const ART=(window.ART_RAW||'').trim().split('\n').map((l,i)=>{const f=l.split('|');return {id:'art-'+i,n:f[0],rar:f[1],att:f[2]!=='0',attT:f[2],sub:f[3],look:f[4],lore:f[5],prop:f[6],chg:f[7],curse:f[8],mind:f[9],hook:f[10],cat:'Магические',cost:'—',w:0,art:true,ds:f[6]}});
+D.items.push(...ART);
+const RCOL2={'Обычный':'#9b917f','Необычный':'#8fa477','Редкий':'#7d93a8','Очень редкий':'#9a84a6','Легендарный':'#c4a15a','Артефакт':'#a8483a','Разная':'#b39a6e'};
+const _showItemL=showItem;
+showItem=function(id){const a=ART.find(x=>x.id===id);if(!a)return _showItemL(id);
+ const row=(k,v,c='')=>v&&v!=='—'?`<div class="fld ${c}"><b>${k}.</b> ${esc(v)}</div>`:'';
+ openSheet(`<div class="cast-head">${inkSeal({key:a.id,name:a.n,kind:'item',ink:RCOL2[a.rar],blood:a.curse!=='—',size:110})}<div><div class="sb-title">${esc(a.n)}</div><div class="sb-sub">${esc(a.sub)}, ${esc(a.rar.toLowerCase())}${a.att?` (требует настройки${a.attT.length>1?' '+esc(a.attT.slice(1).trim()):''})`:''}</div></div></div>
+ ${row('Облик',a.look)}${row('Предание',a.lore)}<div class="sec-h">Свойства</div><div class="fld">${esc(a.prop)}</div>${row('Заряды',a.chg)}${row('Проклятие',a.curse,'secret')}${row('Разум',a.mind)}${row('Завязка',a.hook)}
+ <div class="row" style="margin-top:12px"><button class="btn red" id="aGive">Отдать герою</button></div>`,r=>{$('#aGive',r).onclick=()=>choosePlayer(a)})};
+/* --- loot generator --- */
+const SRC=[['corpse','Труп'],['chest','Сундук'],['lair','Логово'],['vault','Сокровищница']];
+const GEMS={10:['азурит','кровавик','гематит','лазурит','малахит','бирюза','обсидиан'],50:['гелиотроп','халцедон','сердолик','лунный камень','оникс','циркон','яшма'],100:['янтарь','аметист','хризоберилл','коралл','гранат','нефрит','жемчужина','турмалин'],500:['александрит','аквамарин','чёрный жемчуг','топаз','шпинель'],1000:['чёрный опал','голубой сапфир','изумруд','огненный опал','звёздчатый рубин'],5000:['чёрный сапфир','алмаз','рубин','жакинт']};
+const ARTOBJ={25:['серебряный кубок с волчьими мордами','резная костяная статуэтка висельника','шёлковый погребальный платок','медное зеркальце с трещиной','чётки из чёрного дерева'],250:['золотое кольцо с гербом угасшего рода','позолоченный череп-подсвечник','икона в окладе, лицо святого выскоблено','серебряный кинжал для жертвоприношений'],750:['золотая погребальная маска','кадило из серебра с гранатами','шкатулка с мощами в хрустале'],2500:['корона утопленного короля','золотая статуэтка крылатого демона с рубиновыми глазами'],7500:['реликварий с сердцем святого, усыпанный алмазами','скипетр павшей империи']};
+const TIERS=[['0','Ур. 1–4'],['1','Ур. 5–10'],['2','Ур. 11–16'],['3','Ур. 17–20']];
+const COIN=[{corpse:8,chest:60,lair:250,vault:600}],CM=[1,10,60,300];
+const RW=[{'Обычный':40,'Необычный':50,'Редкий':10},{'Необычный':45,'Редкий':40,'Очень редкий':13,'Легендарный':2},{'Редкий':40,'Очень редкий':40,'Легендарный':18,'Артефакт':2},{'Очень редкий':35,'Легендарный':55,'Артефакт':10}];
+const GV=[[10,50],[50,100,500],[500,1000],[1000,5000]],AV=[[25],[25,250],[250,750,2500],[750,2500,7500]];
+const CNT={corpse:{g:[0,1],a:[0,0],i:[0,1]},chest:{g:[1,3],a:[0,1],i:[1,1]},lair:{g:[2,6],a:[1,2],i:[1,3]},vault:{g:[4,10],a:[2,4],i:[2,5]}};
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const wpick=w=>{let t=Object.values(w).reduce((a,b)=>a+b,0),x=Math.random()*t;for(const k in w){x-=w[k];if(x<0)return k}return Object.keys(w)[0]};
+function rollEntry(type,t,src){if(type==='gem'){const v=pick(GV[t]);return {id:uid(),type,n:pick(GEMS[v]).replace(/^./,c=>c.toUpperCase()),val:v,w:0}}
+ if(type==='art'){const v=pick(AV[t]);return {id:uid(),type,n:pick(ARTOBJ[v]).replace(/^./,c=>c.toUpperCase()),val:v,w:.5}}
+ if(type==='coins'){const g=Math.round(COIN[0][src]*CM[t]*(.5+Math.random()));const c={pm:t>1?Math.floor(g*.2/10):0,zm:0,sm:Math.floor(Math.random()*g*.3),mm:Math.min(400,Math.floor(Math.random()*g*.5))};c.zm=Math.max(0,g-c.pm*10-Math.floor(c.sm/10));return {id:uid(),type,n:'Монеты',coins:c,val:c.pm*10+c.zm+c.sm/10+c.mm/100}}
+ const rar=wpick(RW[t]);const arts=ART.filter(a=>a.rar===rar);let it=(arts.length&&Math.random()<.5)?pick(arts):null;if(!it){const L=D.items.filter(i=>i.cat==='Магические'&&i.rar===rar);it=L.length?pick(L):pick(arts.length?arts:ART)}
+ return {id:uid(),type:'item',n:it.n,item:it.id,rar:it.rar,w:it.w||0}}
+function genLoot2(t,src,keep=[]){const c=CNT[src];const L=[...keep];if(!L.some(e=>e.type==='coins'))L.push(rollEntry('coins',t,src));
+ const add=(ty,[a,b])=>{const n=ri(a,b)-keep.filter(e=>e.type===ty).length;for(let i=0;i<n;i++)L.push(rollEntry(ty==='i'?'item':ty==='g'?'gem':'art',t,src))};
+ add('g',c.g);add('a',c.a);add('i',src==='corpse'&&Math.random()<.7?[0,0]:c.i);return L}
+let loot2=LS.get('loot2',{t:0,src:'chest',list:[]});const saveLoot=()=>LS.set('loot2',loot2);
+const coinTxt=c=>[['пм',c.pm],['зм',c.zm],['см',c.sm],['мм',c.mm]].filter(x=>x[1]).map(x=>x[1]+' '+x[0]).join(' · ')||'пусто';
+function entryHtml(e){const glow=e.rar?RCOL2[e.rar]:e.type==='gem'?'#7d93a8':e.type==='art'?'#c4a15a':'#b39a6e';
+ const ic=e.type==='item'?inkSeal({key:e.item,name:e.n,kind:'item',ink:RCOL2[e.rar],size:44}):`<span class="lt-ic">${e.type==='coins'?'⛁':e.type==='gem'?'◆':'♜'}</span>`;
+ return `<div class="lt${e.lock?' locked':''}" data-e="${e.id}" style="--gl:${glow}">${ic}<div class="lt-b"><div class="t"${e.item?` data-open="${e.item}"`:''}>${esc(e.n)}</div><div class="m">${e.type==='coins'?coinTxt(e.coins):e.type==='item'?esc(e.rar):`${e.val} зм`}</div></div>
+ <div class="lt-a"><button data-act="lock" aria-label="Закрепить">${e.lock?'🔒':'🔓'}</button><button data-act="re" aria-label="Перебросить">⟳</button><button data-act="give" aria-label="Отдать">➜</button><button data-act="del" aria-label="Удалить">✕</button></div></div>`}
+const lootTotal=()=>Math.round(loot2.list.reduce((s,e)=>s+(e.val||0),0));
+function renderLoot(){const o=$('#lootOut');if(!o)return;o.innerHTML=loot2.list.length?`<div class="lt-sum">Итого ценностей: <b>${lootTotal()} зм</b> · предметов: ${loot2.list.filter(e=>e.type==='item').length}</div>`+loot2.list.map(entryHtml).join('')+`<div class="row" style="margin-top:10px"><button class="btn" id="giveAll">Монеты поровну отряду</button><button class="btn dark" id="clrAll">🗑 Очистить всё</button></div>`:`<div class="empty">Выбери источник и брось кости судьбы.</div>`}
+rItems=(function(prev){return function(){if(lootTab==='cat'){prev();if(!$('#artChip',page)){$('#lseg',page)?.insertAdjacentHTML('afterend',`<div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="artChip">✦ Артефакты Книги (${ART.length})</button></div>`);$('#artChip',page).onclick=()=>{S.itCat='Магические';S.itQ='';rItems();lazyList($('#itList'),ART,i=>`<div class="card cast" data-id="${i.id}">${inkSeal({key:i.id,name:i.n,kind:'item',ink:RCOL2[i.rar],size:52})}<div class="t">${esc(i.n)}</div><span class="badge">${esc(i.rar)}</span><div class="m">${esc(i.sub)}${i.att?' · настройка':''}</div></div>`)}}return}
+ page.oninput=null;page.onclick=null;
+ page.innerHTML=header('Лут','добыча и сокровища','tri',2)+lootSeg()+`<div class="gen"><label class="f">Уровень отряда</label>${chips('t',TIERS,loot2.t)}<label class="f">Источник</label>${chips('src',SRC,loot2.src)}
+ <button class="btn red" id="gen" style="width:100%;justify-content:center;margin-top:10px;padding:14px;font-size:16px">🜏 Открыть добычу</button><div class="muted" style="font-size:12px;margin-top:6px">🔒 закреплённое сохраняется при новом броске · ⟳ перебросить одно · ➜ отдать герою</div></div><div id="lootOut"></div>`;
+ bindLootSeg();bindChips(page,(n,v)=>{loot2[n]=n==='t'?+v:v;saveLoot();$$(`[data-chips=${n}] .chip`,page).forEach(b=>b.classList.toggle('on',b.dataset.v===v))});renderLoot();
+ $('#gen').onclick=()=>{loot2.list=genLoot2(loot2.t,loot2.src,loot2.list.filter(e=>e.lock));saveLoot();chestFx(()=>{renderLoot();$$('#lootOut .lt').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px) scale(.96)'},{opacity:1,transform:'none'}],{duration:420,delay:i*70,fill:'backwards',easing:'cubic-bezier(.2,.8,.2,1)'}))})};
+ $('#lootOut').onclick=e=>{const op=e.target.closest('[data-open]');const row=e.target.closest('[data-e]');const b=e.target.closest('[data-act]');
+  if(e.target.closest('#clrAll')){if(!confirm('Очистить всю добычу?'))return;const old=loot2.list;loot2.list=[];saveLoot();renderLoot();KM.undoToast('Добыча очищена',()=>{loot2.list=old;saveLoot();renderLoot()});return}
+  if(e.target.closest('#giveAll')){const c=loot2.list.find(x=>x.type==='coins');if(c)splitGold(Math.floor(c.val));return}
+  if(!row)return;const i=loot2.list.findIndex(x=>x.id===row.dataset.e),en=loot2.list[i];
+  if(!b){if(op)showItem(op.dataset.open);return}const a=b.dataset.act;
+  if(a==='lock'){en.lock=!en.lock;saveLoot();renderLoot()}
+  if(a==='re'){const n=rollEntry(en.type,loot2.t,loot2.src);loot2.list[i]=n;saveLoot();renderLoot();$(`[data-e="${n.id}"]`)?.animate([{transform:'rotateX(90deg)'},{transform:'none'}],{duration:380})}
+  if(a==='del'){loot2.list.splice(i,1);saveLoot();renderLoot();KM.undoToast(`«${en.n}» удалено`,()=>{loot2.list.splice(i,0,en);saveLoot();renderLoot()})}
+  if(a==='give'){if(en.type==='coins'){splitGold(Math.floor(en.val))}else{choosePlayer(en.item?D.items.find(x=>x.id===en.item):{id:'loot-'+en.id,n:`${en.n} (${en.val} зм)`,w:en.w});const j=loot2.list.indexOf(en);if(j>=0){loot2.list.splice(j,1);saveLoot();renderLoot()}}}}}})(rItems);
+function chestFx(done){if(calm()){done();return}const o=document.createElement('div');o.className='chest-fx';o.innerHTML=`<div class="cf-seal">${inkSealSvg({key:'chest'+Date.now(),name:'добыча',kind:'item',inline:1,size:220,cls:'ssig big'})}</div><div class="cf-flash"></div>`;document.body.append(o);
+ o.querySelectorAll('path').forEach(p=>p.setAttribute('pathLength','1'));setTimeout(()=>o.classList.add('open'),900);setTimeout(()=>{done();o.classList.add('out')},1250);setTimeout(()=>o.remove(),1900)}
+/* D: deleting heroes / notes etc. with undo (replace confirm) */
+KM.ART=ART;KM.genLoot2=genLoot2;KM.loot2=()=>loot2;
+
+KM.showItem=(...a)=>showItem(...a);}
