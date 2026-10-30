@@ -72,7 +72,7 @@ function go(i,dirHint){
   const fwd=dirHint!=null?dirHint>0:i>S.sec;flipping=true;
   const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';
   const st=page.scrollTop;book.append(snap);snap.scrollTop=st;
-  S.sec=i;render();page.scrollTop=0;markRib();save();
+  const prevSec=S.sec;S.sec=i;render();page.scrollTop=0;markRib();save();if(window.KMTab&&!go.fromBack)KMTab(prevSec);go.fromBack=0;
   const dur=380,ease='cubic-bezier(.3,.7,.2,1)',dx=fwd?1:-1;
   snap.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-dx*28}%) scale(.96)`,opacity:0}],{duration:dur,easing:ease,fill:'forwards'});
   const a=page.animate([{transform:`translateX(${dx*40}%)`,opacity:0},{transform:'none',opacity:1}],{duration:dur,easing:ease});

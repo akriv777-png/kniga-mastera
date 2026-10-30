@@ -10,7 +10,8 @@ let guard=false,skip=0;
 const sync=()=>{const m=top();if(m&&!guard){guard=true;history.pushState({kmModal:1},'')}else if(!m&&guard){guard=false;if(history.state&&history.state.kmModal){skip++;history.back()}}};
 new MutationObserver(()=>setTimeout(sync,0)).observe(document.body,{childList:true,subtree:false,attributes:true,attributeFilter:['class'],});
 const s0=document.getElementById('sheet');s0&&new MutationObserver(()=>setTimeout(sync,0)).observe(s0,{attributes:true,attributeFilter:['class']});
-addEventListener('popstate',()=>{if(skip){skip--;return}if(guard){guard=false;const m=top();if(m)m.c()}});
+const tabs=[];window.KMTab=prev=>{if(guard)return;tabs.push(prev);if(tabs.length>30)tabs.shift();history.pushState({kmTab:1},'')};
+addEventListener('popstate',()=>{if(skip){skip--;return}if(guard){guard=false;const m=top();if(m)m.c();return}if(tabs.length&&window.KM){const t=tabs.pop();KM.go.fromBack=1;KM.go(t)}});
 /* --- портрет --- */
 const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}};lock();document.addEventListener('click',lock,{once:true});
 {const o=document.createElement('div');o.id='km-rot';o.setAttribute('role','alert');o.innerHTML='<div class="km-rot-b"><div class="km-rot-i">📱</div><b>Поверните телефон вертикально</b><small>Книга читается только в портретной ориентации</small></div>';document.body.append(o)}
@@ -29,3 +30,6 @@ const st=document.createElement('style');st.textContent=`#km-rot{display:none}@m
  const lab=root=>{(root.querySelectorAll?root:document).querySelectorAll('button:not([aria-label]),[role=button]:not([aria-label])').forEach(b=>{const t=(b.textContent||'').trim();if(L[t])b.setAttribute('aria-label',L[t]);else if(!t&&b.title)b.setAttribute('aria-label',b.title)})};
  let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;lab(document)})}).observe(document.body,{childList:true,subtree:true});lab(document);
  if(navigator.vibrate&&!matchMedia('(prefers-reduced-motion:reduce)').matches)document.addEventListener('pointerdown',e=>{const b=e.target.closest('.btn.red,.btn.ac,[data-shb],.dbtn,.kp-d');if(b)try{navigator.vibrate(7)}catch(_){}},{passive:true});})();
+/* --- подсказка прокрутки вкладок (узкие экраны) --- */
+;(()=>{const r=document.getElementById('ribbons');if(!r)return;const u=()=>{const m=r.scrollWidth-r.clientWidth>4;r.classList.toggle('more-r',m&&r.scrollLeft<r.scrollWidth-r.clientWidth-4);r.classList.toggle('more-l',m&&r.scrollLeft>4)};r.addEventListener('scroll',u,{passive:true});addEventListener('resize',u);new MutationObserver(u).observe(r,{childList:true});setTimeout(u,300);
+const st=document.createElement('style');st.textContent='#ribbons.more-r{-webkit-mask-image:linear-gradient(90deg,#000 80%,transparent);mask-image:linear-gradient(90deg,#000 80%,transparent)}#ribbons.more-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 20%);mask-image:linear-gradient(90deg,transparent,#000 20%)}#ribbons.more-l.more-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent);mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent)}';document.head.append(st)})();
