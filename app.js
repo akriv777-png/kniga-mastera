@@ -33,10 +33,11 @@ const IC={
  dice:'<svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 2v6l9-1M12 8 3 7M12 8l-5 10h10z"/></svg>',
  pcs:'<svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M12 8v8M9 11h6"/></svg>',
  notes:'<svg viewBox="0 0 24 24"><path d="M19 3 9 13l-1 4 4-1L22 6z"/><path d="M15 21H4V5h7"/></svg>',
+ map:'<svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>',
  rules:'<svg viewBox="0 0 24 24"><path d="M4 4h6c1.5 0 2 1 2 2v14c0-1-1-2-2-2H4zM20 4h-6c-1.5 0-2 1-2 2v14c0-1 1-2 2-2h6z"/></svg>'
 };
-const SECTIONS=[['npc','NPC и монстры','Бестиарий'],['spells','Заклинания','Заклинания'],['items','Предметы','Предметы'],['combat','Бой','Бой'],['dice','Кубики','Кубики'],['pcs','Игроки','Игроки'],['notes','Заметки и сюжет','Заметки'],['rules','Правила','Правила']];
-const ICK=['npc','spell','item','combat','dice','pcs','notes','rules'];
+const SECTIONS=[['npc','NPC и монстры','Бестиарий'],['spells','Заклинания','Чары'],['items','Лут и предметы','Лут'],['combat','Бой','Бой'],['dice','Кубики','Кубики'],['pcs','Игроки','Герои'],['map','Карта','Карта'],['notes','Заметки и сюжет','Заметки'],['rules','Правила','Правила']];
+const ICK=['npc','spell','item','combat','dice','pcs','map','notes','rules'];
 
 /* ---------- state ---------- */
 const S={sec:LS.get('sec',0),npcQ:'',npcType:'',npcCR:'',npcOnlyTop:true,spQ:'',spCls:'',spLvl:'',itQ:'',itCat:'Оружие',itRar:'',noteTag:'',lim:60};
@@ -321,18 +322,6 @@ function doRoll(){const{d,n,m,adv}=dState;let rolls=[],total,exp,crit='';
   let k=0;const iv=setInterval(()=>{res.textContent=rnd(d*n)+m;if(++k>8){clearInterval(iv);res.textContent=total;res.className='res '+crit;$('#exp').textContent=exp+(crit==='crit'?' — КРИТ!':crit==='fail'?' — провал…':'')}},55);
   pushHist(`Бросок ${n}к${d}${m?fmod(m):''}${adv&&d===20?(adv>0?' ⬆':' ⬇'):''}`,exp,total);setTimeout(()=>{$('#hist').innerHTML=histHtml()},560)}
 
-/* ---------- PLAYERS ---------- */
-function rPcs(){page.innerHTML=header('Игроки','листы героев','tri',1)+players.map((p,i)=>`<div class="pc" data-i="${i}">${SIG[['pent','star','eye'][i%3]].replace('class="sig"','class="art"')}
-  <input class="pcn" data-k="name" value="${esc(p.name)}" placeholder="Имя героя"><input class="pcc" data-k="cls" value="${esc(p.cls)}" placeholder="Класс">
-  <div class="pcstats"><div class="shield"><small>ХИТЫ</small><input data-k="hp" type="number" inputmode="numeric" value="${p.hp}"><small style="color:var(--ink2)">из <input data-k="maxhp" type="number" inputmode="numeric" value="${p.maxhp}" style="width:36px;font-size:13px;font-family:var(--rough);display:inline"></small></div>
-  <div class="shield"><small>КД</small><input data-k="ac" type="number" inputmode="numeric" value="${p.ac}"></div><div class="shield"><small>ПАСС. ВНИМ.</small><input data-k="pp" type="number" inputmode="numeric" value="${p.pp}"></div></div>
-  <div class="row" style="margin-top:8px"><span class="muted" style="font-size:13px">Бонус инициативы</span><input class="inp" data-k="init" type="number" inputmode="numeric" value="${p.init}" style="width:60px;text-align:center"></div>
-  <label class="f">Заметки</label><textarea class="inp" data-k="notes">${esc(p.notes)}</textarea>
-  ${players.length>1?'<button class="btn sm dark" data-del style="margin-top:8px">Удалить</button>':''}</div>`).join('')+`<button class="btn red" id="addPc">＋ Новый герой</button><div style="height:20px"></div>`;
-  page.oninput=e=>{const k=e.target.dataset.k;if(!k)return;const p=players[+e.target.closest('.pc').dataset.i];p[k]=e.target.type==='number'?+e.target.value:e.target.value;save()};
-  $$('[data-del]').forEach(b=>b.onclick=()=>{const i=+b.closest('.pc').dataset.i;if(confirm('Удалить героя «'+players[i].name+'»?')){players.splice(i,1);save();rPcs()}});
-  $('#addPc').onclick=()=>{players.push({id:uid(),name:'Новый герой',cls:'Класс',hp:10,maxhp:10,ac:12,pp:10,init:0,notes:''});save();rPcs();page.scrollTo({top:page.scrollHeight,behavior:'smooth'})}}
-
 /* ---------- NOTES ---------- */
 const TAGS=['Заметка','Сцена','Тайна','NPC','Место','Квест'];
 function rNotes(){const L=notes.filter(n=>!S.noteTag||n.tag===S.noteTag).sort((a,b)=>b.t-a.t);
@@ -377,9 +366,9 @@ function rRules(){page.oninput=null;page.innerHTML=header('Правила','шп
   RULES.map((r,i)=>`<details class="rule"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Данные: D&D 5e SRD 5.1 (CC-BY-4.0, Wizards of the Coast), через 5e-bits/5e-database.</p>`}
 
 /* ---------- render ---------- */
-const R=[rNpc,rSpells,rItems,rCombat,rDice,rPcs,rNotes,rRules];
+const R=[()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>rPcs(),()=>rMap(),()=>rNotes(),()=>rRules()];
 function render(){page.oninput=null;R[S.sec]()}
-markRib();render();
+window.__boot=()=>{markRib();render()};
 
 /* ---------- cover ---------- */
 (function(){const cv=$('#cover');const em=$('.embers',cv);
@@ -390,4 +379,4 @@ markRib();render();
  const open=()=>{if(cv.classList.contains('open'))return;cv.classList.add('open');setTimeout(()=>cv.classList.add('gone'),1700)};
  cv.addEventListener('click',open);if(sessionStorage.getItem('kmOpened')){cv.classList.add('gone')}cv.addEventListener('transitionend',()=>sessionStorage.setItem('kmOpened',1))})();
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
-window.KM={go,showMon,showSpell,closeSheet,addCombatant,S};
+window.KM={go,showMon,showSpell,showItem,closeSheet,addCombatant,S,get players(){return players}};
