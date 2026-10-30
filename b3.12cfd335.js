@@ -393,6 +393,7 @@ window.__boot=()=>{markRib();render()};
  cv.addEventListener('click',open);if(sessionStorage.getItem('kmOpened')){cv.classList.add('gone')}cv.addEventListener('transitionend',()=>sessionStorage.setItem('kmOpened',1))})();
 if(!window.KM_PLAYER&&'serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}})}
 window.KM={go,showMon,showSpell,showItem,closeSheet,addCombatant,S,get players(){return players}};
+;addEventListener('kmpacks',()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){try{a.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}return}if(['spells','items','bestiary','monsters','magic','loot'].includes((SECTIONS[S.sec]||[])[0])&&!document.querySelector('#sheet.show,.sheet.show'))try{render()}catch(e){}});
 
 ;
 /* session.js */
@@ -2120,7 +2121,7 @@ const END=/(иями|ями|ами|ого|его|ому|ему|ыми|ими|ы�
 const stem=w=>w.length>4?w.replace(END,''):w;
 const toks=s=>norm(s).split(/\s+/).filter(Boolean).flatMap(w=>{const y=SYN[w];return y?norm(y).split(' '):[w]}).map(stem);
 const lev=(a,b)=>{if(Math.abs(a.length-b.length)>2)return 9;const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]};
-let IDX=null;
+let IDX=null;addEventListener("kmpacks",()=>{IDX=null});
 function build(){const L=[];const add=(k,id,n,txt,open,sub)=>L.push({k,id,n,sub:sub||'',nt:toks(n),bt:new Set(toks(txt).slice(0,120)),open});
  DATA.spells.forEach(s=>add('Заклинание',s.id,s.n,[s.sc,s.dt,s.ds||s.tx||''].join(' '),()=>showSpell(s.id),(s.l?s.l+' круг':'заговор')+' · '+s.sc));
  DATA.monsters.forEach(m=>add('Монстр',m.id,m.n,[m.ty,m.sz].join(' '),()=>showMon(m.id),'ПО '+(m.cr??'?')+' · КД '+m.ac+' · '+m.hp+' хитов'));
