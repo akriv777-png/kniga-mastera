@@ -226,3 +226,9 @@ body:has(#sheet.open) #page *,body:has(#sheet.open) .tabbar{backdrop-filter:none
 .tb-code{text-align:center;margin-top:10px;padding:12px;border:1px solid rgba(196,161,90,.4);border-radius:14px;background:rgba(0,0,0,.25)}.tb-code b{display:block;font:600 44px/1.1 'Cormorant Garamond',serif;letter-spacing:8px;color:#e8c77a}.tb-qr{width:190px;margin:8px auto;background:#f3ead6;border-radius:10px;padding:4px}.tb-qr svg{display:block;width:100%;height:auto}
 .tb-perm{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.tb-p .chip{font-size:12px}
 body:has(#sheet.open) #tbfab{display:none!important}
+.lbar{display:flex;gap:6px;align-items:center;margin:8px 0 4px;overflow-x:auto;scrollbar-width:none}.lbar::-webkit-scrollbar{display:none}
+.lb{flex:none;min-height:36px;padding:4px 12px;border-radius:18px;border:1px solid rgba(196,161,90,.35);background:rgba(30,16,12,.8);color:#e9dcc0;font-size:13.5px}.lb.on{background:#5a1e14;border-color:#e0574c;color:#fff}
+.lcount{margin-left:auto;flex:none;color:#a99;font-size:12px;padding-right:4px}
+.card{position:relative}.fav{position:absolute;bottom:4px;right:4px;z-index:2;width:36px;height:36px;border:0;background:none;color:#8a7a5a;font-size:20px;line-height:1}.fav.on{color:#f0c64a;text-shadow:0 0 8px rgba(240,198,74,.6)}
+.lq{flex:1;min-width:130px;min-height:36px;border-radius:18px;border:1px solid rgba(196,161,90,.35);background:rgba(20,10,8,.8);color:#eee;padding:4px 12px;font-size:14px}
+.pin{position:absolute;bottom:2px;right:2px;width:34px;height:34px;border:0;background:none;color:#7a6a4a;font-size:18px;z-index:2}.pin.on{color:#f0c64a}
