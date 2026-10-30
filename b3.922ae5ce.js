@@ -651,12 +651,12 @@ const _fillIt=fillIt;fillIt=function(){_fillIt();$$('#itList .badge').forEach(b=
 /* ================= MAP BUILDER ================= */
 const TILES=[['floor','Пол','#3b3430'],['wall','Стена','#141110'],['door','Дверь','#7a4a22'],['water','Вода','#1d4f73'],['tree','Деревья','#24502a'],['lava','Лава','#c2380e'],['stairs','Лестница','#6b625b'],['chest','Сундук','#3b3430'],['trap','Ловушка','#3b3430'],['grass','Трава','#3d5b2a']];
 const TC=Object.fromEntries(TILES.map(t=>[t[0],t]));
-let maps=LS.get('maps',null);
+let maps=LS.get('maps',null);(maps||[]).forEach(m=>{if(m&&m.hist&&m.hist.length>25)m.hist=m.hist.slice(-25)});
 if(!maps){maps=[sampleMap()];LS.set('maps',maps)}
 let mapCur=LS.get('mapcur',maps[0].id);
 let mt={tool:'pan',tile:'wall',fogView:false,tokKind:'pc',locked:true,autoLock:LS.get('autolock',true)};
 const snap=m=>JSON.stringify({g:m.g,fog:m.fog,tok:m.tok});
-function histPush(m){m.hist=m.hist||[];m.redo=[];m.hist.push(snap(m));if(m.hist.length>60)m.hist.shift()}
+function histPush(m){m.hist=m.hist||[];m.redo=[];m.hist.push(snap(m));if(m.hist.length>25)m.hist.shift()}
 function histMove(m,from,to){if(!(m[from]||[]).length)return false;m[to]=m[to]||[];m[to].push(snap(m));const o=JSON.parse(m[from].pop());m.g=o.g;m.fog=o.fog;m.tok=o.tok;saveMaps();return true}
 let relockT;
 let view=LS.get('mapview',{s:1,x:0,y:0});
@@ -666,7 +666,7 @@ function sampleMap(){const W=20,H=20,g=Array(W*H).fill('');const set=(x,y,t)=>{i
   set(15,8,'chest');set(13,12,'trap');set(4,4,'stairs');for(let x=3;x<7;x++)set(x,9,'water');for(let y=13;y<20;y++)for(let x=0;x<8;x++)if(rnd(3)===1)set(x,y,'tree');else set(x,y,'grass');set(15,17,'lava');set(16,17,'lava');set(16,18,'lava');
   return {id:uid(),name:'Логово гоблинов',W,H,g,fog:Array(W*H).fill(0),tok:[{id:uid(),x:5,y:6,n:'Э',c:'#d6b26a',k:'pc'},{id:uid(),x:6,y:6,n:'Б',c:'#d6b26a',k:'pc'},{id:uid(),x:5,y:7,n:'Л',c:'#d6b26a',k:'pc'},{id:uid(),x:14,y:9,n:'Г',c:'#d42a22',k:'mon'},{id:uid(),x:15,y:11,n:'Г',c:'#d42a22',k:'mon'}]}}
 const curMap=()=>maps.find(m=>m.id===mapCur)||maps[0];
-const saveMaps=()=>{try{const cm=maps.find(x=>x.id===mapCur);if(cm)cm.rev=(cm.rev||0)+1;LS.set('maps',maps);LS.set('mapcur',mapCur)}catch(e){toast('Хранилище переполнено')}};
+const saveMaps=()=>{const cm=maps.find(x=>x.id===mapCur);if(cm)cm.rev=(cm.rev||0)+1;clearTimeout(saveMaps.t);saveMaps.t=setTimeout(saveMaps.now,400)};saveMaps.now=()=>{clearTimeout(saveMaps.t);try{localStorage.setItem('km.maps',JSON.stringify(maps,(k,v)=>k==='hist'||k==='redo'?undefined:v));LS.set('mapcur',mapCur)}catch(e){toast('Хранилище переполнено')}};addEventListener('pagehide',()=>saveMaps.now());document.addEventListener('visibilitychange',()=>{if(document.hidden)saveMaps.now()});
 function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>
@@ -2260,6 +2260,6 @@ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShade
 const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);const pl=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
 const ur=gl.getUniformLocation(pr,'r'),ut=gl.getUniformLocation(pr,'t');gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 const S=.3;const size=()=>{cv.width=Math.max(64,innerWidth*S|0);cv.height=Math.max(64,innerHeight*S|0);gl.viewport(0,0,cv.width,cv.height);gl.uniform2f(ur,cv.width,cv.height)};size();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(size,200)});
-let last=0;const t0=performance.now();const off=()=>document.hidden||document.documentElement.classList.contains('paused')||document.documentElement.classList.contains('lowfx')||(KM.settings&&KM.settings.fx===false)||!!document.querySelector('.show#sheet,#sheet.show')||!document.querySelector('#cover.gone');
+let last=0;const t0=performance.now();const off=()=>document.hidden||document.documentElement.classList.contains('paused')||document.documentElement.classList.contains('lowfx')||(KM.settings&&KM.settings.fx===false)||!!document.querySelector('.show#sheet,#sheet.show')||!document.querySelector('#cover.gone')||!!document.getElementById('mc');
 (function loop(now){requestAnimationFrame(loop);if(now-last<33||off())return;last=now;gl.uniform1f(ut,(now-t0)/1000);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3)})(0);
 KM.gl=true}}}

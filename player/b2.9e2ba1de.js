@@ -88,7 +88,7 @@ const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShade
 const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);const pl=gl.getAttribLocation(pr,'p');gl.enableVertexAttribArray(pl);gl.vertexAttribPointer(pl,2,gl.FLOAT,false,0,0);
 const ur=gl.getUniformLocation(pr,'r'),ut=gl.getUniformLocation(pr,'t');gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 const S=.3;const size=()=>{cv.width=Math.max(64,innerWidth*S|0);cv.height=Math.max(64,innerHeight*S|0);gl.viewport(0,0,cv.width,cv.height);gl.uniform2f(ur,cv.width,cv.height)};size();let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(size,200)});
-let last=0;const t0=performance.now();const off=()=>document.hidden||document.documentElement.classList.contains('paused')||document.documentElement.classList.contains('lowfx')||(KM.settings&&KM.settings.fx===false)||!!document.querySelector('.show#sheet,#sheet.show')||!document.querySelector('#cover.gone');
+let last=0;const t0=performance.now();const off=()=>document.hidden||document.documentElement.classList.contains('paused')||document.documentElement.classList.contains('lowfx')||(KM.settings&&KM.settings.fx===false)||!!document.querySelector('.show#sheet,#sheet.show')||!document.querySelector('#cover.gone')||!!document.getElementById('mc');
 (function loop(now){requestAnimationFrame(loop);if(now-last<33||off())return;last=now;gl.uniform1f(ut,(now-t0)/1000);gl.clear(gl.COLOR_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,3)})(0);
 KM.gl=true}}}
 
