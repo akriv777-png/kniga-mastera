@@ -1622,7 +1622,7 @@ const THS=(()=>{const c={};(window.MAPDECOR?MAPDECOR.items:[]).forEach(x=>x.th.f
 const DEF={type:'dungeon',W:24,H:24,dens:50,dang:40,th:'',th2:'',doors:1,traps:1,chests:1,mons:1,fog:1,dec:1,link:1,pcs:1,grp:'Подземелья'};
 function genUI(re){const cur=curMap();const S=Object.assign({},DEF,LS.get('gen2',{}),re&&cur.gen?cur.gen:{});S.seed=re&&cur.gen?cur.gen.seed:String(Math.floor(Math.random()*999999));
  const chk=(id,l)=>`<label style="display:flex;align-items:center;gap:6px;min-height:40px;padding:0 4px"><input type="checkbox" data-o="${id}"${S[id]?' checked':''} style="width:22px;height:22px"> ${l}</label>`;
- openSheet(`<div class="sb-title">✦ Генератор локаций</div><div class="sb-sub">${LT.length} типов мест · выберите тип, размер и опции</div>
+ openSheet(`<div class="sb-title">✦ Генератор локаций</div><div class="sb-sub">${LT.length} типов мест · выберите тип, размер и опции</div><button class="btn sm" id="gblank" style="margin-top:6px">▢ Пустая / простая карта</button>
  <input class="inp" id="gq" placeholder="Поиск типа: таверна, пещера, порт…" style="margin-top:8px">
  ${chips('grp',GROUPS.map(g=>[g,g]),S.grp)}
  <div id="glt"></div>
@@ -1636,6 +1636,7 @@ function genUI(re){const cur=curMap();const S=Object.assign({},DEF,LS.get('gen2'
  <div class="muted" id="glk" style="font-size:12.5px;margin-top:4px"></div>
  <div class="row" style="margin-top:14px;gap:8px">${re&&cur.gen?'<button class="btn red grow" id="gre" style="min-height:48px">↻ Перегенерировать эту карту</button>':''}<button class="btn ${re&&cur.gen?'':'red '}grow" id="ggo" style="min-height:48px">✦ Сгенерировать</button></div>
  <div class="muted" style="font-size:12px;margin-top:8px">1 клетка = 1,5 м. Всё сгенерированное можно править кистью, а декор — инструментом «Декор».</div>`,r=>{
+  {const gb=$('#gblank',r);if(gb)gb.onclick=()=>KM.newMapOld();}
   const ltBox=$('#glt',r);
   const drawLT=()=>{const q=($('#gq',r).value||'').trim().toLowerCase();const list=LT.filter(x=>q?(x[1]+' '+x[5].join(' ')+' '+x[2]).toLowerCase().includes(q):x[2]===S.grp);ltBox.innerHTML=list.length?chips('lt',list.map(x=>[x[0],x[1]]),S.type):'<div class="muted">Ничего не нашлось</div>';
    const lk=LTI[S.type];$('#glk',r).textContent=lk&&lk[7].length?'Связанные карты для «'+lk[1]+'»: '+lk[7].map(x=>x[1]).join(', '):'';};
@@ -1648,6 +1649,7 @@ function genUI(re){const cur=curMap();const S=Object.assign({},DEF,LS.get('gen2'
   $('#ggo',r).onclick=()=>{const o=read();let set;try{set=generateSet(o,0)}catch(e){console.error(e);return toast('Не получилось: '+e.message)}set.forEach(x=>{delete x._G;maps.push(x)});mapCur=set[0].id;saveMaps();view={s:1,x:0,y:0};closeSheet();rMap();toast(set.length>1?`Создано карт: ${set.length} (связаны переходами ⇄)`:'Карта готова · зерно '+o.seed)};
   const gr=$('#gre',r);if(gr)gr.onclick=()=>{const o=read();histPush(cur);const nm=generate(Object.assign({},o,{name:cur.name}));['g','fog','tok','dec','W','H','theme','light','type','gen','lt','seed'].forEach(k=>cur[k]=nm[k]);cur.links=(cur.links||[]).filter(l=>maps.some(x=>x.id===l.to)).map(l=>{const c=freeCell(cur,{x:l.x,y:l.y});cur.g[c.y*cur.W+c.x]=cur.g[c.y*cur.W+c.x]==='door'?'door':'stairs';return Object.assign(l,c)});saveMaps();closeSheet();rMap();toast('Перегенерировано · зерно '+o.seed)}})}
 KM.genUI=genUI;
+{const _nm=window.newMap||newMap;KM.newMapOld=_nm;window.newMap=newMap=function(){genUI(0)}}
 /* ---------- встраивание: кнопки в «Карте», меню, переходы ---------- */
 const _rMap=window.rMap||rMap;window.rMap=rMap=function(){_rMap.apply(this,arguments);const m=curMap();const nb=$('#mNew');if(nb&&!$('#mGen2')){nb.insertAdjacentHTML('beforebegin','<button class="btn sm red" id="mGen2" aria-label="Генератор локаций">✦ Генератор</button>');$('#mGen2').onclick=()=>genUI(0)}
  const mw=$('#mw');if(mw&&(m.links||[]).length&&!$('#mLinks')){mw.insertAdjacentHTML('beforebegin',`<div class="row" id="mLinks" style="flex-wrap:wrap;gap:6px;margin:0 0 8px">${m.links.filter(l=>maps.some(x=>x.id===l.to)).map((l,i)=>`<button class="btn sm" data-lk="${i}">${esc(l.n)}</button>`).join('')}</div>`);$$('#mLinks [data-lk]').forEach(b=>b.onclick=()=>{const l=m.links[+b.dataset.lk];if(!l)return;mapCur=l.to;saveMaps();view={s:1,x:0,y:0};rMap();toast('Переход: '+curMap().name)})}};
