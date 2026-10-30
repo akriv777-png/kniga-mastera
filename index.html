@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>Книга Мастера</title>
+<meta name="theme-color" content="#120907">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Книга Мастера">
+<meta name="description" content="Помощник Мастера Подземелий D&D 5e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" href="img/icon-192.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="img/splash-1170x2532.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="img/splash-1179x2556.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="img/splash-1290x2796.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="img/splash-1125x2436.jpg">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="img/splash-1284x2778.jpg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="book">
+    <div class="page" id="page"></div>
+  </div>
+  <div id="gutter"></div>
+  <div id="candle"></div>
+  <nav id="ribbons"></nav>
+  <div id="sheet"><div class="bg"></div><div class="sh"><div class="grab"></div><button class="x" aria-label="Закрыть">✕</button><div class="page" id="sheetPage"></div></div></div>
+  <div id="toast"></div>
+  <div id="cover">
+    <div class="face">
+      <div class="glow"></div>
+      <div class="embers"></div>
+      <div class="ttl">Книга<br>Мастера<small>гримуар хранителя подземелий</small></div>
+      <div class="tap">коснись, чтобы открыть</div>
+    </div>
+    <div class="inside"></div>
+  </div>
+</div>
+<script src="data/data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
