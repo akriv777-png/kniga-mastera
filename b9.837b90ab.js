@@ -531,7 +531,7 @@ KM.oneshots=list;})();
 'use strict';
 /* «Кампании»: готовые кампании (data/camp*.js грузятся лениво), прогресс по главам, карты, встречи → трекер */
 (()=>{const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-const FILES=['data/camp1.js','data/camp2.js','data/camp3.js'];let ld=null;
+const FILES=['data/camp1.js','data/camp2.js','data/camp3.js','data/camp4.js'];let ld=null;
 function load(){if(window.CAMPAIGNS&&window.CAMPAIGNS.length>=FILES.length)return Promise.resolve();if(ld)return ld;window.CAMPAIGNS=window.CAMPAIGNS||[];
  ld=Promise.all(FILES.map(f=>new Promise(r=>{if(document.querySelector(`script[data-cf="${f}"]`))return r();const s=document.createElement('script');s.src=f;s.dataset.cf=f;s.onload=s.onerror=()=>r();document.head.appendChild(s)}))).then(()=>{const o=FILES.map(f=>f.match(/camp(\d)/)[1]);CAMPAIGNS.sort((a,b)=>parseInt(a.lvl)-parseInt(b.lvl))});return ld}
 const P=id=>LS.get('camp_'+id,null),setP=(id,v)=>LS.set('camp_'+id,v);
