@@ -1,7 +1,7 @@
 'use strict';
 /* ===== STAGE 4: magic system ===== */
 D.spells.forEach(s=>{s.dmg=(s.dmg||'').replace('+ MOD','+ мод.');s.dt=(s.dmg.match(/(кислота|силовое поле|дробящий|рубящий|некротический|излучение|огонь|электричество|яд|холод|психический|колющий|звук)/)||[])[1]||'';
- const m=s.ds.match(/На больших уровнях:[^]*?(\d+)к(\d+)[^]*?выше (\d+)/);if(m&&s.l>0)s.up={n:+m[1],d:+m[2],from:+m[3]}});
+ const m=s.ds.match(/На больших уровнях:[^]*?(\d+)к(\d+)[^]*?выше (\d+)/);if(m&&s.l>0)s.up={n:+m[1],d:+m[2],from:+m[3],step:/кажды[ех] дв/.test(s.ds)?2:1};const ut=s.ds.split('На больших уровнях:')[1];if(ut)s.upTxt=ut.trim()});
 const SCHOOLS=['Ограждение','Вызов','Прорицание','Очарование','Воплощение','Иллюзия','Некромантия','Преобразование'];
 const SCH_C={'Ограждение':['#7fb6ff','shield'],'Вызов':['#ffb347','gate'],'Прорицание':['#c9a6ff','eye'],'Очарование':['#ff7ac8','heart'],'Воплощение':['#ff5a30','star'],'Иллюзия':['#8affea','spiral'],'Некромантия':['#8cff6a','skull'],'Преобразование':['#ffd84a','tri']};
 const DT_C={'огонь':'#ff5a20','холод':'#8fd8ff','электричество':'#b8a0ff','кислота':'#9be33a','яд':'#5fd07a','некротический':'#7a5cff','излучение':'#ffe9a0','силовое поле':'#d0c0ff','психический':'#ff7ad6','звук':'#7ad0ff','дробящий':'#c9b08a','рубящий':'#e0d0c0','колющий':'#e0d0c0'};
@@ -43,7 +43,7 @@ rSpells=function(){page.oninput=null;page.onclick=null;const seg=`<div class="se
  chips('conc',[['','Концентрация: любая'],['1','Только концентрация'],['0','Без концентрации']],MF.conc)+chips('rit',[['','Ритуал: любой'],['1','Только ритуалы']],MF.rit)+chips('dt',[['','Любой урон'],...Object.keys(DT_C).map(d=>[d,d])],MF.dt)+chips('cp',[['','Любые компоненты'],['noV','Без вербального'],['noS','Без соматического'],['noM','Без материального']],MF.cp)+`</details><div class="list" id="spList"></div>`;
  bindChips(page,(n,v)=>{if(n==='lvl')S.spLvl=v;else if(n==='cls')S.spCls=v;else MF[n]=v;LS.set('mf',MF);rSpells()});bindSearch('spQ',q=>{S.spQ=q;fillSp()});
  $('#mseg').onclick=e=>{const b=e.target.closest('[data-v]');if(b){MF.view=b.dataset.v;LS.set('mf',MF);rSpells()}};fillSp()};
-fillSp=function(){let L=D.spells;const q=S.spQ;if(q)L=L.filter(s=>(s.n+' '+s.en).toLowerCase().includes(q));if(S.spLvl!=='')L=L.filter(s=>s.l===+S.spLvl);if(S.spCls)L=L.filter(s=>s.cl.includes(S.spCls));
+fillSp=function(){let L=D.spells;const q=S.spQ;if(q)L=L.filter(s=>(s.n).toLowerCase().includes(q));if(S.spLvl!=='')L=L.filter(s=>s.l===+S.spLvl);if(S.spCls)L=L.filter(s=>s.cl.includes(S.spCls));
  if(MF.sc)L=L.filter(s=>s.sc===MF.sc);if(MF.tm)L=L.filter(s=>MF.tm==='long'?/мин|ч\./.test(s.t):s.t===MF.tm);if(MF.conc)L=L.filter(s=>s.conc===(MF.conc==='1'));if(MF.rit)L=L.filter(s=>s.rit);if(MF.dt)L=L.filter(s=>s.dt===MF.dt);if(MF.cp)L=L.filter(s=>!s.c.includes({noV:'В',noS:'С',noM:'М'}[MF.cp]));
  L=[...L].sort((a,b)=>a.l-b.l||a.n.localeCompare(b.n,'ru'));
  lazyList($('#spList'),L,s=>`<div class="card spc" data-id="${s.id}">${spellSigil(s,46,'ssig mini')}<div class="t">${esc(s.n)}</div><span class="badge">${s.l===0?'заговор':s.l+' круг'}</span><div class="m">${esc(s.sc)} · ${esc(s.t)}${s.conc?' · <span class="hand">концентрация</span>':''}${s.rit?' · ритуал':''}</div>${s.dmg?`<div class="m" style="color:${DT_C[s.dt]||'#ff7d74'}">${esc(s.dmg)}</div>`:''}</div>`);
@@ -53,7 +53,8 @@ showSpell=function(id,slot){const s=D.spells.find(x=>x.id===id);_showSpell(id);c
  sp.insertAdjacentHTML('afterbegin',spellArt(s));drawSigils(sp);$$('.ssig.big *',sp).forEach(p=>p.setAttribute('pathLength','1'));$('.ssig.big',sp).classList.add('draw');
  const lv=slot||Math.max(1,s.l);const base=(s.dmg.match(/(\d+)к(\d+)/)||[]);
  let up='';if(s.l>0){up=`<div class="sec-h">Ячейка и усиление</div><div class="chips" id="slv">${[1,2,3,4,5,6,7,8,9].filter(l=>l>=s.l).map(l=>`<button class="chip${l===lv?' on':''}" data-l="${l}">${l} круг</button>`).join('')}</div>`;
-  if(s.up&&base[1]){const extra=Math.max(0,lv-s.up.from)*s.up.n;up+=`<div class="scal">Урон на ${lv} круге: <b>${+base[1]+(s.up.d==+base[2]?extra:0)}к${base[2]}${s.up.d!=+base[2]&&extra?` + ${extra}к${s.up.d}`:''}</b> ${esc(s.dt)}</div>`}}
+  if(s.up&&!base[1]){const ex=Math.floor(Math.max(0,lv-s.up.from)/s.up.step)*s.up.n;up+=`<div class="scal">${/лечен|восстанавл|хит/i.test(s.ds)&&!s.dt?"Лечение":"Доп. кубы"} на ${lv} круге: <b>+${ex}к${s.up.d}</b></div>`}else if(s.upTxt&&!s.up){const g=s.upTxt.match(/\+(\d+)\s+(.+?) за (?:каждый )?уровень ячейки выше (\d+)/);up+=`<div class="scal">${g?`На ${lv} круге: <b>+${Math.max(0,lv-g[3])*g[1]}</b> ${esc(g[2])}`:esc(s.upTxt)}</div>`}
+  if(s.up&&base[1]){const extra=Math.floor(Math.max(0,lv-s.up.from)/s.up.step)*s.up.n;up+=`<div class="scal">Урон на ${lv} круге: <b>${esc(s.dmg.replace(/(\d+)к(\d+)/,(a,n,d)=>s.up.d==+d?(+n+extra)+'к'+d:a+(extra?` + ${extra}к${s.up.d}`:'')))}</b></div>`}}
  const casters=players.map((p,i)=>[p,i]).filter(([p])=>Object.keys(p.slots||{}).length||s.l===0);
  sp.insertAdjacentHTML('beforeend',up+`<div class="sec-h">Сотворить</div><div class="row">${casters.map(([p,i])=>`<button class="btn ${s.l?'red':''}" data-cast="${i}">✦ Каст: ${esc(p.name)}${s.l?` <small>(${(p.slots[lv]?p.slots[lv].max-p.slots[lv].used:0)} яч.)</small>`:''}</button>`).join('')||'<span class="muted">У героев нет ячеек — укажи класс (напр. «Волшебник») и уровень в «Героях».</span>'}</div>
   <div class="row" style="margin-top:8px">${players.map((p,i)=>`<button class="btn sm" data-learn="${i}">${p.spells?.includes(s.id)?'✓ ':'＋ '}${esc(p.name)}</button>`).join('')}</div><div class="muted" style="font-size:12px">«＋ Имя» — добавить в гримуар героя.</div>`);
@@ -76,3 +77,4 @@ function rGrimoire(seg){const p=players[MF.hero]||players[0];if(!p){page.innerHT
   const c=e.target.closest('.card');if(c)showSpell(c.dataset.id)}}
 KM.spellSigil=spellSigil;KM.ensureSlots=ensureSlots;
 KM.showSpell=(...a)=>showSpell(...a);KM.closeSheet=()=>closeSheet();KM.save=()=>save();if(!("players" in KM))KM.players=players;
+KM.SECTIONS=SECTIONS;

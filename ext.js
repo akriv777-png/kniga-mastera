@@ -41,7 +41,7 @@ function choosePlayer(it){openSheet(`<div class="sb-title">Кому отдать
   $$('[data-i]',r).forEach(b=>b.onclick=()=>{giveItem(players[+b.dataset.i],it);closeSheet()})})}
 function pickItem(cb){openSheet(`<div class="sb-title">Добавить предмет</div>${searchBox('pq','Меч, зелье, верёвка…','')}<div class="list" id="pl"></div>
   <div class="sec-h">Своё</div><div class="row"><input class="inp grow" id="cn" placeholder="Название"><input class="inp" id="cw" type="number" inputmode="decimal" placeholder="кг" style="width:70px"><button class="btn" id="cok">OK</button></div>`,r=>{
-  const fill=q=>{const L=D.items.filter(i=>!q||(i.n+' '+i.en).toLowerCase().includes(q)).slice(0,40);$('#pl',r).innerHTML=L.map(i=>`<div class="card" data-id="${i.id}" style="padding:8px 12px"><div class="t" style="font-size:15px">${esc(i.n)}</div><div class="m">${esc(i.sub||i.cat)}${i.w?' · '+kg(i.w):''}</div></div>`).join('')};
+  const fill=q=>{const L=D.items.filter(i=>!q||(i.n).toLowerCase().includes(q)).slice(0,40);$('#pl',r).innerHTML=L.map(i=>`<div class="card" data-id="${i.id}" style="padding:8px 12px"><div class="t" style="font-size:15px">${esc(i.n)}</div><div class="m">${esc(i.sub||i.cat)}${i.w?' · '+kg(i.w):''}</div></div>`).join('')};
   fill('');const qi=$('#pq',r);qi.oninput=()=>fill(qi.value.trim().toLowerCase());
   $('#pl',r).onclick=e=>{const c=e.target.closest('.card');if(!c)return;cb(D.items.find(i=>i.id===c.dataset.id));closeSheet()};
   $('#cok',r).onclick=()=>{const n=$('#cn',r).value.trim();if(!n)return;cb({id:'custom-'+uid(),n,w:+$('#cw',r).value||0});closeSheet()}})}
@@ -58,7 +58,7 @@ rItems=function(){page.oninput=null;page.onclick=null;
    <label class="f">Что генерировать</label>${chips('kind',[['ind','Карманы (1 враг)'],['hoard','Клад (логово)'],['magic','1 магический предмет']],lootCfg.kind)}
    <button class="btn red" id="gen" style="width:100%;justify-content:center;margin-top:10px;padding:14px;font-size:16px">🜏 Сгенерировать добычу</button></div>
    <div id="lootOut">${lootRes?lootHtml(lootRes):'<div class="empty">Брось кости судьбы — и узнай, что нашли герои.</div>'}</div>
-   <p class="muted" style="font-size:11.5px;margin-top:14px">Упрощённый генератор по мотивам таблиц сокровищ (суммы монет ≈ средним из Руководства Мастера; предметы — случайные из SRD нужной редкости).</p>`;
+   <p class="muted" style="font-size:11.5px;margin-top:14px">Упрощённый генератор по мотивам таблиц сокровищ (суммы монет ≈ средним из Руководства Мастера; предметы — случайные из справочника нужной редкости).</p>`;
   bindLootSeg();bindChips(page,(n,v)=>{lootCfg[n]=n==='tier'?+v:v;LS.set('lootcfg',lootCfg);rItems()});
   $('#gen').onclick=()=>{lootRes=genLoot(lootCfg.tier,lootCfg.kind);LS.set('lootres',lootRes);$('#lootOut').innerHTML=lootHtml(lootRes);$('#lootOut').animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:350})};
   $('#lootOut').onclick=e=>{const g=e.target.closest('[data-give]');if(g){const it=D.items.find(i=>i.id===g.dataset.give);return choosePlayer(it)}
@@ -130,7 +130,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
     drawMap(g,m,CS,mt.fogView?1:.55);}
   function opts(){const O=$('#mopts');
     if(mt.tool==='paint')O.innerHTML=`<div class="tiles">${TILES.map(([k,l,c])=>`<button data-tile="${k}" class="${mt.tile===k?'on':''}"><i style="background:${c}">${tileIcon(k)}</i>${l}</button>`).join('')}</div>`;
-    else if(mt.tool==='token')O.innerHTML=`${chips('tk',[['pc','Герой'],['mon','Монстр'],['npc','NPC'],['del','Удалить фишку']],mt.tokKind)}<div class="muted" style="font-size:12.5px">Тапни клетку — поставить. Перетащи фишку — двигать.</div><div class="row" style="margin-top:6px">${players.map(p=>`<button class="btn sm" data-pp="${p.id}">${esc(p.name)}</button>`).join('')}</div>`;
+    else if(mt.tool==='token')O.innerHTML=`${chips('tk',[['pc','Герой'],['mon','Монстр'],['npc','НИП'],['del','Удалить фишку']],mt.tokKind)}<div class="muted" style="font-size:12.5px">Тапни клетку — поставить. Перетащи фишку — двигать.</div><div class="row" style="margin-top:6px">${players.map(p=>`<button class="btn sm" data-pp="${p.id}">${esc(p.name)}</button>`).join('')}</div>`;
     else if(mt.tool==='fog')O.innerHTML=`${chips('fv',[['0','Вид Мастера'],['1','Вид игроков']],mt.fogView?1:0)}<div class="row" style="margin-top:6px"><button class="btn sm" id="fAll">Скрыть всё</button><button class="btn sm" id="fNone">Открыть всё</button></div><div class="muted" style="font-size:12.5px;margin-top:6px">Води пальцем: скрытые клетки открываются, открытые — скрываются.</div>`;
     else O.innerHTML=`<div class="muted" style="font-size:12.5px">${mt.locked?'🔒 Карта заблокирована: касания только двигают и масштабируют. Нажми «Редактировать» или выбери инструмент.':'Двумя пальцами — зум и сдвиг в любом режиме.'}</div>`;
     $$('[data-tile]',O).forEach(b=>b.onclick=()=>{mt.tile=b.dataset.tile;opts()});
