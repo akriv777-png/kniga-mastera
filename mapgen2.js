@@ -38,7 +38,7 @@ function doors(G,p){G.rooms.forEach(rm=>{const ring=[];for(let x=rm.x-1;x<=rm.x+
 function cave(G,o){const {W,H,R}=G;const ft=o.ft||'floor';let a=new Uint8Array(W*H);for(let i=0;i<W*H;i++){const x=i%W,y=(i/W)|0;a[i]=(x<1||y<1||x>=W-1||y>=H-1||R()<(o.fill||.45))?1:0}
  for(let k=0;k<(o.iter||5);k++){const b=a.slice();for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){let c=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)c+=a[(y+dy)*W+x+dx];b[y*W+x]=c>=5?1:0}a=b}
  for(let i=0;i<W*H;i++)G.g[i]=a[i]?'':ft;const keep=largest(G,t=>t===ft);for(let i=0;i<W*H;i++)if(G.g[i]===ft&&!keep.has(i))G.g[i]='';
- if(o.liq){const n=fbm(R,W,H,5);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(G.get(x,y)===ft&&n(x,y)>1-o.liq[1])G.set(x,y,o.liq[0])}
+ if(o.liq){const n=fbm(R,W,H,5);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(G.get(x,y)===ft&&n(x,y)>.74-o.liq[1])G.set(x,y,o.liq[0])}
  if(o.alt){const n=fbm(R,W,H,4);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(G.get(x,y)===ft&&n(x,y)<o.alt[1])G.set(x,y,o.alt[0])}
  walls(G);const cells=[...keep];const reg=[];for(let k=0;k<Math.max(3,(cells.length/60)|0);k++){const c=G.pick(cells);reg.push({x:(c%W)-2,y:((c/W)|0)-2,w:5,h:5,cx:c%W,cy:(c/W)|0})}G.rooms.push(...reg);
  const s=cells.reduce((b,c)=>((c%W)+((c/W)|0)<(b%W)+((b/W)|0)?c:b),cells[0]);G.start={x:s%W,y:(s/W)|0}}
@@ -229,7 +229,7 @@ function furnish(G,R,themes,dens,indoor){const MD=window.MAPDECOR;if(!MD)return[
  let pool=MD.items.filter(x=>x.th.some(t=>ths.has(t))&&x.w<=6&&x.h<=6);const any=MD.items.filter(x=>x.th.includes('любая')&&x.w<=4&&x.h<=4);if(pool.length<20)pool=pool.concat(any);
  if(!indoor)pool=pool.filter(x=>x.cat!=='Двери и окна'&&x.cat!=='Ковры');if(!pool.length)return[];
  const occ=new Uint8Array(W*H),occF=new Uint8Array(W*H);const free=[];for(let i=0;i<W*H;i++)if(FREE.has(G.g[i]))free.push(i);
- const n=Math.min(indoor?220:180,Math.round(free.length*dens*(indoor?.09:.045)));const out=[];
+ const n=Math.min(indoor?220:180,Math.round(free.length*dens*(indoor?.16:.07)));const out=[];
  const fl=pool.filter(x=>x.layer==='floor'),ob=pool.filter(x=>x.layer!=='floor');
  for(let k=0;k<n*10&&out.length<n;k++){const it=(fl.length&&R()<.2)?G.pick(fl):G.pick(ob.length?ob:fl);const r=Math.floor(R()*4),f=R()<.3;const w=r%2?it.h:it.w,h=r%2?it.w:it.h;
   const c=G.pick(free),x=c%W,y=(c/W)|0;let ok=true,wallN=false;
@@ -244,7 +244,7 @@ function spawn(G,R,lt,dang,o){const {W,H}=G;const lv=players.length?players.redu
  let pool=(D.monsters||[]).filter(x=>crOf(x)<=crMax&&crOf(x)>=Math.min(crMax*.15,1)&&match(x));if(pool.length<2)pool=(D.monsters||[]).filter(x=>crOf(x)<=crMax&&match(x));if(!pool.length)pool=(D.monsters||[]).filter(x=>crOf(x)<=crMax);if(!pool.length)return[];
  const rooms=G.rooms.filter(r=>!G.start||Math.hypot(r.cx-G.start.x,r.cy-G.start.y)>6);const grp=Math.max(1,Math.min(10,Math.round((W*H/300)*(.4+dang*1.6))));const toks=[],cnt={},used=new Set();
  for(let k=0;k<grp;k++){const mo=G.pick(pool);const r=rooms.length?G.pick(rooms):{cx:G.ri(2,W-3),cy:G.ri(2,H-3)};const num=crOf(mo)>=crMax*.7?1:G.ri(1,Math.max(1,Math.round(1+dang*4)));
-  for(let q=0;q<num;q++){for(let t=0;t<20;t++){const x=r.cx+G.ri(-2,2),y=r.cy+G.ri(-2,2),c=G.get(x,y);if(!c||BLOCK.has(c)||c==='door'||used.has(y*W+x))continue;used.add(y*W+x);cnt[mo.id]=(cnt[mo.id]||0)+1;const i=cnt[mo.id];
+  for(let q=0;q<num&&toks.length<Math.round(3+dang*11);q++){for(let t=0;t<20;t++){const x=r.cx+G.ri(-2,2),y=r.cy+G.ri(-2,2),c=G.get(x,y);if(!c||BLOCK.has(c)||c==='door'||used.has(y*W+x))continue;used.add(y*W+x);cnt[mo.id]=(cnt[mo.id]||0)+1;const i=cnt[mo.id];
    toks.push({id:uid(),x,y,n:(mo.n[0]+i).slice(0,3),c:'#d42a22',k:'mon',mid:mo.id,nm:mo.n+' '+i,hp:mo.hp,mhp:mo.hp,ac:mo.ac,sz:mo.sz});break}}}return toks}
 function placePCs(m,G){const {W}=G;const s=G.start;let k=0;const ps=players.slice(0,8);const ring=[[0,0],[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1],[2,0],[0,2],[-2,0],[0,-2]];
  for(const [dx,dy] of ring){if(k>=ps.length)break;const x=s.x+dx,y=s.y+dy,t=G.get(x,y);if(!t||BLOCK.has(t)||m.tok.some(z=>z.x===x&&z.y===y))continue;const p=ps[k++];m.tok.push({id:uid(),x,y,n:(p.name||'?')[0],c:'#d6b26a',k:'pc',pid:p.id,photo:p.photo||null})}}
