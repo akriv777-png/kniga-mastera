@@ -36,6 +36,6 @@ const wm=window.showMon;if(wm)window.showMon=showMon=function(id){const m=DATA.m
 const ws=window.showSpell;if(ws)window.showSpell=showSpell=function(id){const m=DATA.spells.find(x=>x.id===id);m&&rec('Заклинание',id,m.n);return ws.apply(this,arguments)};
 const wi=KM.showItem;if(wi)KM.showItem=function(id){const m=DATA.items.find(x=>x.id===id);m&&rec('Предмет',id,m.n);return wi.apply(this,arguments)};
 function now(){let b=document.getElementById('nvnow');if(!NV.on){b&&b.remove();return}const t=NOW[S.sec];if(!t)return;const h=page.querySelector(':scope>.ph');if(!b){b=document.createElement('div');b.id='nvnow'}b.innerHTML=`<span>✦</span><p>${t}</p><button aria-label="Помощник">?</button>`;b.querySelector('button').onclick=()=>hub();(h&&h.parentNode===page?h.after(b):page.prepend(b))}
-const og=KM.go;KM.go=function(){const r=og.apply(this,arguments);setTimeout(now,30);return r};
+const og=KM.go;KM.go=function(){const r=og.apply(this,arguments);now();setTimeout(now,30);return r};
 const f=document.createElement('button');f.id='nvfab';f.textContent='?';f.setAttribute('aria-label','Помощник мастера');f.onclick=()=>hub();document.body.append(f);
 setTimeout(now,800);KM.novice={hub,flow,REF,FLOW,NV};}
