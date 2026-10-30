@@ -109,3 +109,6 @@ html.calm #fxAmb,html.calm .fx-par,html.calm .inkbleed{display:none}
 #hpop{position:fixed;left:16px;right:16px;z-index:120;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#f0dfbd,#d9c193);color:#2a1208;border:1px solid #8b6a35;box-shadow:0 14px 40px rgba(0,0,0,.7);opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;transition:opacity .25s,transform .4s var(--spring)}
 #hpop.on{opacity:1;transform:none;pointer-events:auto}#hpop b{font-family:"Cormorant Garamond",serif;font-size:19px;color:#7d0f0a}#hpop p{margin:4px 0 0;font-size:14px;line-height:1.45}
 .inp::placeholder,textarea::placeholder,input::placeholder{color:rgba(201,176,138,.45);font-style:italic}
+#cover .drips,#cover .drops{display:none!important}
+#cover .bloodfx{position:absolute;inset:0;z-index:2;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+#cover .bloodfx.stain{z-index:1;mix-blend-mode:multiply;filter:none;opacity:.9}
