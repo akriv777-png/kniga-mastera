@@ -320,3 +320,6 @@ body:has(#sheet.open) #kdock,body:has(.as-box.on) #kdock{display:none}
 #kdock.kd-peek{transform:translateX(calc(100% + 2px));opacity:.6}
 #kdock.kd-peek::before{content:'';position:absolute;left:-12px;top:50%;width:6px;height:44px;margin-top:-22px;border-radius:3px;background:rgba(196,161,90,.7);box-shadow:0 0 8px rgba(0,0,0,.6)}
 #kdock.kd-peek{pointer-events:auto}
+
+#lootOut .lt{contain:layout paint}
+#lootOut{overflow-anchor:none}
