@@ -1,0 +1,20 @@
+/* Книга Игрока: элементы листа героя в стиле гримуара (общие style.css + fx.css) */
+.pbk h3{font:600 20px/1.2 'Cormorant Garamond',CG,Georgia,serif;color:var(--gold,#d9b46a);margin:18px 2px 8px;letter-spacing:.3px}
+.pbk .card{margin-bottom:10px}.pbk .muted{color:var(--tx2,#b9a99a);font-size:13.5px}
+.pbk .inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(10,6,5,.7);color:var(--tx,#eee);padding:10px 12px;font-size:16px;font-family:inherit}
+.pbk textarea.inp{min-height:140px;resize:vertical;background:linear-gradient(rgba(233,214,170,.06),rgba(233,214,170,.02))}
+.pbk .hp{display:flex;align-items:center;gap:12px}.pbk .hp .big{font:700 52px/1 'Cormorant Garamond',Georgia,serif;color:#f1e4c8;text-shadow:0 0 18px rgba(212,42,34,.45)}.pbk .hp small{color:var(--tx2);font-size:13px}
+.pbk .bar{height:9px;border-radius:5px;background:rgba(0,0,0,.5);overflow:hidden;margin-top:8px;border:1px solid rgba(212,42,34,.25)}.pbk .bar i{display:block;height:100%;background:linear-gradient(90deg,#6e0c08,#d42a22);box-shadow:0 0 10px #d42a22}
+.pbk .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.pbk .stats div,.pbk .kv div{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 4px}
+.pbk .stats b{display:block;font:700 26px/1.1 'Cormorant Garamond',Georgia,serif;color:#f1e4c8}.pbk .stats small,.pbk .kv small{display:block;color:var(--tx2);font-size:11.5px;letter-spacing:.5px}
+.pbk .kv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}.pbk .kv b{font:700 20px 'Cormorant Garamond',Georgia,serif;color:#f1e4c8}
+.pbk .chip{display:inline-flex;margin:3px}.pbk .it{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(196,161,90,.12)}.pbk .it:last-child{border:0}.pbk .it .t{font-weight:600}.pbk .it .m{color:var(--tx2);font-size:13px}
+.pbk .slots{display:flex;gap:6px;flex-wrap:wrap}.pip{width:30px;height:30px;border-radius:50%;border:1.5px solid #d42a22;background:radial-gradient(#d42a22,#6e0c08);box-shadow:0 0 8px rgba(212,42,34,.5)}.pip.used{background:transparent;box-shadow:none;opacity:.5}
+.pbk .soon{font:italic 16px 'Cormorant Garamond',Georgia,serif;color:var(--gold,#d9b46a)}.pbk .req{border-left:3px solid #d42a22}
+.pbk .btn{justify-content:center}.pbk .btn.ac{background:linear-gradient(180deg,#b8913f,#7a5a1e);color:#fff;border-color:transparent}
+.pbk .init div{display:flex;gap:10px;padding:8px;border-radius:10px}.pbk .init .cur{background:rgba(212,42,34,.18);border:1px solid rgba(212,42,34,.4)}
+#mapc{width:100%;border-radius:12px;border:1px solid var(--line);touch-action:none}
+.sig{max-width:100%}
+#link.lk{position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:45;width:42px;height:42px;border-radius:50%;border:1px solid #c4a15a;background:radial-gradient(#2a120c,#0e0706);color:#f0d68a;font-size:20px}#link.lk.on{color:#ff5a4c;box-shadow:0 0 14px rgba(212,42,34,.7)}
+body:has(#sheet.open) #link{display:none}
+#sheetPage h3{font:600 22px 'Cormorant Garamond',Georgia,serif;color:var(--gold,#d9b46a)}#sheetPage .inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(10,6,5,.7);color:#eee;padding:10px;font-size:16px}

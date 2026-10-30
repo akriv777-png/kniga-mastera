@@ -1,18 +1,51 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
-<title>Книга Игрока</title><meta name="theme-color" content="#0b0a12">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Книга Игрока">
-<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="img/apple-touch-icon.png"><link rel="icon" href="img/icon-192.png">
-<link rel="stylesheet" href="p.css">
-</head><body>
-<header id="top"><div class="ttl"><b>Книга Игрока</b><small id="sub">лист героя</small></div><button id="link" class="lk" aria-label="Связь со столом">◌</button></header>
-<main id="page"></main>
-<nav id="nav"></nav>
-<div id="sheet"><div class="bg"></div><div class="sh"><div class="grab"></div><div id="shc"></div></div></div>
-<div id="toast"></div>
-<script src="pdata.js"></script>
+<title>Книга Игрока</title>
+<meta name="theme-color" content="#120907">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Книга Игрока">
+<meta name="description" content="Помощник Мастера Подземелий для «Подземелий и драконов»">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" href="img/icon-192.png">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../fx.css">
+<link rel="stylesheet" href="p2.css">
+</head>
+<body>
+<div id="app">
+  <div id="book">
+    <div class="page" id="page"></div>
+  </div>
+  <div id="gutter"></div>
+  <div id="candle"></div>
+  <nav id="ribbons"></nav>
+  <div id="sheet"><div class="bg"></div><div class="sh"><div class="grab"></div><button class="x" aria-label="Закрыть">✕</button><div class="page" id="sheetPage"></div></div></div>
+  <div id="toast"></div>
+  <button id="link" class="lk" aria-label="Связь со столом">◌</button>
+  <div id="cover">
+    <div class="face">
+      <div class="glow"></div>
+      <div class="embers"></div>
+      <div class="ttl">Книга<br>Игрока<small>гримуар искателя приключений</small></div>
+      <div class="tap">коснись, чтобы открыть</div>
+    </div>
+    <div class="inside"></div>
+  </div>
+</div>
+<script>window.KM_PLAYER=1</script>
+<script src="pdata.js"></script><script>window.DATA={monsters:[],spells:PDATA.spells,items:PDATA.items}</script>
+<script src="../app.js"></script>
+<script src="../fx.js"></script>
+<script src="../magic.js"></script><script>window.npcSigil=()=>""</script><script src="../ink.js"></script>
+<script src="../webgl.js"></script>
 <script src="player.js"></script>
 <script src="../vendor/peerjs.min.js"></script>
 <script src="sync.js"></script>
+<script src="../blood.js"></script>
 </body></html>

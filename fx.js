@@ -55,7 +55,7 @@ KM.settings=openSettings;
 /* cover: blinking eye following touch */
 (function(){const cv=$('#cover');if(!cv)return;const f=$('.face',cv);
  f.insertAdjacentHTML('beforeend',`<svg class="eyefx" viewBox="0 0 720 1280" preserveAspectRatio="xMidYMid slice"><defs><clipPath id="eyeC"><path d="M268 728Q320 664 377 664Q440 664 488 728Q440 792 377 794Q318 792 268 728z"/></clipPath><radialGradient id="scl"><stop offset="0" stop-color="#b98468"/><stop offset=".55" stop-color="#a06a52" stop-opacity=".9"/><stop offset="1" stop-color="#5a1a10" stop-opacity="0"/></radialGradient></defs>
- <g clip-path="url(#eyeC)"><ellipse cx="377" cy="727" rx="46" ry="46" fill="url(#scl)"/><image id="irisI" href="img/iris.png" x="337" y="687" width="80" height="80"/>
+ <g clip-path="url(#eyeC)"><ellipse cx="377" cy="727" rx="46" ry="46" fill="url(#scl)"/><image id="irisI" href="${window.KM_PLAYER?'../':''}img/iris.png" x="337" y="687" width="80" height="80"/>
  <path class="lid" d="M258 660H498V732Q440 700 377 700Q316 700 258 732z" fill="#2a0806"/><path class="lid2" d="M258 800H498V726Q440 760 377 760Q316 760 258 726z" fill="#1d0504"/></g></svg>`);
  const ir=$('#irisI',f);let tx=0,ty=0,cx=0,cy=0;
  const mv=(x,y)=>{const r=f.getBoundingClientRect();const dx=(x-r.left)/r.width-.5,dy=(y-r.top)/r.height-.57;tx=Math.max(-1,Math.min(1,dx*2.4))*26;ty=Math.max(-1,Math.min(1,dy*2.4))*12};

@@ -13,10 +13,10 @@ const fresh=()=>({id:uid(),name:'Новый герой',cls:'Воин',race:'Ч�
 if(!H){H=fresh();LS.set('hero',H)}
 const save=()=>{LS.set('hero',H);window.KP&&KP.onLocal&&KP.onLocal()};
 let tab=LS.get('tab','hero');
-const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2200)};
-function sheet(html,bind){$('#shc').innerHTML=html;$('#sheet').classList.add('open');bind&&bind($('#shc'))}
-function close(){$('#sheet').classList.remove('open')}
-$('#sheet .bg').onclick=close;
+const toast=t=>window.toast(t);
+function sheet(html,bind){openSheet(html,bind)}
+function close(){closeSheet()}
+
 const TABS=[['hero','⚔','Герой'],['bag','⛁','Сумка'],['spells','✧','Чары'],['notes','✎','Записи'],['table','◎','Стол']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="${k}" class="${k===tab?'on':''}"><i>${i}</i>${l}</button>`).join('');$$('#nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;LS.set('tab',tab);render();scrollTo(0,0)})}
 const can=f=>!window.KP||!KP.linked()||KP.can(f);
@@ -47,11 +47,12 @@ function editHero(){sheet(`<h3>Герой</h3><input class="inp" id="en" value="
  <button class="btn red" id="es2" style="width:100%;margin-top:10px">Сохранить</button>`,r=>{const tg=(arr,v)=>arr.includes(v)?arr.filter(x=>x!==v):[...arr,v];
  $$('[data-sv]',r).forEach(b=>b.onclick=()=>{H.svp=tg(H.svp,+b.dataset.sv);b.classList.toggle('on')});$$('[data-pf]',r).forEach(b=>b.onclick=()=>{H.prof=tg(H.prof,+b.dataset.pf);b.classList.toggle('on')});
  $('#es2',r).onclick=()=>{H.name=$('#en',r).value||H.name;H.race=$('#er',r).value;H.cls=$('#ec',r).value;H.lvl=Math.max(1,Math.min(20,+$('#el',r).value||1));H.ac=+$('#ea',r).value||10;H.maxhp=+$('#em',r).value||1;H.hp=Math.min(H.hp,H.maxhp);H.spd=+$('#es',r).value||9;$$('[data-st]',r).forEach(i=>H.st[+i.dataset.st]=+i.value||10);save();close();render()}})}
+function bagSorted(){const k=LS.get('bs','');const a=H.inv.slice();if(k==='n')a.sort((x,y)=>x.n.localeCompare(y.n,'ru'));if(k==='w')a.sort((x,y)=>(y.w||0)*(y.q||1)-(x.w||0)*(x.q||1));if(k==='q')a.sort((x,y)=>(y.q||1)-(x.q||1));return a}
 function rBag(){const w=H.inv.reduce((s,x)=>s+(x.w||0)*(x.q||1),0);return `<div class="card"><div class="row">${Object.keys(H.coins).map(k=>`<div style="flex:1;text-align:center" data-coin="${k}"><b style="font-size:20px">${H.coins[k]}</b><div class="muted">${k}</div></div>`).join('')}</div></div>
  <div class="row"><input class="inp grow" id="iq" placeholder="Найти предмет и добавить…" style="flex:1"></div><div id="ir"></div>
- <h3>Снаряжение <span class="muted">· ${w.toFixed(1)} кг</span></h3><div class="card">${H.inv.length?H.inv.map(x=>`<div class="it"><div class="grow" data-iv="${x.id}"><div class="t">${esc(x.n)}${x.q>1?' ×'+x.q:''}</div><div class="m">${esc(x.d||'')}</div></div><button class="btn sm" data-iq="${x.id}" data-d="-1">−</button><button class="btn sm" data-iq="${x.id}" data-d="1">＋</button></div>`).join(''):'<p class="muted">Сумка пуста.</p>'}</div>
+ <h3>Снаряжение <span class="muted">· ${w.toFixed(1)} кг</span></h3><div class="chips">${[['','Как есть'],['n','А–Я'],['w','Тяжёлое'],['q','Больше штук']].map(([k,l])=>`<button class="chip${(LS.get('bs','')===k)?' on':''}" data-bs="${k}">${l}</button>`).join('')}</div><div class="card">${H.inv.length?bagSorted().map(x=>`<div class="it"><div class="grow" data-iv="${x.id}"><div class="t">${esc(x.n)}${x.q>1?' ×'+x.q:''}</div><div class="m">${esc(x.d||'')}</div></div><button class="btn sm" data-iq="${x.id}" data-d="-1">−</button><button class="btn sm" data-iq="${x.id}" data-d="1">＋</button></div>`).join(''):'<p class="muted">Сумка пуста.</p>'}</div>
  <button class="btn" id="icust" style="width:100%">＋ Свой предмет</button>`}
-function bBag(){const inp=$('#iq');inp.oninput=()=>{const q=inp.value.trim().toLowerCase();$('#ir').innerHTML=q.length<2?'':`<div class="card">${D.items.filter(i=>i.n.toLowerCase().includes(q)).slice(0,8).map(i=>`<div class="it" data-add="${i.id}"><div class="grow"><div class="t">${esc(i.n)}</div><div class="m">${esc([i.dmg,i.cost,i.rar].filter(Boolean).join(' · '))}</div></div><b>＋</b></div>`).join('')||'<p class="muted">Ничего</p>'}</div>`;$$('[data-add]').forEach(b=>b.onclick=()=>{if(!can('inv'))return toast('Сумку меняет Мастер');const i=D.items.find(x=>x.id===b.dataset.add);addItem({item:i.id,n:i.n,w:i.w||0,d:[i.dmg,i.prop].filter(Boolean).join(' · ')});inp.value='';render()})};
+function bBag(){$$('[data-bs]').forEach(b=>b.onclick=()=>{LS.set('bs',b.dataset.bs);render()});const inp=$('#iq');inp.oninput=()=>{const q=inp.value.trim().toLowerCase();$('#ir').innerHTML=q.length<2?'':`<div class="card">${D.items.filter(i=>i.n.toLowerCase().includes(q)).slice(0,8).map(i=>`<div class="it" data-add="${i.id}"><div class="grow"><div class="t">${esc(i.n)}</div><div class="m">${esc([i.dmg,i.cost,i.rar].filter(Boolean).join(' · '))}</div></div><b>＋</b></div>`).join('')||'<p class="muted">Ничего</p>'}</div>`;$$('[data-add]').forEach(b=>b.onclick=()=>{if(!can('inv'))return toast('Сумку меняет Мастер');const i=D.items.find(x=>x.id===b.dataset.add);addItem({item:i.id,n:i.n,w:i.w||0,d:[i.dmg,i.prop].filter(Boolean).join(' · ')});inp.value='';render()})};
  $$('[data-iq]').forEach(b=>b.onclick=()=>{if(!can('inv'))return toast('Сумку меняет Мастер');const x=H.inv.find(y=>y.id===b.dataset.iq);x.q=(x.q||1)+(+b.dataset.d);if(x.q<=0)H.inv=H.inv.filter(y=>y!==x);save();render()});
  $$('[data-coin]').forEach(b=>b.onclick=()=>{if(!can('inv'))return toast('Монеты меняет Мастер');const k=b.dataset.coin;sheet(`<h3>${k}</h3><input class="inp" id="cv" type="number" inputmode="numeric" style="font-size:30px;text-align:center" value="${H.coins[k]}"><button class="btn red" id="cok" style="width:100%;margin-top:10px">Сохранить</button>`,r=>{$('#cok',r).onclick=()=>{H.coins[k]=Math.max(0,+$('#cv',r).value||0);save();close();render()}})});
  $$('[data-iv]').forEach(b=>b.onclick=()=>{const x=H.inv.find(y=>y.id===b.dataset.iv);const i=D.items.find(y=>y.id===x.item);sheet(`<h3>${esc(x.n)}</h3><p>${esc(i?(i.ds||[i.sub,i.dmg,i.prop,i.cost].filter(Boolean).join(' · ')):x.d)}</p>`)});
@@ -73,8 +74,10 @@ function bNotes(){$('#nt').oninput=e=>{H.notes=e.target.value;clearTimeout(bNote
 function rTable(){return window.KP&&KP.render?KP.render():`<div class="card"><h3>Связь со столом Мастера</h3><p class="soon">Живая связь — скоро.</p><p class="muted">Пока можно передать героя Мастеру кодом.</p><button class="btn" id="exp" style="width:100%">Скопировать код героя</button><textarea class="inp" id="imp" placeholder="Вставьте код героя от Мастера" style="margin-top:8px;min-height:80px"></textarea><button class="btn ac" id="impb" style="width:100%;margin-top:6px">Загрузить героя</button></div>`}
 function bTable(){if(window.KP&&KP.bind)return KP.bind();$('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(H))));navigator.clipboard?.writeText(c).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};$('#impb').onclick=()=>{try{const v=$('#imp').value.trim().replace(/^KP1:/,'');const h=JSON.parse(decodeURIComponent(escape(atob(v))));H=Object.assign(fresh(),h);save();toast('Герой загружен');render()}catch(e){toast('Неверный код')}}}
 const RN={hero:[rHero,bHero],bag:[rBag,bBag],spells:[rSpells,bSpells],notes:[rNotes,bNotes],table:[rTable,bTable]};
-function render(){nav();$('#sub').textContent=H.name;$('#page').innerHTML=RN[tab][0]();RN[tab][1]()}
+const HD={hero:['Герой',()=>H.name+' · '+H.cls+' '+H.lvl+' ур.','pent'],bag:['Сумка',()=>'снаряжение и монеты','star'],spells:['Чары',()=>'ячейки и заклинания','eye'],notes:['Записи',()=>'дневник и послания Мастера','tri'],table:['Стол',()=>'связь с Мастером','pent']};
+window.PRN=function(i){tab=TABS[i][0];LS.set('tab',tab);const h=HD[tab];page.oninput=null;page.innerHTML=header(h[0],h[1](),h[2],i)+'<div class="pbk">'+RN[tab][0]()+'</div>';RN[tab][1]()};
+function render(){const y=page.scrollTop;PRN(S.sec);page.scrollTop=y}
 window.KPA={get H(){return H},set H(v){H=v;LS.set('hero',H)},render,save,toast,sheet,close,LS,esc,uid,$,$$,D,pb,md,fm};
-render();
+S.sec=Math.max(0,TABS.findIndex(t=>t[0]===tab));markRib();PRN(S.sec);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 }

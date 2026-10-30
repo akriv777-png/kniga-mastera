@@ -31,7 +31,7 @@ function bind(){const g=$('#sgo');if(g)g.onclick=()=>{S.code=$('#scode').value.t
  $('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(A.H))));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};
  $('#impb').onclick=()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim().replace(/^KP1:/,'')))));A.H=Object.assign(A.H,h);A.save();toast('Герой загружен');A.render()}catch(e){toast('Неверный код')}}}
 window.KP={linked:()=>live,can:f=>perm[f]&&perm[f]!=='off',render,bind,onLocal};
-$('#link').onclick=()=>{localStorage.setItem('kp_tab','"table"');location.hash='';A.render();document.querySelector('[data-tab=table]')?.click()};
+$('#link').onclick=()=>{localStorage.setItem('kp_tab','"table"');location.hash='';A.render();KM.go(4)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.auto&&!live){retry=0;connect()}});
 if(S.code&&(S.auto||q))connect();
 }
