@@ -149,3 +149,11 @@ html.calm #fxAmb,html.calm .fx-par,html.calm .inkbleed{display:none}
 .phr{padding:6px 12px;margin:4px 0;border-left:2px solid #b48a42;font-size:17px;color:#f0dcb0}
 .badge.rel-2,.badge.rel-1{background:#4a1010!important;color:#ff9a8a!important}.badge.rel1,.badge.rel2{background:#123a20!important;color:#9affb0!important}
 .lbl{display:block;font-size:12px;color:var(--tx3);margin:8px 0 3px}
+/* ink grimoire */
+.iseal{display:block;filter:none!important;opacity:.92}.card .ssig.mini,.card .nsig{mix-blend-mode:screen}
+.sp-art.inkp{border-bottom:1px solid rgba(203,180,138,.25)}.sp-art.inkp .ssig.big{filter:drop-shadow(0 0 6px rgba(0,0,0,.8))!important;animation:none}
+.ssig.big path{stroke-dasharray:1;stroke-dashoffset:1;animation:inkDraw 2.6s cubic-bezier(.6,.1,.3,1) forwards}.ssig.big g g path{animation-delay:.3s}
+@keyframes inkDraw{to{stroke-dashoffset:0}}html.calm .ssig.big path{animation:none;stroke-dashoffset:0}
+.offs,.offs *{animation-play-state:paused!important}html.paused *{animation-play-state:paused!important}
+.ring2 svg,.sp-art-ring{will-change:auto}.tabseal{width:22px;height:22px}
+.sp-plate{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
