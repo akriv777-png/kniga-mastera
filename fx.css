@@ -296,3 +296,9 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text!important;user-
 #mw,#mc,.map-wrap,.tok,.token{touch-action:none}
 .chips,.lbar,.imp-o,.shp-o,#tabbar{touch-action:pan-x pan-y;overscroll-behavior-x:contain}
 .tb-st{margin-top:8px;font-size:13px;line-height:1.5;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.05)}
+/* док инструментов: компактно, у правого края над панелью вкладок */
+#nvfab,.as-fab{display:none!important}
+#kdock{position:fixed;right:calc(8px + env(safe-area-inset-right));bottom:calc(88px + env(safe-area-inset-bottom));z-index:45;display:flex;flex-direction:column;gap:8px;align-items:center;touch-action:manipulation}
+#kdock #kdock-t,#kdock #tbfab{position:static!important;width:38px!important;height:38px!important;border-radius:50%;border:1px solid rgba(196,161,90,.5);background:radial-gradient(#2e1610,#120806);color:#e8c77a;font-size:17px;box-shadow:0 2px 10px rgba(0,0,0,.5);opacity:.88;display:flex;align-items:center;justify-content:center;padding:0}
+#kdock #tbfab b,#kdock #tbfab i{font-size:10px}
+body:has(#sheet.open) #kdock,body:has(.as-box.on) #kdock{display:none}

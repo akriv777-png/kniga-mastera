@@ -18,3 +18,5 @@
 #link.lk{position:fixed;right:58px;top:calc(14px + env(safe-area-inset-top));z-index:45;width:42px;height:42px;border-radius:50%;border:1px solid #c4a15a;background:radial-gradient(#2a120c,#0e0706);color:#f0d68a;font-size:20px}#link.lk.on{color:#ff5a4c;box-shadow:0 0 14px rgba(212,42,34,.7)}
 body:has(#sheet.open) #link{display:none}
 #sheetPage h3{font:600 22px 'Cormorant Garamond',Georgia,serif;color:var(--gold,#d9b46a)}#sheetPage .inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(10,6,5,.7);color:#eee;padding:10px;font-size:16px}
+.undob{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:99;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:#2a2118;color:#f4e9d4;box-shadow:0 8px 24px rgba(0,0,0,.35)}.undob span{flex:1}
+.jr .btn.sm{padding:4px 8px;min-width:0}
