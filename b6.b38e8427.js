@@ -122,7 +122,7 @@ window.lazyList=lazyList=function(el,items,tpl){if(!el)return og.apply(this,argu
  bar(el,k,C,s,items.length,L.length);
  const t2=x=>tpl(x).replace(/^(\s*<div class="[^"]*card[^"]*"[^>]*>)/,`$1<button class="fav${fav.includes(x.id)?' on':''}" data-fav="${esc(x.id)}" aria-label="В избранное">${fav.includes(x.id)?'★':'☆'}</button>`);
  if(!el._favb){el._favb=1;el.addEventListener('click',e=>{const b=e.target.closest('[data-fav]');if(!b)return;e.stopPropagation();e.preventDefault();const f=FV[CFG[el._k].t];const id=b.dataset.fav;const i=f.indexOf(id);i>=0?f.splice(i,1):f.push(id);sv();b.classList.toggle('on',i<0);b.textContent=i<0?'★':'☆';toast(i<0?'В избранном — всегда сверху':'Убрано из избранного')},true)}el._k=k;
- if(!L.length){el.innerHTML=`<div class="empty">Ничего не найдено.${Object.values(s.f).some(Boolean)||s.fo?' <button class="btn sm" data-lreset>Сбросить фильтры</button>':''}</div>`;const r=el.querySelector('[data-lreset]');if(r)r.onclick=()=>{s.f={};s.fo=0;sv();render()};return}
+ if(!L.length&&!window.KM_core&&/spList|itList/.test(el.id)){el.innerHTML='<div class="empty km-ld">Загружаю книгу…</div>';return} if(!L.length){el.innerHTML=`<div class="empty">Ничего не найдено.${Object.values(s.f).some(Boolean)||s.fo?' <button class="btn sm" data-lreset>Сбросить фильтры</button>':''}</div>`;const r=el.querySelector('[data-lreset]');if(r)r.onclick=()=>{s.f={};s.fo=0;sv();render()};return}
  return og.call(this,el,L,t2)};
 function bar(el,k,C,s,tot,n){let b=el.previousElementSibling;if(!b||!b.classList.contains('lbar')){b=document.createElement('div');b.className='lbar';el.before(b)}
  const nf=Object.values(s.f).filter(Boolean).length;const sl=(C.sorts.find(x=>x[0]===s.s)||['','Как в книге'])[1];
