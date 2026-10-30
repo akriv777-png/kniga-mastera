@@ -321,3 +321,5 @@ html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)
 .cb-top{gap:6px}.cb-top>button{flex:1 1 auto;min-width:44px;padding-left:6px;padding-right:6px}.cb-top .cb-rd{flex:0 0 auto}
 #page .hq::after{inset:-14px}
 .sw-ctl button{position:relative}.sw-ctl button::after{content:'';position:absolute;inset:-8px}
+
+.inv-r .chip.att{padding:2px 7px;font-size:12px;min-height:0;margin-left:4px}.inv-r .chip.att.on{color:#ffd36a;border-color:#d6b26a;box-shadow:0 0 6px rgba(214,178,106,.5)}.att-n{color:#e8d3a2;font-weight:600}.att-n.over{color:#ff6b5b}

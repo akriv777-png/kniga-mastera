@@ -106,7 +106,7 @@ $('.bg',sheet).onclick=closeSheet;$('.x',sheet).onclick=closeSheet;
 /* ---------- helpers ---------- */
 function header(title,sub,sig='pent',gi=0){return `<div class="ph">${SIG[sig]}<h1><span class="cap">${esc(title[0])}</span>${esc(title.slice(1))}</h1><div class="sub">${esc(sub)}</div></div>${glyphs(gi)}`}
 const searchBox=(id,ph,v)=>`<label class="search"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg><input id="${id}" type="search" placeholder="${ph}" value="${esc(v)}" autocomplete="off"></label>`;
-const chips=(name,opts,cur)=>`<div class="chips" data-chips="${name}">${opts.map(([v,l])=>`<button class="chip${String(cur)===String(v)?' on':''}" data-v="${esc(v)}">${esc(l)}</button>`).join('')}</div>`;
+const chips=(name,opts,cur)=>`<div class="chips" data-chips="${name}">${opts.filter((o,i,a)=>a.findIndex(z=>String(z[1]).trim().toLowerCase()===String(o[1]).trim().toLowerCase())===i).map(([v,l])=>`<button class="chip${String(cur)===String(v)?' on':''}" data-v="${esc(v)}">${esc(l)}</button>`).join('')}</div>`;
 function bindChips(root,cb){$$('[data-chips]',root).forEach(c=>c.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;c.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));try{navigator.vibrate&&navigator.vibrate(5)}catch(_){}cb(c.dataset.chips,b.dataset.v)}))}
 function bindSearch(id,cb){const i=$('#'+id);if(!i)return;let t;i.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>cb(i.value.trim().toLowerCase()),120)})}
 function lazyList(container,items,renderItem){let n=0;const step=40;const sentinel=document.createElement('div');sentinel.className='more';const key=S.sec+':'+(container.id||container.className)+':'+items.length;lazyList.mem=lazyList.mem||{};
@@ -171,6 +171,7 @@ function editNpc(m){const isNew=!m;m=m||{id:'own-'+uid(),n:'',sz:'Средний
     const i=ownNpcs.findIndex(x=>x.id===n.id);if(i>=0)ownNpcs[i]=n;else ownNpcs.unshift(n);save();closeSheet();S.npcOnlyTop='own';rNpc();toast('НИП записан в книгу')}})}
 
 /* ---------- SPELLS ---------- */
+window.KM_clsNorm=L=>{const M={artificer:'Изобретатель',wizard:'Волшебник',sorcerer:'Чародей',cleric:'Жрец',druid:'Друид',bard:'Бард',warlock:'Колдун',paladin:'Паладин',ranger:'Следопыт'};(L||[]).forEach(s=>{if(Array.isArray(s.cl))s.cl=[...new Set(s.cl.map(c=>{c=String(c).trim();const k=c.toLowerCase();return M[k]||c.charAt(0).toUpperCase()+c.slice(1).toLowerCase()}))]})};
 const CLASSES=['Бард','Жрец','Друид','Паладин','Следопыт','Чародей','Колдун','Волшебник','Изобретатель'];
 const lvlName=l=>l===0?'Заговор':l+'-й круг';
 function rSpells(){page.innerHTML=header('Заклинания','свод чар и заговоров','star',1)+searchBox('spQ','Найти заклинание…',S.spQ)+
@@ -544,6 +545,7 @@ players.forEach(p=>{p.lvl=p.lvl||1;p.st=p.st||PRESET[p.cls]||[10,10,10,10,10,10]
   if(!p.inv.length&&!p._seeded){p._seeded=1;const seed={'Маг':['quarterstaff','dagger','component-pouch'],'Воин':['chain-mail','longsword','shield'],'Плут':['shortsword','shortbow','leather-armor','thieves-tools']}[p.cls]||[];
    seed.forEach(id=>{const it=D.items.find(x=>x.id===id);if(it)p.inv.push({id:uid(),item:it.id,n:it.n,q:1,w:it.w||0})})}});
 save();
+const attOf=x=>{const it=x.item&&D.items.find(i=>i.id===x.item);return !!(it&&it.att)};const attN=p=>p.inv.filter(x=>x.att).length;
 const invW=p=>Math.round(p.inv.reduce((a,x)=>a+(x.w||0)*x.q,0)*10)/10;
 const kg=n=>String(Math.round(n*10)/10).replace('.',',')+' кг';
 function rPcs(){page.oninput=null;
@@ -557,8 +559,8 @@ function rPcs(){page.oninput=null;
     <button class="shield gold" data-purse="${p.id}" style="font:inherit"><small>КОШЕЛЁК</small><b style="font-size:20px;color:#f0c64a">${KM.coin.fmtTot(p)}</b><i style="display:block;font-size:10px;opacity:.75;font-style:normal">${KM.coin.mini(p)}</i></button></div>
    <div class="abil hero-ab">${p.st.map((v,j)=>`<div><small>${ABN[j]}</small><input data-st="${j}" type="number" inputmode="numeric" value="${v}"><i>${fmod(mod(v))}</i></div>`).join('')}</div>
    ${KM.uses?KM.uses.row(p):''}<div class="conds-row">${p.conds.map(c=>`<span class="cond">${esc(c)}</span>`).join('')}<button class="chip" data-conds>${p.conds.length?'✎':'＋ Состояние'}</button></div>
-   <div class="inv-h"><b>Инвентарь</b><span>${p.inv.length} предм. · ${kg(invW(p))}</span><button class="btn sm" data-addinv>＋</button></div>
-   <div class="inv">${p.inv.map((x,k)=>`<div class="inv-r" data-k="${k}"><span class="nm" data-open>${esc(x.n)}</span><span class="w">${x.w?kg(x.w*x.q):''}</span><div class="q"><button data-q="-1">−</button><b>${x.q}</b><button data-q="1">+</button></div><button class="rm" data-rm>✕</button></div>`).join('')||'<div class="muted" style="font-size:13px;padding:6px 2px">Пусто. Добавь из «Лута» или кнопкой ＋</div>'}</div>
+   <div class="inv-h"><b>Инвентарь</b><span>${p.inv.length} предм. · ${kg(invW(p))}${p.inv.some(attOf)?` · <b class="att-n${attN(p)>3?' over':''}" title="Настройка: короткий отдых (1 ч) рядом с предметом — и его магия работает на вас. Одновременно можно быть настроенным максимум на 3 предмета." data-atth>✧ Настроено ${attN(p)}/3</b>`:''}</span><button class="btn sm" data-addinv>＋</button></div>
+   <div class="inv">${p.inv.map((x,k)=>`<div class="inv-r" data-k="${k}"><span class="nm" data-open>${esc(x.n)}</span>${attOf(x)?`<button class="chip att${x.att?' on':''}" data-att title="${x.att?'Настроен — нажмите, чтобы снять':'Настроиться (макс. 3)'}">✧${x.att?' Настроен':''}</button>`:''}<span class="w">${x.w?kg(x.w*x.q):''}</span><div class="q"><button data-q="-1">−</button><b>${x.q}</b><button data-q="1">+</button></div><button class="rm" data-rm>✕</button></div>`).join('')||'<div class="muted" style="font-size:13px;padding:6px 2px">Пусто. Добавь из «Лута» или кнопкой ＋</div>'}</div>
    <details class="pnotes"><summary>Заметки</summary><textarea class="inp" data-k="notes">${esc(p.notes||'')}</textarea></details>
    ${players.length>1?'<button class="btn sm dark" data-del style="margin-top:8px">Удалить героя</button>':''}</div>`).join('')+`<button class="btn red" id="addPc">＋ Новый герой</button><div class="row" style="gap:8px;margin-top:8px"><button class="btn grow" id="bldPc">🧙 Мастер создания</button><button class="btn grow" id="rndPc">🎲 Случайный</button></div><button class="btn" id="pRest" style="width:100%;margin-top:8px">⛺ Отдых отряда</button><div style="height:20px"></div>`;
   const P=e=>{const h=e.target&&e.target.closest&&e.target.closest('.hero');return h?players[+h.dataset.i]:null};
@@ -568,8 +570,8 @@ function rPcs(){page.oninput=null;
   page.onclick=e=>{const t=e.target;const h=t.closest('.hero');if(!h)return;const p=players[+h.dataset.i];
    if(t.closest('[data-conds]'))return heroConds(p);
    if(t.closest('[data-addinv]'))return pickItem(it=>{giveItem(p,it);rPcs()});
-   const r=t.closest('.inv-r');if(r){const x=p.inv[+r.dataset.k];
-    if(t.dataset.q){x.q=Math.max(1,x.q+ +t.dataset.q);save();rPcs()}else if(t.closest('[data-rm]')){const k=+r.dataset.k;p.inv.splice(k,1);save();rPcs();KM.undoToast('«'+x.n+'» убрано',()=>{p.inv.splice(k,0,x);save();rPcs()})}else if(t.closest('[data-open]')&&x.item)showItem(x.item)}
+   if(t.closest('[data-atth]'))return toast('Настройка: короткий отдых (1 ч) рядом с предметом — и его магия работает на вас. Одновременно можно быть настроенным максимум на 3 предмета.');const r=t.closest('.inv-r');if(r){const x=p.inv[+r.dataset.k];
+    if(t.dataset.q){x.q=Math.max(1,x.q+ +t.dataset.q);save();rPcs()}else if(t.closest('[data-att]')){if(!x.att&&attN(p)>=3)return toast('Уже настроено 3 предмета — сначала снимите настройку с другого');x.att=x.att?0:1;save();rPcs();try{KM.table.push(true)}catch(e){}toast(x.att?'✧ Настроен: '+x.n:'Настройка снята: '+x.n)}else if(t.closest('[data-rm]')){const k=+r.dataset.k;p.inv.splice(k,1);save();rPcs();KM.undoToast('«'+x.n+'» убрано',()=>{p.inv.splice(k,0,x);save();rPcs()})}else if(t.closest('[data-open]')&&x.item)showItem(x.item)}
    if(t.closest('[data-del]')){const i=+h.dataset.i;players.splice(i,1);save();rPcs();KM.undoToast('Герой «'+p.name+'» удалён',()=>{players.splice(i,0,p);save();rPcs()})}};
   $('#pRest').onclick=()=>KM.partyRestUI();const addB=h=>{const o=Object.assign({id:uid(),conds:[],inv:[],notes:'',pp:10,init:0,gold:0},h);o.id=uid();players.push(o);save();rPcs();page.scrollTo({top:page.scrollHeight,behavior:'smooth'});toast('Герой «'+o.name+'» добавлен')};$('#bldPc').onclick=()=>window.KMB?KMB.open(addB,{host:'dm'}):toast('Мастер создания не загружен');$('#rndPc').onclick=()=>window.KMB&&addB(KMB.random());
   $('#addPc').onclick=()=>{players.push({id:uid(),name:'Новый герой',cls:'Класс',lvl:1,hp:10,maxhp:10,ac:12,pp:10,init:0,st:[10,10,10,10,10,10],conds:[],gold:0,inv:[],notes:''});save();rPcs();page.scrollTo({top:page.scrollHeight,behavior:'smooth'})}}
