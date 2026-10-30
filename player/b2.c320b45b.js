@@ -188,8 +188,10 @@ window.PRN=function(i){tab=TABS[i][0];LS.set('tab',tab);const h=HD[tab];page.oni
 function render(){const y=page.scrollTop,h0=page.scrollHeight;PRN(S.sec);if(page.scrollHeight<h0){const sp=document.createElement('div');sp.className='rnd-sp';sp.style.height=(h0-page.scrollHeight)+'px';page.appendChild(sp)}page.scrollTop=y;const fix=()=>{if(Math.abs(page.scrollTop-y)>2)page.scrollTop=y};requestAnimationFrame(fix);clearTimeout(render.t);render.t=setTimeout(()=>{page.querySelectorAll('.rnd-sp').forEach(x=>x.remove());fix();requestAnimationFrame(fix)},450)}
 window.KPA={get H(){return H},set H(v){H=v;LS.set('hero',H)},render,save,toast,sheet,close,LS,esc,uid,$,$$,D,pb,md,fm};
 S.sec=Math.max(0,TABS.findIndex(t=>t[0]===tab));markRib();PRN(S.sec);
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}})}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;try{toast('Обновлено — перезапуск')}catch(e){}setTimeout(()=>location.reload(),900)}});navigator.serviceWorker.ready.then(r=>{const u=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)u()});setInterval(u,30*60e3)})}
 }
 
 ;document.addEventListener('click',e=>{const c=e.target.closest('[data-ho]');if(!c||!window.KMH)return;const ho=KPA.LS.get('handouts',[]),h=ho[+c.dataset.ho];if(h){KMH.open(h);KPA.LS.set('hoNew',KPA.LS.get('hoNew',[]).filter(x=>x!==+c.dataset.ho));c.classList.remove('hx-new')}});
 ;addEventListener('pdata',()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(document.querySelector('.sheet.show,#sheet.show'))return;try{render()}catch(e){}});
+
+window.KM_ver=()=>caches.keys().then(k=>(k.filter(x=>/^k[mp]-/.test(x)).pop()||'—').replace(/^k[mp]-/,''));

@@ -97,8 +97,8 @@ function go(i,dirHint){
 
 /* ---------- sheet ---------- */
 const sheet=$('#sheet'),sp=$('#sheetPage');
-function openSheet(html,after){clearTimeout(closeSheet.t);const ot=(sp.querySelector('.sb-title,h3')||{}).textContent,oy=sp.scrollTop,was=sheet.classList.contains('show');sp.innerHTML=html;const nt=(sp.querySelector('.sb-title,h3')||{}).textContent;sp.scrollTop=was&&ot&&ot===nt?oy:0;sheet.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>sheet.classList.add('show')));after&&after(sp)}
-function closeSheet(){sheet.classList.remove('show');clearTimeout(closeSheet.t);closeSheet.t=setTimeout(()=>sheet.classList.remove('open'),420)}
+function openSheet(html,after){clearTimeout(closeSheet.t);window.KM_sheetRet=null;const ot=(sp.querySelector('.sb-title,h3')||{}).textContent,oy=sp.scrollTop,was=sheet.classList.contains('show');sp.innerHTML=html;const nt=(sp.querySelector('.sb-title,h3')||{}).textContent;sp.scrollTop=was&&ot&&ot===nt?oy:0;{const kv=sp.querySelector('#kmver');kv&&window.KM_ver&&KM_ver().then(v=>kv.textContent='версия '+v)}sheet.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>sheet.classList.add('show')));after&&after(sp)}
+function closeSheet(){const RT=window.KM_sheetRet;if(RT){window.KM_sheetRet=null;RT();return}sheet.classList.remove('show');clearTimeout(closeSheet.t);closeSheet.t=setTimeout(()=>sheet.classList.remove('open'),420)}
 $('.bg',sheet).onclick=closeSheet;$('.x',sheet).onclick=closeSheet;
 (function(){let y0,ok;const sh=$('.sh',sheet);sh.addEventListener('touchstart',e=>{ok=sp.scrollTop<=0;y0=e.touches[0].clientY},{passive:true});
  sh.addEventListener('touchend',e=>{if(ok&&e.changedTouches[0].clientY-y0>110)closeSheet()},{passive:true})})();
@@ -393,9 +393,11 @@ window.__boot=()=>{markRib();render()};
  $('.face',cv).append(dr,ds);for(let i=0;i<18;i++){const e=document.createElement('i');e.style.left=Math.random()*100+'%';e.style.setProperty('--dx',(Math.random()*80-40)+'px');e.style.animationDuration=(5+Math.random()*6)+'s';e.style.animationDelay=(Math.random()*6)+'s';em.append(e)}
  const open=()=>{if(cv.classList.contains('open'))return;cv.classList.add('open');setTimeout(()=>cv.classList.add('gone'),1700)};
  cv.addEventListener('click',open);if(sessionStorage.getItem('kmOpened')){cv.classList.add('gone')}cv.addEventListener('transitionend',()=>sessionStorage.setItem('kmOpened',1))})();
-if(!window.KM_PLAYER&&'serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}})}
+if(!window.KM_PLAYER&&'serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;try{toast('Обновлено — перезапуск')}catch(e){}setTimeout(()=>location.reload(),900)}});navigator.serviceWorker.ready.then(r=>{const u=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)u()});setInterval(u,30*60e3)})}
 window.KM={go,showMon,showSpell,showItem,closeSheet,addCombatant,S,get players(){return players}};
 ;addEventListener('kmpacks',()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){try{a.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}return}if(['spells','items','npc','map'].includes((SECTIONS[S.sec]||[])[0])&&!document.querySelector('#sheet.show,.sheet.show'))try{render()}catch(e){}});
+
+window.KM_ver=()=>caches.keys().then(k=>(k.filter(x=>/^k[mp]-/.test(x)).pop()||'—').replace(/^k[mp]-/,''));
 
 ;
 /* session.js */
@@ -806,7 +808,7 @@ const _doRoll=doRoll;doRoll=function(){_doRoll();setTimeout(()=>{const r=$('#res
 KM.summon=summon;KM.crack=crack;
 /* settings */
 function openSettings(){const T=(k,l,d)=>`<div class="set-row"><div><b>${l}</b><div class="muted" style="font-size:12.5px">${d}</div></div><button class="tog${FXS[k]?' on':''}" data-k="${k}" aria-label="${l}"></button></div>`;
- openSheet(`<div class="sb-title" data-noshow>Настройки</div><div class="sb-sub">Анимации и эффекты</div>${T('calm','Меньше анимации','Отключает пульсации, частицы, переходы чернил и вспышки кубиков. Система «уменьшить движение» учитывается автоматически.')}${T('amb','Угли и пепел','Летящие искры и пыль на фоне страниц.')}
+ openSheet(`<div class="sb-title" data-noshow>Настройки</div><div class="sb-sub">Анимации и эффекты · <span id="kmver">версия …</span></div>${T('calm','Меньше анимации','Отключает пульсации, частицы, переходы чернил и вспышки кубиков. Система «уменьшить движение» учитывается автоматически.')}${T('amb','Угли и пепел','Летящие искры и пыль на фоне страниц.')}
  <div class="muted" style="font-size:12px;margin-top:14px">${RM.matches?'В системе включено «Уменьшение движения» — анимации уже приглушены.':''} Все данные хранятся только на этом устройстве (в памяти браузера).</div>`,r=>{$$('.tog',r).forEach(b=>b.onclick=()=>{const k=b.dataset.k;FXS[k]=!FXS[k];LS.set('fx',FXS);b.classList.toggle('on',FXS[k]);applyFx()})})}
 KM.settings=openSettings;
 /* cover: blinking eye following touch */
