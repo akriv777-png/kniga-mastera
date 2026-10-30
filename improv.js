@@ -27,7 +27,7 @@ function enc(ter){const P=party(),L=avgL(),budget=P.reduce((a,x)=>a+BUD[Math.max
  let n=1;for(let k=6;k>=1;k--){const mul=k==1?1:k==2?1.5:k<=6?2:2.5;if(m.xp*k*mul<=budget*1.1){n=k;break}}return{m,n,budget,adj:Math.round(m.xp*n*(n==1?1:n==2?1.5:2))}}
 let ST={ter:'Лес',race:'Человек'};try{Object.assign(ST,JSON.parse(localStorage['km.imp']||'{}'))}catch(e){}
 const sv=()=>localStorage['km.imp']=JSON.stringify(ST);
-const K=[['name','✒','Имя'],['npc','☺','Нрав'],['tav','🍺','Таверна'],['rum','👂','Слух'],['hook','⚑','Зацепка'],['enc','⚔','Встреча'],['trap','⚠','Ловушка'],['twist','↯','Поворот'],['riddle','?','Загадка'],['tbl','🎲','Таблицы'],['ho','📜','Раздатка'],['os','📖','Ваншоты'],['shop','⚖','Лавки']];
+const K=[['name','✒','Имя'],['npc','☺','Нрав'],['tav','🍺','Таверна'],['rum','👂','Слух'],['hook','⚑','Зацепка'],['enc','⚔','Встреча'],['trap','⚠','Ловушка'],['twist','↯','Поворот'],['riddle','?','Загадка'],['tbl','🎲','Таблицы'],['ho','📜','Раздатка'],['os','📖','Ваншоты'],['camp','🏰','Кампании'],['shop','⚖','Лавки']];
 let last=null;
 function gen(k){const L=avgL();const tier=L<=4?0:L<=10?1:L<=16?2:3;
  switch(k){
@@ -60,7 +60,7 @@ function bind(r,k){r.onclick=e=>{const b=e.target.closest('button');if(!b)return
  else if(b.hasAttribute('data-note')&&last.note){const g=last;notes.unshift({id:uid(),title:g.note[0],text:(g.note[1]||g.b||''),tag:k==='name'||k==='npc'?'НИП':k==='tav'?'Место':k==='hook'?'Квест':k==='rum'?'Тайна':'Сцена',t:Date.now()});save();toast('Сохранено в заметки');b.disabled=true;b.textContent='✓ В заметках'}}}
 function panel(){if(S.sec!==0)return;let p=document.getElementById('impp');if(p&&p.parentNode===page)return;p=document.createElement('div');p.id='impp';p.className='card imp-p';
  p.innerHTML=`<div class="imp-h"><b>✦ Импровизатор</b><span class="m">игроки ушли не туда? — один тап</span></div><div class="imp-g">${K.map(([k,i,t])=>`<button data-imp="${k}"><i>${i}</i>${t}</button>`).join('')}</div>`;
- p.onclick=e=>{const b=e.target.closest('[data-imp]');if(!b)return;if(b.dataset.imp==='shop')return KM.shops.list();if(b.dataset.imp==='ho')return KM.hoTpl();if(b.dataset.imp==='os')return KM.oneshots();show(b.dataset.imp)};
+ p.onclick=e=>{const b=e.target.closest('[data-imp]');if(!b)return;if(b.dataset.imp==='shop')return KM.shops.list();if(b.dataset.imp==='ho')return KM.hoTpl();if(b.dataset.imp==='os')return KM.oneshots();if(b.dataset.imp==='camp')return KM.camps();show(b.dataset.imp)};
  const after=page.querySelector('#nvnow')||page.querySelector(':scope>.ph');after&&after.parentNode===page?after.after(p):page.prepend(p)}
 const og=KM.go;KM.go=function(){const r=og.apply(this,arguments);setTimeout(panel,60);return r};
 setTimeout(panel,300);new MutationObserver(()=>{if(S.sec===0&&!document.getElementById('impp'))panel()}).observe(page,{childList:true});

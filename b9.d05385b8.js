@@ -456,7 +456,7 @@ function enc(ter){const P=party(),L=avgL(),budget=P.reduce((a,x)=>a+BUD[Math.max
  let n=1;for(let k=6;k>=1;k--){const mul=k==1?1:k==2?1.5:k<=6?2:2.5;if(m.xp*k*mul<=budget*1.1){n=k;break}}return{m,n,budget,adj:Math.round(m.xp*n*(n==1?1:n==2?1.5:2))}}
 let ST={ter:'Лес',race:'Человек'};try{Object.assign(ST,JSON.parse(localStorage['km.imp']||'{}'))}catch(e){}
 const sv=()=>localStorage['km.imp']=JSON.stringify(ST);
-const K=[['name','✒','Имя'],['npc','☺','Нрав'],['tav','🍺','Таверна'],['rum','👂','Слух'],['hook','⚑','Зацепка'],['enc','⚔','Встреча'],['trap','⚠','Ловушка'],['twist','↯','Поворот'],['riddle','?','Загадка'],['tbl','🎲','Таблицы'],['ho','📜','Раздатка'],['os','📖','Ваншоты'],['shop','⚖','Лавки']];
+const K=[['name','✒','Имя'],['npc','☺','Нрав'],['tav','🍺','Таверна'],['rum','👂','Слух'],['hook','⚑','Зацепка'],['enc','⚔','Встреча'],['trap','⚠','Ловушка'],['twist','↯','Поворот'],['riddle','?','Загадка'],['tbl','🎲','Таблицы'],['ho','📜','Раздатка'],['os','📖','Ваншоты'],['camp','🏰','Кампании'],['shop','⚖','Лавки']];
 let last=null;
 function gen(k){const L=avgL();const tier=L<=4?0:L<=10?1:L<=16?2:3;
  switch(k){
@@ -489,7 +489,7 @@ function bind(r,k){r.onclick=e=>{const b=e.target.closest('button');if(!b)return
  else if(b.hasAttribute('data-note')&&last.note){const g=last;notes.unshift({id:uid(),title:g.note[0],text:(g.note[1]||g.b||''),tag:k==='name'||k==='npc'?'НИП':k==='tav'?'Место':k==='hook'?'Квест':k==='rum'?'Тайна':'Сцена',t:Date.now()});save();toast('Сохранено в заметки');b.disabled=true;b.textContent='✓ В заметках'}}}
 function panel(){if(S.sec!==0)return;let p=document.getElementById('impp');if(p&&p.parentNode===page)return;p=document.createElement('div');p.id='impp';p.className='card imp-p';
  p.innerHTML=`<div class="imp-h"><b>✦ Импровизатор</b><span class="m">игроки ушли не туда? — один тап</span></div><div class="imp-g">${K.map(([k,i,t])=>`<button data-imp="${k}"><i>${i}</i>${t}</button>`).join('')}</div>`;
- p.onclick=e=>{const b=e.target.closest('[data-imp]');if(!b)return;if(b.dataset.imp==='shop')return KM.shops.list();if(b.dataset.imp==='ho')return KM.hoTpl();if(b.dataset.imp==='os')return KM.oneshots();show(b.dataset.imp)};
+ p.onclick=e=>{const b=e.target.closest('[data-imp]');if(!b)return;if(b.dataset.imp==='shop')return KM.shops.list();if(b.dataset.imp==='ho')return KM.hoTpl();if(b.dataset.imp==='os')return KM.oneshots();if(b.dataset.imp==='camp')return KM.camps();show(b.dataset.imp)};
  const after=page.querySelector('#nvnow')||page.querySelector(':scope>.ph');after&&after.parentNode===page?after.after(p):page.prepend(p)}
 const og=KM.go;KM.go=function(){const r=og.apply(this,arguments);setTimeout(panel,60);return r};
 setTimeout(panel,300);new MutationObserver(()=>{if(S.sec===0&&!document.getElementById('impp'))panel()}).observe(page,{childList:true});
@@ -520,11 +520,85 @@ const lv=o=>{const m=String(o.lvl||'1').match(/\d+/g)||[1];return[+m[0],+(m[1]||
 const B=[['','Все'],['1','1–4'],['5','5–10'],['11','11+']];let F=LS.get('osF','');
 const fit=o=>{if(!F)return true;const[a,b]=lv(o),lo=+F,hi=F==='1'?4:F==='5'?10:20;return a<=hi&&b>=lo};
 function list(){const A=L().map((o,i)=>[o,i]).filter(([o])=>fit(o));openSheet(`<div class="sb-title">Ваншоты</div><div class="muted" style="font-size:12.5px">Готовые приключения на один вечер. Выберите — и нажмите «Начать».</div><div class="chips" style="margin:8px 0">${B.map(([v,t])=>`<button class="chip${F===v?' on':''}" data-osf="${v}">${t}</button>`).join('')}</div><button class="btn red" id="osR" style="width:100%;min-height:48px">🎲 Случайный ваншот</button><div class="list" style="margin-top:10px">${A.map(([o,i])=>`<div class="card" data-os="${i}"><div class="grow"><div class="t">${E(o.n)}</div><div class="m">Уровни ${E(o.lvl)} · ${E(String(o.hook).slice(0,80))}…</div></div></div>`).join('')||'<div class="muted">Нет ваншотов для этих уровней</div>'}</div>`,r=>{r.onclick=e=>{const f=e.target.closest('[data-osf]');if(f){F=f.dataset.osf;LS.set('osF',F);return list()}if(e.target.closest('#osR')){if(A.length)one(A[Math.floor(Math.random()*A.length)][1]);return}const c=e.target.closest('[data-os]');if(c)one(+c.dataset.os)}})}
-function one(i){const o=L()[i];if(!o)return;openSheet(`<div class="sb-title" data-noshow>${E(o.n)}</div><div class="muted">Уровни ${E(o.lvl)}</div><h3>Зацепка</h3><p>${E(o.hook)}</p><h3>Сцены</h3><ol>${(o.scenes||[]).map(s=>`<li>${E(s)}</li>`).join('')}</ol><h3>Поворот <small class="muted">(только для Мастера)</small></h3><p>${E(o.twist)}</p><h3>Награда</h3><p>${E(o.reward)}</p><div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="osB">← Список</button><button class="btn" id="osP">📣 Зацепку игрокам</button><button class="btn red" id="osS" style="width:100%;min-height:50px">▶ Начать: создать заметки</button></div>`,r=>{
- r.querySelector('#osB').onclick=list;
+function one(i){const o=L()[i];if(!o)return;openSheet(`<div class="sb-title" data-noshow>${E(o.n)}</div><div class="muted">Уровни ${E(o.lvl)}</div><h3>Зацепка</h3><p>${E(o.hook)}</p><h3>Сцены</h3><ol>${(o.scenes||[]).map(s=>`<li>${E(s)}</li>`).join('')}</ol><h3>Поворот <small class="muted">(только для Мастера)</small></h3><p>${E(o.twist)}</p><h3>Награда</h3><p>${E(o.reward)}</p><div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="osB">← Список</button><button class="btn" id="osP">📣 Зацепку игрокам</button><button class="btn" id="osM">🗺 Карта</button><button class="btn red" id="osS" style="width:100%;min-height:50px">▶ Начать: создать заметки</button></div>`,r=>{
+ r.querySelector('#osB').onclick=list;r.querySelector('#osM').onclick=()=>KM.osMap&&KM.osMap(o,i);
  r.querySelector('#osP').onclick=()=>KM.showPlayers&&KM.showPlayers({i:'📖',n:o.n,t:o.hook});
  r.querySelector('#osS').onclick=()=>{const t=Date.now(),mk=(title,text,tag,k)=>({id:uid(),title,text,tag,t:t-k});const add=[mk('Ваншот: '+o.n,`Уровни ${o.lvl}\n\nЗацепка: ${o.hook}\n\nНаграда: ${o.reward}`,'Квест',0),...(o.scenes||[]).map((s,k)=>mk(`${o.n} — сцена ${k+1}`,s,'Сцена',k+1)),mk(`${o.n} — поворот (тайна)`,o.twist,'Тайна',9)];const before=notes.slice();notes.unshift(...add);save();closeSheet();KM.undoToast?KM.undoToast(`Создано заметок: ${add.length}`,()=>{notes.length=0;notes.push(...before);save();render()}):toast('Заметки созданы')}})}
 KM.oneshots=list;})();
+
+;
+/* campaign.js */
+'use strict';
+/* «Кампании»: готовые кампании (data/camp*.js грузятся лениво), прогресс по главам, карты, встречи → трекер */
+(()=>{const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const FILES=['data/camp1.js','data/camp2.js','data/camp3.js'];let ld=null;
+function load(){if(window.CAMPAIGNS&&window.CAMPAIGNS.length>=FILES.length)return Promise.resolve();if(ld)return ld;window.CAMPAIGNS=window.CAMPAIGNS||[];
+ ld=Promise.all(FILES.map(f=>new Promise(r=>{if(document.querySelector(`script[data-cf="${f}"]`))return r();const s=document.createElement('script');s.src=f;s.dataset.cf=f;s.onload=s.onerror=()=>r();document.head.appendChild(s)}))).then(()=>{const o=FILES.map(f=>f.match(/camp(\d)/)[1]);CAMPAIGNS.sort((a,b)=>parseInt(a.lvl)-parseInt(b.lvl))});return ld}
+const P=id=>LS.get('camp_'+id,null),setP=(id,v)=>LS.set('camp_'+id,v);
+const mname=id=>{const m=D.monsters.find(z=>z.id===id);return m?m.n:id};
+const monL=a=>a.map(([id,n])=>`<a class="cpM" data-mon="${E(id)}">${E(mname(id))}</a>${n>1?' ×'+n:''}`).join(', ');
+const bar=(c,p)=>{const d=p?p.done.length:0,t=c.chapters.length;return`<div class="tkHp" style="height:10px;margin:6px 0 0"><i style="width:${d/t*100}%;background:#8a6a2a"></i></div><div class="m">${p?`Пройдено глав: ${d} из ${t}`:'Не начата'}</div>`};
+function list(){load().then(()=>{const A=window.CAMPAIGNS||[];openSheet(`<div class="sb-title">Кампании</div><div class="muted" style="font-size:12.5px">Готовые кампании на несколько вечеров: главы, сцены, NPC, карты, встречи и награды. Не связаны с вашими заметками — начинайте с любой.</div><div class="list" style="margin-top:10px">${A.map((c,i)=>`<div class="card" data-cp="${i}"><div class="grow"><div class="t">${E(c.n)}</div><div class="m">Уровни ${E(c.lvl)} · ${E(c.sess)} · глав: ${c.chapters.length}</div>${bar(c,P(c.id))}</div></div>`).join('')}</div>`,r=>{r.onclick=e=>{const c=e.target.closest('[data-cp]');if(c)camp(+c.dataset.cp)}})})}
+function camp(i,sy){const c=CAMPAIGNS[i];if(!c)return;const p=P(c.id);
+ openSheet(`<div class="sb-title" data-noshow>${E(c.n)}</div><div class="muted">Уровни ${E(c.lvl)} · ${E(c.sess)}</div>${bar(c,p)}
+ <h3>Завязка</h3><p>${E(c.premise)}</p>
+ <details><summary><b>Как вовлечь героев</b></summary><ul>${c.hooks.map(h=>`<li>${E(h)}</li>`).join('')}</ul></details>
+ <details><summary><b>Персонажи (${c.npcs.length})</b></summary>${c.npcs.map(n=>`<p><b>${E(n.n)}</b> <span class="muted">— ${E(n.role)}</span><br>${E(n.d)}</p>`).join('')}</details>
+ <details><summary><b>Советы новичку</b></summary><ul>${c.tips.map(h=>`<li>${E(h)}</li>`).join('')}</ul></details>
+ <details><summary><b>Финал</b> <small class="muted">(только для Мастера)</small></summary><p>${E(c.finale)}</p></details>
+ <h3>Главы</h3><div class="list">${c.chapters.map((h,k)=>`<div class="card" data-ch="${k}"><div class="grow"><div class="t">${p&&p.done.includes(k)?'✓ ':p&&p.cur===k?'▶ ':''}${k+1}. ${E(h.n)}</div><div class="m">Ур. ${h.lvl} · ${E(h.goal)}</div></div></div>`).join('')}</div>
+ <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="cpB">← Список</button><button class="btn" id="cpH">📣 Завязку игрокам</button>${p?'<button class="btn" id="cpR">Сбросить прогресс</button>':''}<button class="btn red" id="cpS" style="width:100%;min-height:50px">${p?'▶ Продолжить: глава '+((p.cur||0)+1):'▶ Начать кампанию'}</button></div>`,r=>{
+  if(sy)document.getElementById('sheetPage')&&(document.getElementById('sheetPage').scrollTop=sy);
+  r.onclick=e=>{const h=e.target.closest('[data-ch]');if(h)return chap(i,+h.dataset.ch)};
+  r.querySelector('#cpB').onclick=list;r.querySelector('#cpH').onclick=()=>KM.showPlayers&&KM.showPlayers({i:'🏰',n:c.n,t:c.premise});
+  const rs=r.querySelector('#cpR');if(rs)rs.onclick=()=>{if(confirm('Сбросить прогресс кампании?')){LS.set('camp_'+c.id,null);camp(i)}};
+  r.querySelector('#cpS').onclick=()=>{let q=P(c.id);if(!q){q={t:Date.now(),done:[],cur:0};setP(c.id,q);toast('Кампания начата')}chap(i,q.cur||0)}})}
+function chap(i,k){const c=CAMPAIGNS[i],h=c&&c.chapters[k];if(!h)return;let p=P(c.id);if(p){p.cur=k;setP(c.id,p)}const done=p&&p.done.includes(k);
+ openSheet(`<div class="sb-title" data-noshow>${k+1}. ${E(h.n)}</div><div class="muted">${E(c.n)} · уровень ${h.lvl}</div>
+ <p><b>Цель:</b> ${E(h.goal)}</p><p>${E(h.sum)}</p>
+ <h3>Сцены</h3><ol>${h.scenes.map(s=>`<li><b>${E(s.n)}.</b> ${E(s.t)}</li>`).join('')}</ol>
+ <h3>Места</h3>${h.locs.map((l,j)=>`<div class="card" style="align-items:center"><div class="grow"><div class="t">${E(l.n)}</div><div class="m">${E(l.d)}${l.mon.length?'<br>Враги: '+monL(l.mon):''}</div></div><button class="btn sm" data-map="${j}">🗺 Карта</button></div>`).join('')}
+ <h3>Встречи</h3>${h.enc.map((en,j)=>`<div class="card"><div class="grow"><div class="t">${E(en.n)}</div><div class="m">${monL(en.mon)}</div><div class="m" style="margin-top:4px">${E(en.tac)}</div></div><button class="btn sm" data-enc="${j}">⚔ В трекер</button></div>`).join('')}
+ <h3>Награда</h3><p>${E(h.loot)}</p>
+ ${h.shop?`<details><summary><b>⚖ ${E(h.shop.n)}</b></summary><ul>${h.shop.items.map(x=>`<li>${E(x)}</li>`).join('')}</ul></details>`:''}
+ ${h.handout?`<div class="card"><div class="grow"><div class="t">📜 ${E(h.handout.n)}</div><div class="m" style="font-style:italic">${E(h.handout.t)}</div></div><button class="btn sm" id="cpHo">📣 Игрокам</button></div>`:''}
+ ${h.tip?`<p class="muted" style="font-size:13px">💡 ${E(h.tip)}</p>`:''}
+ <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="cpC">← Кампания</button>${k>0?'<button class="btn" id="cpPv">‹ Пред.</button>':''}${k<c.chapters.length-1?'<button class="btn" id="cpNx">След. ›</button>':''}<button class="btn" id="cpN">📝 В заметки</button><button class="btn ${done?'':'red'}" id="cpD" style="width:100%;min-height:50px">${done?'✓ Глава пройдена (отменить)':'✓ Отметить главу пройденной'}</button></div>`,r=>{
+  r.onclick=e=>{const mo=e.target.closest('[data-mon]');if(mo){showMon(mo.dataset.mon);window.KM_sheetRet=()=>chap(i,k);return}
+   const mb=e.target.closest('[data-map]');if(mb){const l=h.locs[+mb.dataset.map];return KM.preMap('cp-'+c.id+'-'+k+'-'+mb.dataset.map,{type:l.type,W:l.W||26,H:l.H||24,dang:l.dang||40,mon:l.mon,mons:l.mon.length?1:0,name:l.n})}
+   const eb=e.target.closest('[data-enc]');if(eb){const en=h.enc[+eb.dataset.enc];let n=0;en.mon.forEach(([id,q])=>{const m=D.monsters.find(z=>z.id===id);if(m)for(let t=0;t<q;t++){addCombatant(m);n++}});toast(`В трекер добавлено: ${n}`);return}};
+  r.querySelector('#cpC').onclick=()=>camp(i);const pv=r.querySelector('#cpPv'),nx=r.querySelector('#cpNx');pv&&(pv.onclick=()=>chap(i,k-1));nx&&(nx.onclick=()=>chap(i,k+1));
+  const ho=r.querySelector('#cpHo');ho&&(ho.onclick=()=>KM.showPlayers&&KM.showPlayers({i:'📜',n:h.handout.n,t:h.handout.t}));
+  r.querySelector('#cpN').onclick=()=>{const t=Date.now();notes.unshift({id:uid(),title:`${c.n} — гл. ${k+1}: ${h.n}`,text:`Цель: ${h.goal}\n\n${h.sum}\n\n${h.scenes.map((s,j)=>`${j+1}. ${s.n}: ${s.t}`).join('\n')}\n\nНаграда: ${h.loot}`,tag:'Квест',t});save();toast('Добавлено в заметки')};
+  r.querySelector('#cpD').onclick=()=>{let q=P(c.id)||{t:Date.now(),done:[],cur:k};q.done=q.done.includes(k)?q.done.filter(x=>x!==k):[...q.done,k];if(!done&&k<c.chapters.length-1)q.cur=k+1;setP(c.id,q);toast(done?'Отметка снята':(q.done.length===c.chapters.length?'Кампания завершена! 🎉':'Глава пройдена'));chap(i,k)}})}
+KM.camps=list;KM.campLoad=load;})();
+
+;
+/* premap.js */
+'use strict';
+/* Заготовленные карты: детерминированная генерация по ключу, лениво, по тапу «Карта» */
+(()=>{
+const hs=s=>{let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+function place(m,mons,key){if(!mons||!mons.length)return;const old=(m.tok||[]).filter(t=>t.k==='mon');m.tok=(m.tok||[]).filter(t=>t.k!=='mon');const pc=m.tok.filter(t=>t.k==='pc');const W=m.W;
+ const FREE=c=>c&&!['wall','pit','water','lava','tree','cloud','air','rock','door','stairs'].includes(c);const used=new Set(m.tok.map(t=>t.y*W+t.x));(m.links||[]).forEach(l=>used.add(l.y*W+l.x));
+ const cand=[];for(let i=0;i<m.g.length;i++){const x=i%W,y=(i/W)|0;if(!FREE(m.g[i])||used.has(i))continue;if(window.KM_SOLID&&KM_SOLID(m,x,y))continue;const d=pc.length?Math.min(...pc.map(p=>Math.hypot(p.x-x,p.y-y))):99;if(d<6)continue;cand.push(i)}
+ const pos=old.map(t=>t.y*W+t.x).filter(i=>!used.has(i));let h=hs(key);const pick=()=>{if(pos.length)return pos.shift();if(!cand.length)return -1;h=Math.imul(h^h>>>15,2246822507)>>>0;const k=h%cand.length;return cand.splice(k,1)[0]};
+ mons.forEach(([id,n])=>{const mo=D.monsters.find(z=>z.id===id);if(!mo)return;let g0=-1;for(let q=1;q<=n;q++){let i=-1;if(g0>=0){const gx=g0%W,gy=(g0/W)|0;let best=-1,bd=9;cand.forEach((c,k)=>{const d=Math.max(Math.abs(c%W-gx),Math.abs(((c/W)|0)-gy));if(d<bd){bd=d;best=k}});if(best>=0&&bd<=3)i=cand.splice(best,1)[0]}if(i<0)i=pick();if(i<0)return;if(g0<0)g0=i;{const ci=cand.indexOf(i);if(ci>=0)cand.splice(ci,1)}used.add(i);
+  m.tok.push({id:uid(),x:i%W,y:(i/W)|0,n:(mo.n[0]+(n>1?q:'')).slice(0,3),c:'#d42a22',k:'mon',mid:mo.id,nm:mo.n+(n>1?' '+q:''),hp:mo.hp,mhp:mo.hp,ac:mo.ac,sz:mo.sz})}})}
+function open(key,o){if(typeof maps==='undefined'||!KM.genSet)return toast('Карты недоступны');
+ let m=maps.find(x=>x.pre===key);let made=0;
+ if(!m){const opt=Object.assign({type:'dungeon',W:24,H:24,dens:50,dang:40,th:'',th2:'',doors:1,traps:1,chests:1,mons:1,fog:1,dec:1,link:1,pcs:1},o||{},{seed:key});let set;
+  try{set=KM.genSet(opt,0)}catch(e){console.error(e);return toast('Не получилось: '+e.message)}
+  place(set[0],o&&o.mon,key);set.forEach((x,i)=>{delete x._G;x.pre=i?key+'#'+i:key;x.shared=false;maps.push(x)});if(o&&o.name)set[0].name=o.name;m=set[0];made=set.length}
+ mapCur=m.id;try{view={s:1,x:0,y:0}}catch(e){}saveMaps();closeSheet();
+ const mi=SECTIONS.findIndex(s=>s[0]==='map');const fin=()=>{try{rMap()}catch(e){}toast(made?(made>1?`Карта готова · связанных: ${made}`:'Карта готова'):'Открыта: '+m.name)};
+ if(S.sec===mi)fin();else{KM.go(mi);setTimeout(fin,450)}}
+KM.preMap=open;
+/* тип карты для ваншота по ключевым словам */
+const KW=[[/мельниц/,'mill'],[/таверн|трактир|корчм/,'tavern'],[/склеп|крипт/,'crypt'],[/гробниц|курган|пирамид/,'tomb'],[/катакомб/,'catacombs'],[/канализ|сток/,'sewer'],[/тюрьм|темниц/,'prison'],[/культ|секта|алтар/,'cult'],[/некромант/,'necro'],[/алхими|лаборатор/,'lab'],[/вампир/,'vampire'],[/дракон/,'dragon'],[/паук|паутин/,'spider'],[/слиз/,'slime'],[/ледян|лёд|мороз|снег/,'icecave'],[/вулкан|лава/,'volcano'],[/шахт|рудник/,'mine'],[/грот|подводн/,'grotto'],[/пещер/,'cave'],[/подземь/,'underdark'],[/болот|топь/,'swamp'],[/джунгл/,'jungle'],[/пустын|пес[ко]/,'desert'],[/оазис/,'oasis'],[/гор[аыне]|перевал/,'mountain'],[/каньон|ущель/,'canyon'],[/озер|остров/,'lake'],[/побереж|берег|маяк/,'coast'],[/фе[йия]|фей/,'feywild'],[/чащ|роща/,'deepforest'],[/лес/,'forest'],[/деревн|сел[оа]|хутор/,'village'],[/рынок|ярмарк/,'market'],[/порт|док|причал/,'port'],[/корабл|судн/,'ship'],[/трущоб/,'slums'],[/караван/,'caravan'],[/ферм/,'farm'],[/кладбищ|могил/,'graveyard'],[/поле бо|битв/,'battlefield'],[/особняк|поместь/,'manor'],[/дворец|бал/,'palace'],[/лавк|магазин/,'shop'],[/кузн/,'smithy'],[/храм|монастыр|святилищ/,'temple'],[/библиотек|архив/,'library'],[/замок/,'castle'],[/крепост|форт/,'fortress'],[/башн|маг/,'magetower'],[/часов/,'clocktower'],[/лагер/,'camp'],[/город|улиц/,'city'],[/подвал|погреб/,'cellar'],[/дом/,'house']];
+KM.osType=o=>{const t=(o.n+' '+(o.scenes||[]).join(' ')+' '+o.hook).toLowerCase();for(const [r,ty] of KW)if(r.test(t)&&(!KM.LOCTYPES||KM.LOCTYPES.some(l=>l[0]===ty)))return ty;return 'dungeon'};
+KM.osMap=(o,i)=>{const lv=+(String(o.lvl).match(/\d+/)||[1])[0];open('os-'+i,{type:KM.osType(o),W:26,H:24,dang:Math.min(80,25+lv*5),name:o.n})};
+})();
 
 ;
 /* paste.js */
