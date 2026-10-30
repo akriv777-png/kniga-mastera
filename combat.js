@@ -145,7 +145,7 @@ window.rCombat=rCombat=function(){norm();const k=C(),L=k.list,cur=L[k.turn];page
  const hpTxt=c=>c.hide&&k.pv?(c.dead?'повержен':c.hp<c.max/2?'тяжело ранен':c.hp<c.max?'ранен':'цел'):`${c.hp}/${c.max}${c.thp?' +'+c.thp:''}`;
  const bar=c=>`<div class="hpbar"><i style="width:${Math.max(0,Math.min(100,c.hp/c.max*100))}%"></i></div>`;
  const cn=c=>c.conds.map(x=>`<span class="cond">${esc(x.n)}${x.r?' '+x.r:''}</span>`).join('');
- let h=header('Бой','трекер инициативы','tri',0)+`<div class="cb-top"><div class="cb-rd"><small>РАУНД</small><b>${k.round}</b></div><div class="cb-tm"><small>бой · ход</small><b id="tmr">${fmtT(Date.now()-(k.t0||Date.now()))} · ${fmtT(Date.now()-(k.tt||Date.now()))}</b></div>
+ let h=header('Бой','трекер инициативы','tri',0)+`<div class="cb-top"><div class="cb-rd"><small>РАУНД</small><b>${k.round}</b></div><div class="cb-tm"><small>бой · ход</small><b id="tmr">${fmtT(Date.now()-(k.t0||Date.now()))} · ${fmtT(Date.now()-(k.tt||Date.now()))}</b></div><button class="btn sm" id="cbshow" aria-label="Показать порядок ходов игрокам" style="margin-left:auto">📣 Игрокам</button>
   <button class="btn sm" id="cbu" aria-label="Отменить">↶</button><button class="btn sm${k.pv?' red':''}" id="cpv">${k.pv?'👁 Игроки':'🙈 Мастер'}</button><button class="btn sm" id="cmn">⋯</button></div>
   <div class="row cb-add"><button class="btn red grow" id="cad">＋ Существа</button><button class="btn grow" id="cin2">🎲 Инициатива</button><button class="btn" id="cenc">⚖</button></div>`;
  if(!L.length)h+=`<div class="cb-empty"><div class="esig"></div><p>Бой не начат.</p><button class="btn red" id="cst" style="padding:16px 22px">⚔ Начать: герои + монстры</button></div>`;
@@ -193,3 +193,5 @@ function quick(c,s){openSheet(`<div class="sb-title">${esc(c.name)}: ${s<0?'ур
  $('#qok',r).onclick=()=>{const v=+$('#qv',r).value||0;snap();if(s<0){const o=damage(c,v,dt);toast(`${c.name}: −${o.v}${o.out.length?' · '+o.out.join(', '):''}`)}else heal(c,v);save();closeSheet();rCombat();flash(c.id)}})}
 KM.combat={damage,attack,multi,bulk,initSheet,next,undo,endCombat,parseAtk,cSheet,addMon:(m,n)=>{addMon(m,n);renum();save();rCombat()}};
 }
+
+document.addEventListener('click',e=>{if(!e.target.closest||!e.target.closest('#cbshow'))return;const t=window.KM&&KM.table;if(!t||!t.conns||!Object.keys(t.conns).length){toast('Стол не открыт: откройте ◎ Онлайн, чтобы игроки видели порядок ходов');return}t.push(true);toast('Порядок ходов и текущий ход показаны игрокам (вкладка «Мастер»)')});
