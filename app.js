@@ -134,7 +134,7 @@ function showMon(id){const m=findMon(id);if(!m)return;const ab=['Сил','Лов
   ${m.lg&&m.lg.length?`<div class="sec-h">Легендарные действия</div>${featHtml(m.lg)}`:''}
   ${m.notes?`<div class="sec-h">Заметки</div><div class="desc">${esc(m.notes)}</div>`:''}
   <div class="row" style="margin-top:18px"><button class="btn red" id="toFight">⚔ В бой</button>${m.own?'<button class="btn" id="edN">Изменить</button><button class="btn dark" id="delN">Удалить</button>':'<button class="btn" id="cpN">Копировать в мои</button>'}</div>
-  ${!m.own&&m.f&&[...m.f,...m.a].some(f=>f.ru===false)?'<p class="muted" style="font-size:12px;margin-top:14px">Пометка (EN) — текст оставлен на английском из SRD.</p>':''}`,r=>{
+  `,r=>{
    $('#toFight',r).onclick=()=>{addCombatant(m);toast(`«${m.n}» в бою`)};
    if(m.own){$('#edN',r).onclick=()=>editNpc(m);$('#delN',r).onclick=()=>{if(confirm('Удалить «'+m.n+'»?')){ownNpcs=ownNpcs.filter(x=>x.id!==m.id);save();closeSheet();rNpc()}}}
    else $('#cpN',r).onclick=()=>{const c=JSON.parse(JSON.stringify(m));c.id='own-'+uid();c.n=m.n+' (мой)';delete c.top;delete c.own;ownNpcs.unshift(c);save();toast('Скопировано в «Мои»');editNpc(c)}})}
