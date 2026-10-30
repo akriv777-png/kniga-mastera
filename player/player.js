@@ -20,7 +20,7 @@ function close(){closeSheet()}
 
 const TABS=[['hero','⚔','Герой'],['bag','⛁','Сумка'],['spells','✧','Чары'],['notes','✎','Записи'],['table','◎','Стол']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="${k}" class="${k===tab?'on':''}"><i>${i}</i>${l}</button>`).join('');$$('#nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;LS.set('tab',tab);render();scrollTo(0,0)})}
-const can=f=>!window.KP||!KP.linked()||KP.can(f);
+const can=f=>!window.KP||!KP.linked()||(KP.online()?KP.can(f):f==='notes');
 function num(title,cb,ph=''){sheet(`<h3>${esc(title)}</h3><input class="inp" id="nv" type="number" inputmode="numeric" placeholder="${ph}" style="font-size:30px;text-align:center"><div class="row" style="margin-top:10px"><button class="btn red grow" id="nm">− Урон</button><button class="btn ac grow" id="np">＋ Лечение</button></div>`,r=>{setTimeout(()=>$('#nv',r).focus(),50);$('#nm',r).onclick=()=>{cb(-Math.abs(+$('#nv',r).value||0));close()};$('#np',r).onclick=()=>{cb(Math.abs(+$('#nv',r).value||0));close()}})}
 function hpChange(v){if(v<0){let d=-v;const a=Math.min(H.thp,d);H.thp-=a;d-=a;H.hp=Math.max(0,H.hp-d);if(H.hp===0&&!H.conds.includes('Без сознания'))H.conds.push('Без сознания')}else{if(H.hp===0){H.ds={s:0,f:0};H.conds=H.conds.filter(c=>c!=='Без сознания')}H.hp=Math.min(H.maxhp,H.hp+v)}save();render()}
 function rHero(){const p=pb(H.lvl);
