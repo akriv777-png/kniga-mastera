@@ -18,7 +18,7 @@ function rPcs(){page.oninput=null;
     <div class="shield"><small>ВНИМ.</small><input data-k="pp" type="number" inputmode="numeric" value="${p.pp}"></div>
     <button class="shield gold" data-purse="${p.id}" style="font:inherit"><small>КОШЕЛЁК</small><b style="font-size:20px;color:#f0c64a">${KM.coin.fmtTot(p)}</b><i style="display:block;font-size:10px;opacity:.75;font-style:normal">${KM.coin.mini(p)}</i></button></div>
    <div class="abil hero-ab">${p.st.map((v,j)=>`<div><small>${ABN[j]}</small><input data-st="${j}" type="number" inputmode="numeric" value="${v}"><i>${fmod(mod(v))}</i></div>`).join('')}</div>
-   <div class="conds-row">${p.conds.map(c=>`<span class="cond">${esc(c)}</span>`).join('')}<button class="chip" data-conds>${p.conds.length?'✎':'＋ Состояние'}</button></div>
+   ${KM.uses?KM.uses.row(p):''}<div class="conds-row">${p.conds.map(c=>`<span class="cond">${esc(c)}</span>`).join('')}<button class="chip" data-conds>${p.conds.length?'✎':'＋ Состояние'}</button></div>
    <div class="inv-h"><b>Инвентарь</b><span>${p.inv.length} предм. · ${kg(invW(p))}</span><button class="btn sm" data-addinv>＋</button></div>
    <div class="inv">${p.inv.map((x,k)=>`<div class="inv-r" data-k="${k}"><span class="nm" data-open>${esc(x.n)}</span><span class="w">${x.w?kg(x.w*x.q):''}</span><div class="q"><button data-q="-1">−</button><b>${x.q}</b><button data-q="1">+</button></div><button class="rm" data-rm>✕</button></div>`).join('')||'<div class="muted" style="font-size:13px;padding:6px 2px">Пусто. Добавь из «Лута» или кнопкой ＋</div>'}</div>
    <details class="pnotes"><summary>Заметки</summary><textarea class="inp" data-k="notes">${esc(p.notes||'')}</textarea></details>
