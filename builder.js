@@ -36,7 +36,7 @@ const LOOKS=['шрам через бровь','рыжие косы','разно�
 const SLOTS=[[],[2],[3],[4,2],[4,3],[4,3,2],[4,3,3],[4,3,3,1],[4,3,3,2],[4,3,3,3,1],[4,3,3,3,2],[4,3,3,3,2,1],[4,3,3,3,2,1],[4,3,3,3,2,1,1],[4,3,3,3,2,1,1],[4,3,3,3,2,1,1,1],[4,3,3,3,2,1,1,1],[4,3,3,3,2,1,1,1,1],[4,3,3,3,3,1,1,1,1],[4,3,3,3,3,2,1,1,1],[4,3,3,3,3,2,2,1,1]];
 const HALF=['Паладин','Следопыт'];
 const slotsFor=(cls,l)=>{const c=CLASSES.find(x=>x.n===cls);if(!c)return{};if(c.pact){const n=l<2?1:l<11?2:l<17?3:4,lv=Math.min(5,Math.ceil(l/2));return{[lv]:{max:n,used:0}}}let a=[];if(c.ca!=null)a=SLOTS[l]||[];else if(HALF.includes(cls))a=l<2?[]:SLOTS[Math.ceil(l/2)]||[];const o={};a.forEach((m,i)=>o[i+1]={max:m,used:0});return o};
-const ITEMS=()=>((window.DATA&&DATA.items)||[]),SPELLS=()=>((window.DATA&&DATA.spells)||[]);
+const ITEMS=()=>((window.DATA&&DATA.items)||(window.PDATA&&PDATA.items)||[]),SPELLS=()=>((window.DATA&&DATA.spells)||(window.PDATA&&PDATA.spells)||[]);
 const itm=id=>ITEMS().find(x=>x.id===id);
 function acOf(h){const c=CLASSES.find(x=>x.n===h.cls)||{};const dx=md(h.st[1]);let best=10+dx,sh=0;(h.inv||[]).forEach(x=>{const it=itm(x.item);if(!it||!it.acv)return;const v=String(it.acv);if(/^\+/.test(v)){sh=Math.max(sh,parseInt(v));return}const b=parseInt(v);let a=b;if(/Лов/.test(v)){const mx=(v.match(/макс\.\s*(\d)/)||[])[1];a+=mx?Math.min(+mx,dx):dx}best=Math.max(best,a)});
  const hasArm=(h.inv||[]).some(x=>{const it=itm(x.item);return it&&it.acv&&!/^\+/.test(String(it.acv))});if(!hasArm&&c.unarm!=null)best=Math.max(best,10+dx+md(h.st[c.unarm]));return best+sh}
