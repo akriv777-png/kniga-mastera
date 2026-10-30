@@ -92,10 +92,13 @@ function streets(G,o){const {W,H,R}=G;nature(G,{base:o.base||'dirt',trees:o.tree
  xs.forEach(x=>{for(let y=0;y<H;y++)for(let k=0;k<rw;k++)G.set(x+k,y,'road')});ys.forEach(y=>{for(let x=0;x<W;x++)for(let k=0;k<rw;k++)G.set(x,y+k,'road')});
  const bx=[-rw,...xs,W],by=[-rw,...ys,H];let plaza=null;const doorsAt=[];
  for(let i=0;i<bx.length-1;i++)for(let j=0;j<by.length-1;j++){const x0=bx[i]+rw+1,x1=bx[i+1]-1,y0=by[j]+rw+1,y1=by[j+1]-1;const w=x1-x0,h=y1-y0;if(w<4||h<4)continue;
-  if(!plaza&&o.plaza&&i===((bx.length-1)>>1)&&j===((by.length-1)>>1)){plaza={x:x0,y:y0,w,h};G.rect(x0-1,y0-1,w+2,h+2,'road');G.set(x0+(w>>1),y0+(h>>1),'water');G.rooms.push({x:x0,y:y0,w,h,cx:x0+(w>>1),cy:y0+(h>>1),plaza:1});continue}
+  if(!plaza&&o.plaza&&i===((bx.length-1)>>1)&&j===((by.length-1)>>1)){plaza={x:x0,y:y0,w,h};G.rect(x0-1,y0-1,w+2,h+2,'road');for(let a=-1;a<=1;a++)for(let b2=-1;b2<=1;b2++)G.set(x0+(w>>1)+a,y0+(h>>1)+b2,'water');G.rooms.push({x:x0,y:y0,w,h,cx:x0+(w>>1),cy:y0+(h>>1),plaza:1});continue}
   if(o.park&&R()<o.park){continue}
-  const two=w>=10&&R()<.6;const parts=two?[[x0,w>>1],[x0+(w>>1)+1,w-(w>>1)-1]]:[[x0,w]];parts.forEach(([px,pw])=>{if(pw<4)return;const hh=Math.min(h,G.ri(4,Math.max(4,h)));const py=R()<.5?y0:y1-hh;const d=house(G,px,py,pw,hh,o.ft||'wood',3,py===y0?2:0,pw>7&&hh>6?1:0);doorsAt.push(d);
-   const dside=py===y0?-1:1;const dd=[d.x,d.y];for(let s=1;s<4;s++){const t=G.get(dd[0],dd[1]+(py===y0?-s:s));if(t==='road')break;if(t&&t!=='wall')G.set(dd[0],dd[1]+(py===y0?-s:s),'road')}})}
+  {const rows=h>=10?[y0,'B']:[R()<.5?y0:'B'];for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++)if(R()<.5)G.set(xx,yy,'grass');
+   rows.forEach(rr=>{let px=x0;const hh=rows.length>1?Math.max(4,Math.min((h>>1),G.ri(5,7))):Math.max(4,Math.min(h,G.ri(5,8)));const py=rr==='B'?y1-hh+1:rr;
+    while(px<=x1-3){let pw=Math.min(x1-px+1,G.ri(5,9));if(x1-px+1-pw<4)pw=x1-px+1;if(pw<4)break;const ft=R()<.5?(o.ft||'wood'):'floor';const d=house(G,px,py,pw,hh,ft,3,py===y0?2:0,pw>7&&hh>6?1:0);doorsAt.push(d);
+     const up=py===y0;for(let s=1;s<4;s++){const t=G.get(d.x,d.y+(up?-s:s));if(t==='road')break;if(t&&t!=='wall')G.set(d.x,d.y+(up?-s:s),'road')}px+=pw+1}});
+   for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){const t=G.get(xx,yy);if((t==='grass'||t==='dirt')&&R()<.06&&G.get(xx,yy-1)!=='wall'&&G.get(xx,yy+1)!=='wall')G.set(xx,yy,'tree')}}}
  if(o.water){for(let y=H-o.water;y<H;y++)for(let x=0;x<W;x++)G.set(x,y,'water');for(let x=3;x<W-3;x+=G.ri(5,8))for(let y=H-o.water-1;y<H-2;y++)G.set(x,y,'bridge')}
  G.doorsAt=doorsAt;G.start={x:xs[0]||1,y:0}}
 function village(G,o){const {W,H,R}=G;nature(G,{base:o.base||'grass',trees:o.trees||.16,alt:[['dirt',.18]],water:o.pond?.12:0});const pts=meander(G,{x:0,y:G.ri(4,H-5)},{x:W-1,y:G.ri(4,H-5)},'road',2,.3,'bridge');
@@ -162,7 +165,7 @@ const LT=[
 ['feywild','Поляна Страны Фей','Природа','nature',{trees:.3,alt:[['moss',.3]],clear:5},['фейвайлд','сад'],'фея',[]],
 ['wasteland','Пустошь','Природа','nature',{base:'ash',trees:.03,cliff:.1,alt:[['dirt',.3]]},['пустошь','пепелище'],'нежить|/гнолл|орк/',[]],
 ['village','Деревня','Поселения','village',{},['деревня','ферма'],'гуманоид',[['tavern','Таверна']]],
-['city','Городские улицы','Поселения','streets',{plaza:1},['город','рынок'],'гуманоид',[['tavern','Таверна'],['sewer','Канализация']]],
+['city','Городские улицы','Поселения','streets',{plaza:1,sp:14},['город','рынок'],'гуманоид',[['tavern','Таверна'],['sewer','Канализация']]],
 ['market','Рыночная площадь','Поселения','streets',{plaza:1,sp:12},['рынок','ярмарка','город'],'гуманоид',[]],
 ['port','Порт и доки','Поселения','streets',{water:6,base:'dirt'},['порт','склад'],'гуманоид|/пират/',[['ship','Корабль у причала']]],
 ['slums','Трущобы','Поселения','streets',{sp:6,rw:1,base:'mud'},['трущобы','город'],'гуманоид',[]],
@@ -306,4 +309,5 @@ const _rMap=window.rMap||rMap;window.rMap=rMap=function(){_rMap.apply(this,argum
 const _mm=window.mapMenu||mapMenu;window.mapMenu=mapMenu=function(){_mm.apply(this,arguments);const m=curMap();const L=$('#sheetPage .list')||$$('#sheetPage .list').pop();if(!L||$('#mxG2'))return;L.insertAdjacentHTML('afterbegin',`<button class="btn red" id="mxG2">✦ Генератор локаций…</button>${m.gen?'<button class="btn" id="mxR2">🎲 Перегенерировать (новое зерно)</button><button class="btn" id="mxE2">⚙ Изменить параметры генерации</button>':''}`);
  $('#mxG2').onclick=()=>genUI(0);const r2=$('#mxR2');if(r2){r2.onclick=()=>{const o=Object.assign({},m.gen,{seed:String(Math.floor(Math.random()*999999)),name:m.name});histPush(m);const nm=generate(o);['g','fog','tok','dec','W','H','gen','seed'].forEach(k=>m[k]=nm[k]);(m.links||[]).forEach(l=>{const c=freeCell(m,{x:l.x,y:l.y});l.x=c.x;l.y=c.y;m.g[c.y*m.W+c.x]='stairs'});saveMaps();closeSheet();rMap();toast('Новый вариант · зерно '+o.seed)};$('#mxE2').onclick=()=>genUI(1)}};
 const _nm=window.newMap||newMap;window.newMap=newMap=function(){_nm.apply(this,arguments);const r=$('#sheetPage');if(r&&!$('#ng2')){const t=r.querySelector('.sb-sub');t&&t.insertAdjacentHTML('afterend',`<button class="btn red" id="ng2" style="width:100%;margin-top:10px;min-height:48px">✦ Расширенный генератор (${LT.length} типов мест)</button>`);$('#ng2').onclick=()=>genUI(0)}};
+window.KM&&(KM.gen2=generate);
 }
