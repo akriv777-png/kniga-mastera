@@ -308,3 +308,6 @@ p.dropcap{color:var(--tx2)}
 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}.tiles button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;color:#cbb;font-size:10.5px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .tiles button.on{border-color:var(--red);background:rgba(212,42,34,.15);color:#fff}.tiles i{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-style:normal;color:#fff;font-size:14px}
 select.inp{appearance:none;-webkit-appearance:none}
+
+.tb-panel{margin-bottom:14px}.tb-panel .sb-title{font-size:22px}
+.tb-panel .tb-qr{max-width:150px;margin:6px auto}.tb-panel .tb-qr svg{width:100%;height:auto}
