@@ -100,6 +100,7 @@ function paint(g,m,CS){const P=(PAL[m.style]||PAL.dark)[m.theme]||PAL.dark.stone
  if(par){for(let k=0;k<W*H/3;k++){g.fillStyle=`rgba(120,80,30,${r()*.08})`;g.beginPath();g.arc(r()*W*CS,r()*H*CS,r()*CS*1.5,0,7);g.fill()}}
  const isWall=t=>t==='wall'||!t;
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=m.g[y*W+x],X=x*CS,Y=y*CS;if(!t){if(!par){g.fillStyle=`rgba(255,255,255,${r()*.015})`;g.fillRect(X,Y,CS,CS)}else{g.strokeStyle='rgba(60,40,20,.18)';g.beginPath();for(let k=0;k<3;k++){const o=r()*CS;g.moveTo(X+o,Y);g.lineTo(X,Y+o)}g.stroke()}continue}
+  const GG=window.KM_GROUND&&KM_GROUND[t];if(GG){g.fillStyle=par?GG[2]:GG[1];g.fillRect(X,Y,CS,CS);if(t==='wood'){g.strokeStyle='rgba(0,0,0,.35)';g.beginPath();for(let k=1;k<4;k++){g.moveTo(X,Y+k*CS/4);g.lineTo(X+CS,Y+k*CS/4)}g.stroke()}else for(let k=0;k<5;k++){g.fillStyle=`rgba(${r()<.5?'0,0,0':'255,255,255'},${.05+r()*.08})`;g.fillRect(X+r()*CS,Y+r()*CS,2,2)}continue}
   const fl=['floor','chest','trap','door','stairs','pillar','altar','table','torch','rubble','bones','crate','rug'].includes(t)||IN2.includes(t);
   if(fl){g.fillStyle=(x*7+y*13)%3?P[0]:P[1];g.fillRect(X,Y,CS,CS);// flagstones
    g.strokeStyle=par?'rgba(60,40,20,.25)':'rgba(0,0,0,.35)';g.lineWidth=1;const o=((y%2)*CS/2);g.beginPath();g.moveTo(X,Y+CS/2);g.lineTo(X+CS,Y+CS/2);g.moveTo(X+((o+CS/4)%CS),Y);g.lineTo(X+((o+CS/4)%CS),Y+CS/2);g.moveTo(X+((o+CS*3/4)%CS),Y+CS/2);g.lineTo(X+((o+CS*3/4)%CS),Y+CS);g.stroke();
@@ -170,6 +171,7 @@ function lightLayer(m,CS){const key=m.id+'L'+hashG(m.g)+m.tok.map(t=>t.k==='pc'?
  cache.set(m.id+'L',{key,cv});return cv}
 window.drawMap=drawMap=function(g,m,CS,fogA){g.drawImage(base(m,CS),0,0);
  if(m.light&&m.type!=='forest'&&m.type!=='village')g.drawImage(lightLayer(m,CS),0,0);
+ window.KM_DEC&&KM_DEC(g,m,CS);
  const par=m.style==='parch';
  m.tok.forEach(t=>{const X=t.x*CS+CS/2,Y=t.y*CS+CS/2;if(fogA>=1&&m.fog[t.y*m.W+t.x])return;g.fillStyle='rgba(0,0,0,.5)';g.beginPath();g.arc(X+1,Y+2,CS*.4,0,7);g.fill();
   const col=t.k==='pc'?'#c9a45a':t.k==='mon'?'#8a1c14':'#3c5a7a';g.fillStyle=col;g.beginPath();g.arc(X,Y,CS*.4,0,7);g.fill();g.strokeStyle=par?'#2a1a0c':'#e8dcc0';g.lineWidth=2;g.stroke();g.lineWidth=1;

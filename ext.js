@@ -171,7 +171,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
     if(gest&&pts.size>=2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=cv.getBoundingClientRect();
       const s=Math.max(.3,Math.min(4,gest.v.s*d/gest.d));const k=s/gest.v.s;view.s=s;view.x=(gest.cx-r.left)-((gest.cx-r.left)-gest.v.x)*k+(cx-gest.cx);view.y=(gest.cy-r.top)-((gest.cy-r.top)-gest.v.y)*k+(cy-gest.cy);draw();return}
     if(!drag)return;if(drag.pan){view.x=drag.v.x+e.clientX-drag.x;view.y=drag.v.y+e.clientY-drag.y;draw()}
-    else if(drag.tok){const c=cell(e.clientX,e.clientY);if(c&&m.g[c.y*m.W+c.x]==='wall'){dist('⛔ Стена');return}if(c){drag.tok.x=c.x;drag.tok.y=c.y;dist(`${(Math.max(Math.abs(c.x-drag.ox),Math.abs(c.y-drag.oy))*1.5).toLocaleString('ru')} м`);draw()}}else if(drag.paint)apply(cell(e.clientX,e.clientY))});
+    else if(drag.tok){const c=cell(e.clientX,e.clientY);if(c&&(m.g[c.y*m.W+c.x]==='wall'||window.KM_SOLID&&KM_SOLID(m,c.x,c.y))){dist('⛔ Стена');return}if(c){drag.tok.x=c.x;drag.tok.y=c.y;dist(`${(Math.max(Math.abs(c.x-drag.ox),Math.abs(c.y-drag.oy))*1.5).toLocaleString('ru')} м`);draw()}}else if(drag.paint)apply(cell(e.clientX,e.clientY))});
   const up=e=>{pts.delete(e.pointerId);dist(null);if(pts.size<2)gest=null;if(!pts.size){if(drag&&!drag.pan)saveMaps();drag=null;LS.set('mapview',view)}};
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   $('#zi').onclick=()=>zoom(1.25);$('#zo').onclick=()=>zoom(.8);$('#zf').onclick=fit;
