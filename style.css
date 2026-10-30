@@ -1,7 +1,7 @@
 @import url("fonts/fonts.css");
 :root{
   --bg:#0c0909; --bg2:#141010; --card:#1a1515; --card2:#221b1a; --line:rgba(255,235,220,.08); --line2:rgba(255,235,220,.14);
-  --tx:#ece4dc; --tx2:#a89d95; --tx3:#6f6560;
+  --tx:#ece4dc; --tx2:#a89d95; --tx3:#968a82;
   --red:#d42a22; --red2:#ff4a3d; --blood:#8e0f0b; --gold:#d6b26a;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
   --title:"Ruslan Display",serif; --ui:"Manrope",system-ui,-apple-system,sans-serif; --num:"Russo One","Manrope",sans-serif; --hand:"Marck Script",cursive; --gore:"Rubik Wet Paint","Ruslan Display",serif;
@@ -319,3 +319,5 @@ html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)
 #page .hq::after,#page .qbox::after,.fx-gear::after{content:'';position:absolute;inset:-12px}
 .cb-top .cb-tm{flex:0 0 auto}.cb-top .cb-tm b{display:block;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:13px;line-height:1.35}.cb-top .cb-tm i{font-style:normal;font-size:10.5px;opacity:.6;letter-spacing:.04em}
 .cb-top{gap:6px}.cb-top>button{flex:1 1 auto;min-width:44px;padding-left:6px;padding-right:6px}.cb-top .cb-rd{flex:0 0 auto}
+#page .hq::after{inset:-14px}
+.sw-ctl button{position:relative}.sw-ctl button::after{content:'';position:absolute;inset:-8px}
