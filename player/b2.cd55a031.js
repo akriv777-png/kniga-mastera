@@ -188,3 +188,4 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:
 }
 
 ;document.addEventListener('click',e=>{const c=e.target.closest('[data-ho]');if(!c||!window.KMH)return;const ho=KPA.LS.get('handouts',[]),h=ho[+c.dataset.ho];if(h){KMH.open(h);KPA.LS.set('hoNew',KPA.LS.get('hoNew',[]).filter(x=>x!==+c.dataset.ho));c.classList.remove('hx-new')}});
+;addEventListener('pdata',()=>{const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;if(document.querySelector('.sheet.show,#sheet.show'))return;try{render()}catch(e){}});
