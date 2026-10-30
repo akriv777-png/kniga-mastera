@@ -10,3 +10,5 @@ t.onclick=()=>openSheet(`<div class="sb-title">Инструменты</div><div 
 d.append(t);document.body.append(d);
 const grab=()=>{const f=document.getElementById('tbfab');if(f&&f.parentNode!==d)d.prepend(f)};grab();setTimeout(grab,500);
 }
+
+;(()=>{const d=document.getElementById('kdock');if(!d)return;let t;const pg=document.getElementById('page');const hide=()=>{d.classList.add('kd-hide');clearTimeout(t);t=setTimeout(()=>d.classList.remove('kd-hide'),900)};(pg||window).addEventListener('scroll',hide,{passive:true})})();
