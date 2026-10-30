@@ -271,3 +271,8 @@ body[data-wx=storm] #page,body[data-wx=rain] #page{filter:saturate(.85) brightne
 .imp-res details{margin:6px 0 10px}
 .imp-act{display:flex;flex-wrap:wrap;gap:6px}
 @keyframes impIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+/* Надёжная вставка/выделение в полях (iOS) */
+input,textarea,select,[contenteditable]{-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;touch-action:manipulation}
+.pst-row{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
+.pst-h{font-size:12px;opacity:.65}
+.btn.pulse{animation:pstP 1s ease 2}@keyframes pstP{50%{transform:scale(1.05);box-shadow:0 0 0 6px rgba(216,178,90,.25)}}

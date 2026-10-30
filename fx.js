@@ -25,7 +25,7 @@ function runeRing(r=46,col='#d9b46a',n=24){const R='ᚠᚢᚦᚨᚱᚲᚷᚹᚺ�
    g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}
  requestAnimationFrame(tick);applyFx();RM.addEventListener?.('change',applyFx)})();
 /* ink press ripple */
-document.addEventListener('pointerdown',e=>{if(calm())return;const c=e.target.closest('.card,.btn,.cb');if(!c)return;const r=c.getBoundingClientRect(),s=Math.max(r.width,r.height)*1.2;const i=document.createElement('i');i.className='ink';i.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;if(getComputedStyle(c).position==='static')c.style.position='relative';c.style.overflow='hidden';c.append(i);setTimeout(()=>i.remove(),650)},{passive:true});
+document.addEventListener('pointerdown',e=>{if(calm()||e.target.closest('input,textarea,select,[contenteditable]'))return;const c=e.target.closest('.card,.btn,.cb');if(!c)return;const r=c.getBoundingClientRect(),s=Math.max(r.width,r.height)*1.2;const i=document.createElement('i');i.className='ink';i.style.cssText=`width:${s}px;height:${s}px;left:${e.clientX-r.left-s/2}px;top:${e.clientY-r.top-s/2}px`;if(getComputedStyle(c).position==='static')c.style.position='relative';c.style.overflow='hidden';c.append(i);setTimeout(()=>i.remove(),650)},{passive:true});
 /* header: drawn sigil + rune rings + gear */
 const _header=header;
 header=function(t,s,sig,gi){return _header(t,s,sig,gi).replace('<div class="ph">',`<div class="ph"><div class="ring2">${runeRing(46,'#e8c879',18)}</div><div class="ring2 r3">${runeRing(46,'#d42a22',24)}</div><button class="fx-gear" data-gear aria-label="Настройки">⚙</button>`)};
