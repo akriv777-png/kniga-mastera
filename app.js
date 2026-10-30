@@ -26,6 +26,7 @@ const SIG={
 };
 /* icons for ribbons */
 const IC={
+ sess:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>',
  npc:'<svg viewBox="0 0 24 24"><path d="M12 3c-4 0-7 3-7 7 0 2.5 1 4 2 5v3h3v-2h4v2h3v-3c1-1 2-2.5 2-5 0-4-3-7-7-7z"/><circle cx="9.3" cy="10.5" r="1.5"/><circle cx="14.7" cy="10.5" r="1.5"/></svg>',
  spell:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 4 16.7 18.5 4.4 9.5h15.2L7.3 18.5z"/></svg>',
  item:'<svg viewBox="0 0 24 24"><path d="M14 3l7 7-9 9-3 1-3-3 1-3z"/><path d="M5 19l-2 2M8 13l3 3"/></svg>',
@@ -36,11 +37,11 @@ const IC={
  map:'<svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg>',
  rules:'<svg viewBox="0 0 24 24"><path d="M4 4h6c1.5 0 2 1 2 2v14c0-1-1-2-2-2H4zM20 4h-6c-1.5 0-2 1-2 2v14c0-1 1-2 2-2h6z"/></svg>'
 };
-const SECTIONS=[['npc','NPC и монстры','Бестиарий'],['spells','Заклинания','Чары'],['items','Лут и предметы','Лут'],['combat','Бой','Бой'],['dice','Кубики','Кубики'],['pcs','Игроки','Герои'],['map','Карта','Карта'],['notes','Заметки и сюжет','Заметки'],['rules','Правила','Правила']];
-const ICK=['npc','spell','item','combat','dice','pcs','map','notes','rules'];
+const SECTIONS=[['sess','Сессия','Сессия'],['npc','NPC и монстры','Бестиарий'],['spells','Заклинания','Чары'],['items','Лут и предметы','Лут'],['combat','Бой','Бой'],['dice','Кубики','Кубики'],['pcs','Игроки','Герои'],['map','Карта','Карта'],['notes','Заметки и сюжет','Заметки'],['rules','Правила','Правила']];
+const ICK=['sess','npc','spell','item','combat','dice','pcs','map','notes','rules'];
 
 /* ---------- state ---------- */
-const S={sec:LS.get('sec',0),npcQ:'',npcType:'',npcCR:'',npcOnlyTop:true,spQ:'',spCls:'',spLvl:'',itQ:'',itCat:'Оружие',itRar:'',noteTag:'',lim:60};
+const S={sec:0,npcQ:'',npcType:'',npcCR:'',npcOnlyTop:true,spQ:'',spCls:'',spLvl:'',itQ:'',itCat:'Оружие',itRar:'',noteTag:'',lim:60};
 let ownNpcs=LS.get('npcs',[]);
 let combat=LS.get('combat',{list:[],turn:0,round:1});
 let players=LS.get('players',null)||[
@@ -189,7 +190,7 @@ function showItem(id){const i=D.items.find(x=>x.id===id);
 /* ---------- COMBAT ---------- */
 const CONDS=['Ослеплён','Очарован','Оглох','Испуган','Схвачен','Недееспособен','Невидим','Парализован','Окаменел','Отравлен','Лежит ничком','Опутан','Ошеломлён','Без сознания','Истощение','Концентрация'];
 function addCombatant(m,isPC){const dex=m.st?mod(m.st[1]):(m.init||0);const n=combat.list.filter(c=>c.base===m.n).length;
-  combat.list.push({id:uid(),base:m.n,name:n?`${m.n} ${n+1}`:m.n,init:rnd(20)+dex,dex,hp:m.hp,max:m.maxhp||m.hp,ac:m.ac,pc:!!isPC,mon:isPC?null:m.id,conds:[]});sortC();save();if(S.sec===3)rCombat()}
+  combat.list.push({id:uid(),base:m.n,name:n?`${m.n} ${n+1}`:m.n,init:rnd(20)+dex,dex,hp:m.hp,max:m.maxhp||m.hp,ac:m.ac,pc:!!isPC,mon:isPC?null:m.id,conds:[]});sortC();save();if(SECTIONS[S.sec][0]==='combat')rCombat()}
 function sortC(){const cur=combat.list[combat.turn];combat.list.sort((a,b)=>b.init-a.init||b.dex-a.dex);combat.turn=Math.max(0,combat.list.indexOf(cur))}
 function rCombat(){const L=combat.list;
   page.innerHTML=header('Бой','трекер инициативы','pent',3)+`<div class="round"><div class="rn">Раунд <b>${combat.round}</b></div><div class="row"><button class="btn sm" id="cAdd">＋ Боец</button><button class="btn sm" id="cMenu">⋯</button></div></div>
@@ -366,7 +367,7 @@ function rRules(){page.oninput=null;page.innerHTML=header('Правила','шп
   RULES.map((r,i)=>`<details class="rule"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Данные: D&D 5e SRD 5.1 (CC-BY-4.0, Wizards of the Coast), через 5e-bits/5e-database.</p>`}
 
 /* ---------- render ---------- */
-const R=[()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>rPcs(),()=>rMap(),()=>rNotes(),()=>rRules()];
+const R=[()=>rSession(),()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>rPcs(),()=>rMap(),()=>rNotes(),()=>rRules()];
 function render(){page.oninput=null;R[S.sec]()}
 window.__boot=()=>{markRib();render()};
 
