@@ -98,7 +98,7 @@ function purseUI(p){const draw=()=>openSheet(`<div class="sb-title">Кошелё
   $$('[data-pc]').forEach(i=>i.oninput=()=>{p.coins[i.dataset.pc]=Math.max(0,+i.value||0);p.gold=p.coins.зм;$('#pctot').textContent=nf(cpOf(p)/100);save()});
   $('#pcx').onclick=()=>{const c=p.coins;const cp=c.мм+c.см*10+c.эм*50;c.мм=cp%10;c.см=Math.floor(cp%100/10);c.эм=0;c.зм+=Math.floor(cp/100);p.gold=c.зм;save();draw()};$('#pcok').onclick=()=>{closeSheet();rPcs()}});draw()}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-purse]');if(!b)return;const p=players.find(x=>x.id===b.dataset.purse);if(p)purseUI(p)});
-function splitGold(g,coins){const n=players.length;if(!n)return;const cp=coins?CK.reduce((a,k)=>a+(+coins[{мм:'mm',см:'sm',эм:'em',зм:'zm',пм:'pm'}[k]]||+coins[k]||0)*CV[k],0):Math.round(g*100);const each=Math.floor(cp/n);players.forEach(p=>addCp(p,each));save();toast(`Каждому по ${nf(each/100)} зм (монетами)`)}
+function splitGold(g,coins){const n=players.length;if(!n)return;const cp=coins?CK.reduce((a,k)=>a+(+coins[{мм:'mm',см:'sm',эм:'em',зм:'zm',пм:'pm'}[k]]||+coins[k]||0)*CV[k],0):Math.round(g*100);const each=Math.floor(cp/n),rem=cp-each*n;players.forEach((p,i)=>addCp(p,each+(i===0?rem:0)));save();toast(`Каждому по ${nf(each/100)} зм (монетами)`+(rem?` · остаток ${rem} мм → ${players[0].name}`:''))}
 /* item sheet: add give button */
 const _showItem=showItem;
 showItem=function(id){_showItem(id);const it=D.items.find(x=>x.id===id);if(!it)return;$('#sheetPage').insertAdjacentHTML('beforeend',`<div class="row" style="margin-top:18px"><button class="btn red" id="giveIt">🎒 В инвентарь</button></div>`);$('#giveIt').onclick=()=>choosePlayer(it)};
