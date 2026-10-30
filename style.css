@@ -313,3 +313,8 @@ select.inp{appearance:none;-webkit-appearance:none}
 .tb-panel .tb-qr{max-width:150px;margin:6px auto}.tb-panel .tb-qr svg{width:100%;height:auto}
 html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)}
 .list>.card{content-visibility:auto;contain-intrinsic-size:auto 92px}
+/* polish: невидимое расширение зоны нажатия до ≥44px */
+#page .chip,#page .btn.sm,#page .rb,#page .lb,#page .rm,#page button:not([class]),#sheet .chip,#sheet .btn.sm,#page .hq,#page .qbox{position:relative}
+#page .chip::after,#page .btn.sm::after,#page .rb::after,#page .lb::after,#page .rm::after,#page button:not([class])::after,#sheet .chip::after,#sheet .btn.sm::after,#page .fav::after,#page .pin::after{content:'';position:absolute;inset:-4px}
+#page .hq::after,#page .qbox::after,.fx-gear::after{content:'';position:absolute;inset:-12px}
+.cb-top .cb-tm{flex:0 0 auto;min-width:84px}.cb-top .cb-tm b,.cb-top .cb-tm small{display:block;white-space:nowrap;font-variant-numeric:tabular-nums}.cb-top .cb-tm b{font-size:14px}
