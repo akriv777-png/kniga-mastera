@@ -80,5 +80,5 @@ window.PRN=function(i){tab=TABS[i][0];LS.set('tab',tab);const h=HD[tab];page.oni
 function render(){const y=page.scrollTop;PRN(S.sec);page.scrollTop=y}
 window.KPA={get H(){return H},set H(v){H=v;LS.set('hero',H)},render,save,toast,sheet,close,LS,esc,uid,$,$$,D,pb,md,fm};
 S.sec=Math.max(0,TABS.findIndex(t=>t[0]===tab));markRib();PRN(S.sec);
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}})}
 }

@@ -10,12 +10,20 @@ function audit(who,hero,f,what,res){T.audit.unshift({t:Date.now(),who,hero,f,wha
 let peer=null,conns={},pend=[],status='выкл',retry=0,last={};
 const permOf=pid=>{const P=Object.assign({},DEF,T.perm[pid]||{});PROT.forEach(f=>{if(P[f]==='direct')P[f]='approve'});if(T.lock[pid])Object.keys(P).forEach(f=>P[f]='off');return P};
 const heroOf=pid=>players.find(p=>p.id===T.link[pid]);
-function start(){if(!window.Peer)return toast('Модуль связи не загружен');stop(true);status='подключение…';peer=new Peer(PREFIX+T.code,{debug:0});
+function start(){if(!window.Peer)return toast('Модуль связи не загружен');stop(true);status='подключение…';peer=new Peer(PREFIX+T.code,{debug:0,config:{iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}});startRelay();
  peer.on('open',()=>{status='открыт';retry=0;T.on=true;sv();upd()});
  peer.on('connection',c=>{c.on('open',()=>{conns[c.peer]={c,name:'?',pid:null};upd()});c.on('data',d=>onData(c,d));c.on('close',()=>{delete conns[c.peer];upd()});c.on('error',()=>{})});
  peer.on('disconnected',()=>{status='переподключение…';upd();setTimeout(()=>{try{peer&&!peer.destroyed&&peer.reconnect()}catch(e){}},1500)});
  peer.on('error',e=>{status=e.type==='unavailable-id'?'код занят — повтор…':'ошибка: '+e.type;upd();if(['unavailable-id','network','server-error','socket-error','socket-closed'].includes(e.type)){clearTimeout(start.t);start.t=setTimeout(()=>T.on&&start(),Math.min(30000,2000*(++retry)))}})}
-function stop(keep){try{peer&&peer.destroy()}catch(e){}peer=null;conns={};if(!keep){T.on=false;sv();status='выкл'}upd()}
+let relay=null,rst='',seen={};
+async function startRelay(){if(relay)return;try{relay=await KMRelay.open(T.code,'dm','dm',onRelay,(t,ok)=>{rst=t;upd()})}catch(e){rst='ретранслятор: ошибка';upd()}}
+function onRelay(pid,m){pid=String(pid).slice(0,40);const id='mq:'+pid;seen[id]=Date.now();
+ if(m.t==='bye'){delete conns[id];upd();return}if(m.t==='ping'){if(conns[id])relay.send(pid,{t:'pong'});else relay.send(pid,{t:'who'});return}
+ if(!conns[id]){if(m.t!=='hello')return relay.send(pid,{t:'who'});const c={peer:id,send:x=>relay&&relay.send(pid,x),close(){}};conns[id]={c,name:'?',pid:null,relay:1}}
+ if(m.t==='hello')Object.keys(conns).forEach(k=>{if(k!==id&&conns[k].pid===String(m.pid||'').slice(0,40)){try{conns[k].c.close()}catch(e){}delete conns[k]}});
+ onData(conns[id].c,m)}
+setInterval(()=>{const now=Date.now();let ch=0;Object.keys(conns).forEach(k=>{if(k.startsWith('mq:')&&now-(seen[k]||0)>75000){delete conns[k];ch=1}});if(ch)upd()},15000);
+function stop(keep){try{relay&&relay.end()}catch(e){}relay=null;rst='';try{peer&&peer.destroy()}catch(e){}peer=null;conns={};if(!keep){T.on=false;sv();status='выкл'}upd()}
 function onData(c,d){const k=conns[c.peer];if(!k||!d||typeof d!=='object')return;
  if(d.t==='hello'){k.name=String(d.name||'Игрок').slice(0,40);k.pid=String(d.pid||c.peer).slice(0,40);
   if(!T.link[k.pid]){const h=players.find(p=>p.id===d.hero?.id)||players.find(p=>p.name===d.hero?.name);if(h){T.link[k.pid]=h.id;sv()}}
@@ -44,8 +52,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&T.on&&(!p
 function qrSvg(t){try{const q=qrcode(0,'M');q.addData(t);q.make();return q.createSvgTag({cellSize:5,margin:2,scalable:true})}catch(e){return ''}}
 function code(h){return 'KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(heroView(h)))))}
 function ui(){const url=PURL+'?room='+T.code;const cs=Object.entries(conns);
- openSheet(`<div class="sb-title">Стол игроков</div><div class="sb-sub">Живая связь с «Книгой Игрока» · ${esc(status)}</div>
- ${peer?`<div class="tb-code"><small>Код комнаты</small><b>${T.code}</b><div class="tb-qr">${qrSvg(url)}</div><div class="muted" style="font-size:12px;word-break:break-all">${esc(url)}</div></div>`:`<p class="muted" style="margin-top:10px">Игроки откроют «Книгу Игрока» и введут код — их листы будут обновляться в реальном времени. Интернет нужен обоим; данные идут напрямую между телефонами.</p>`}
+ openSheet(`<div class="sb-title">Стол игроков</div><div class="sb-sub">Живая связь с «Книгой Игрока»</div>${peer?`<div class="tb-st">◉ Прямая связь: ${esc(status)}<br>${rst?(rst.includes('подключён')?'◉ ':'◌ ')+esc(rst):'◌ ретранслятор: запуск…'}<br><small class="muted">Если прямое соединение не проходит (мобильный интернет, NAT), игроки автоматически подключатся через зашифрованный ретранслятор.</small></div>`:''}
+ ${peer?`<div class="tb-code"><small>Код комнаты</small><b>${T.code}</b><div class="tb-qr">${qrSvg(url)}</div><div class="muted" style="font-size:12px;word-break:break-all">${esc(url)}</div></div>`:`<p class="muted" style="margin-top:10px">Игроки откроют «Книгу Игрока» и введут код — их листы будут обновляться в реальном времени. Интернет нужен обоим; данные идут напрямую между телефонами, а при сбое — через зашифрованный ретранслятор.</p>`}
  <div class="row" style="margin-top:10px">${peer?`<button class="btn dark grow" id="tbs">■ Закрыть стол</button><button class="btn" id="tbn">Новый код</button>`:`<button class="btn red grow" id="tbo" style="padding:16px">◎ Открыть стол</button>`}</div>
  ${pend.length?`<div class="sec-h">Запросы игроков (${pend.length})</div><div class="row" style="margin-bottom:6px"><button class="btn sm" id="tbokall">✓ Одобрить всё без ⚠</button></div>${pend.map(p=>`<div class="card"><div class="grow"><div class="t">${esc(p.who)} → ${esc(p.hero)}</div><div class="m">${p.f==='buy'?'Покупка в лавке':PL[p.f]}: ${esc(desc(p))}</div>${p.warn?`<div class="tb-warn">⚠ ${esc(p.warn)}</div>`:''}</div><button class="btn sm red" data-ok="${p.id}">✓</button><button class="btn sm dark" data-no="${p.id}">✕</button></div>`).join('')}`:''}
  ${cs.length?`<div class="sec-h">За столом (${cs.length})</div>${cs.map(([id,k])=>{const P=permOf(k.pid);return `<div class="card tb-p"><div style="width:100%"><div class="row"><div class="t grow">${esc(k.name)}</div><button class="btn sm${T.lock[k.pid]?' red':''}" data-lock="${esc(k.pid)}">${T.lock[k.pid]?'🔒 Лист заблокирован':'🔓 Заблокировать лист'}</button></div><label class="muted" style="font-size:13px">Герой: <select data-lk="${esc(k.pid)}" class="inp" style="min-height:36px;padding:4px">${['<option value="">— не выбран —</option>',...players.map(p=>`<option value="${p.id}"${T.link[k.pid]===p.id?' selected':''}>${esc(p.name)}</option>`)].join('')}</select></label>

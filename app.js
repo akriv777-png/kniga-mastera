@@ -77,11 +77,17 @@ function go(i,dirHint){
   const a=page.animate([{transform:`translateX(${dx*40}%)`,opacity:0},{transform:'none',opacity:1}],{duration:dur,easing:ease});
   a.onfinish=()=>{snap.remove();flipping=false};
 }
-/* swipe */
-(function(){let x0,y0,t0,ok;const el=$('#book');
- el.addEventListener('touchstart',e=>{if(e.touches.length>1||e.target.closest('.chips,input,textarea,select'))return ok=false;ok=true;x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
- el.addEventListener('touchend',e=>{if(!ok)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
-  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.8&&Date.now()-t0<600){go(S.sec+(dx<0?1:-1),dx<0?1:-1)}},{passive:true});})();
+/* swipe: только от края экрана, никогда — из прокручиваемых, карты, жетонов, полей */
+(function(){let x0,y0,t0,ok;const el=$('#book');const EDGE=40;
+ const BLOCK='input,textarea,select,canvas,[contenteditable],[data-noswipe],.map-wrap,#mw,#mc,.tok,.token,.chips,.lbar,.dbar,.imp-o,.shp-o,.cb-row,.sheet,#sheet,[draggable=true],input[type=range]';
+ const hscroll=t=>{for(let n=t;n&&n!==el&&n.nodeType===1;n=n.parentElement){if(n.scrollWidth>n.clientWidth+2){const o=getComputedStyle(n).overflowX;if(o==='auto'||o==='scroll')return true}}return false};
+ el.addEventListener('touchstart',e=>{ok=false;if(e.touches.length!==1)return;const t=e.touches[0],w=innerWidth;if(t.clientX>EDGE&&t.clientX<w-EDGE)return;const pts=[e.target,...document.elementsFromPoint(innerWidth/2,t.clientY).slice(0,6),...document.elementsFromPoint(t.clientX<EDGE?EDGE+24:innerWidth-EDGE-24,t.clientY).slice(0,6)];if(pts.some(n=>n&&n.closest&&(n.closest(BLOCK)||hscroll(n))))return;ok=true;x0=t.clientX;y0=t.clientY;t0=Date.now()},{passive:true});
+ el.addEventListener('touchmove',e=>{if(ok&&e.touches.length>1)ok=false},{passive:true});
+ el.addEventListener('touchcancel',()=>{ok=false},{passive:true});
+ el.addEventListener('touchend',e=>{if(!ok)return;ok=false;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+  const fromLeft=x0<=EDGE,fromRight=x0>=innerWidth-EDGE;
+  if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2.2&&Date.now()-t0<700&&((fromLeft&&dx>0)||(fromRight&&dx<0))){go(S.sec+(dx<0?1:-1),dx<0?1:-1)}},{passive:true});
+ window.KM_SWIPE={BLOCK,EDGE};})();
 
 /* ---------- sheet ---------- */
 const sheet=$('#sheet'),sp=$('#sheetPage');
@@ -379,5 +385,5 @@ window.__boot=()=>{markRib();render()};
  $('.face',cv).append(dr,ds);for(let i=0;i<18;i++){const e=document.createElement('i');e.style.left=Math.random()*100+'%';e.style.setProperty('--dx',(Math.random()*80-40)+'px');e.style.animationDuration=(5+Math.random()*6)+'s';e.style.animationDelay=(Math.random()*6)+'s';em.append(e)}
  const open=()=>{if(cv.classList.contains('open'))return;cv.classList.add('open');setTimeout(()=>cv.classList.add('gone'),1700)};
  cv.addEventListener('click',open);if(sessionStorage.getItem('kmOpened')){cv.classList.add('gone')}cv.addEventListener('transitionend',()=>sessionStorage.setItem('kmOpened',1))})();
-if(!window.KM_PLAYER&&'serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(!window.KM_PLAYER&&'serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});{const had=!!navigator.serviceWorker.controller;let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!rl){rl=1;location.reload()}})}
 window.KM={go,showMon,showSpell,showItem,closeSheet,addCombatant,S,get players(){return players}};

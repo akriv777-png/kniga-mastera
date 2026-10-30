@@ -292,3 +292,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text!important;user-
 .shp-row{display:flex;align-items:center;gap:8px}.shp-row .price{white-space:nowrap}
 .shp-x{opacity:.55;padding-left:8px!important;padding-right:8px!important}
 .shp-un{color:#e7a14a;font-weight:700;font-size:11px}
+/* жесты: карта и жетоны не прокручивают страницу и не листают; ленты — только горизонталь */
+#mw,#mc,.map-wrap,.tok,.token{touch-action:none}
+.chips,.lbar,.imp-o,.shp-o,#tabbar{touch-action:pan-x pan-y;overscroll-behavior-x:contain}
+.tb-st{margin-top:8px;font-size:13px;line-height:1.5;padding:8px 10px;border-radius:10px;background:rgba(0,0,0,.05)}

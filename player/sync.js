@@ -4,12 +4,22 @@ const S=LS.get('sync',{code:'',name:'',pid:'',auto:false});if(!S.pid){S.pid='p'+
 const q=new URLSearchParams(location.search).get('room');if(q){S.code=q.toUpperCase().slice(0,8);LS.set('sync',S)}
 let peer=null,conn=null,st='не подключено',live=false,perm=LS.get('perm',{}),init=null,map=null,shop=LS.get('shop',null),lastSent=LS.get('lastSent',{}),retry=0,tmr,lock=LS.get('lock',false),party=[],waiting=LS.get('waiting',{});
 const sv=()=>LS.set('sync',S);
-function connect(){if(!window.Peer){st='модуль связи не загружен';return paint()}if(!S.code)return;clearTimeout(tmr);
- if(!peer||peer.destroyed){peer=new Peer({debug:0});peer.on('open',()=>dial());peer.on('error',e=>{st=e.type==='peer-unavailable'?'стол Мастера не открыт — жду…':'ошибка связи ('+e.type+')';live=false;paint();again()});peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
- else if(peer.open)dial();st='подключение…';paint()}
-function dial(){try{conn&&conn.close()}catch(e){}conn=peer.connect(PREFIX+S.code,{reliable:true});
- conn.on('open',()=>{live=true;retry=0;st='за столом';S.auto=true;sv();conn.send({t:'hello',name:S.name||A.H.name,pid:S.pid,hero:{id:A.H.id,name:A.H.name}});const q=LS.get('trades',[]);q.forEach(t=>conn.send(t));LS.set('trades',[]);flush(true);paint();toast('Связь с Мастером установлена')});
- conn.on('data',onState);conn.on('close',()=>{live=false;st='связь потеряна — переподключаюсь…';paint();again()});conn.on('error',()=>{})}
+/* связь: сначала прямой WebRTC (PeerJS + STUN/TURN), параллельно — зашифрованный ретранслятор MQTT; что ответит первым, тем и пользуемся */
+let relay=null,mode='',p2pT=null,helloT=null,pingT=null;
+function hello(){return {t:'hello',name:S.name||A.H.name,pid:S.pid,hero:{id:A.H.id,name:A.H.name}}}
+function onOpen(via){live=true;retry=0;mode=via;st='за столом'+(via==='relay'?' · через ретранслятор':' · напрямую');S.auto=true;sv();clearInterval(helloT);
+ const q=LS.get('trades',[]);q.forEach(t=>conn.send(t));LS.set('trades',[]);flush(true);paint();toast('Связь с Мастером установлена')}
+function connect(){if(!S.code)return;clearTimeout(tmr);st='подключение…';paint();
+ if(window.Peer){if(!peer||peer.destroyed){try{peer=new Peer({debug:0,config:{iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302','stun:stun.cloudflare.com:3478']},{urls:['turn:openrelay.metered.ca:80','turn:openrelay.metered.ca:443','turn:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}]}});peer.on('open',()=>dial());peer.on('error',e=>{if(e.type==='peer-unavailable'&&!live)st='стол Мастера не найден напрямую — пробую ретранслятор…';else if(!live)st='прямая связь недоступна ('+e.type+') — пробую ретранслятор…';paint();if(!relay)startRelay();if(e.type!=='peer-unavailable')again()});peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}catch(e){}}else if(peer.open)dial()}
+ clearTimeout(p2pT);p2pT=setTimeout(()=>{if(!live)startRelay()},6000)}
+function dial(){if(live&&mode==='p2p')return;let c;try{c=peer.connect(PREFIX+S.code,{reliable:true})}catch(e){return}
+ c.on('open',()=>{if(live&&mode==='relay'){try{relay.send('dm',{t:'bye'})}catch(e){}}conn=c;c.send(hello());onOpen('p2p')});
+ c.on('data',onState);c.on('close',()=>{if(conn!==c)return;live=false;st='связь потеряна — переподключаюсь…';paint();again();startRelay()});c.on('error',()=>{})}
+async function startRelay(){if(!window.KMRelay||!S.code)return;if(relay&&relay.code===S.code){if(relay.ok&&!live)relay.send('dm',hello());return}
+ try{relay&&relay.end()}catch(e){}relay=await KMRelay.open(S.code,'p',S.pid,(f,m)=>{if(f!=='dm')return;if(m.t==='who'){relay.send('dm',hello());return}if(m.t==='pong')return;
+   if(m.t==='state'&&(!live||mode==='relay')){if(!live){conn={send:x=>relay.send('dm',x),close(){}};onOpen('relay')}onState(m)}},
+  (t,ok)=>{if(!live){st=ok?'ретранслятор подключён — жду стол Мастера…':t;paint()}if(ok){relay.send('dm',hello());clearInterval(helloT);helloT=setInterval(()=>{if(!live&&relay&&relay.ok)relay.send('dm',hello());else clearInterval(helloT)},5000)}});
+ if(relay)relay.code=S.code;clearInterval(pingT);pingT=setInterval(()=>{if(live&&mode==='relay'&&relay)relay.send('dm',{t:'ping'})},25000)}
 function again(){clearTimeout(tmr);if(!S.auto)return;tmr=setTimeout(connect,Math.min(20000,1500*(++retry)))}
 function onState(d){if(!d||d.t!=='state')return;perm=d.perm||{};lock=!!d.lock;LS.set('perm',perm);LS.set('lock',lock);party=d.party||[];init=d.init;map=d.map;shop=d.shop||null;LS.set('shop',shop);LS.set('handouts',d.handouts||[]);
  if(d.hero){const H=A.H;const h=d.hero;['id','name','cls','lvl','hp','maxhp','thp','ac','spd','st','inv','coins','spells','slots','ds','insp','xp','conds'].forEach(f=>{if(h[f]!==undefined)H[f]=h[f]});if(typeof h.notes==='string'&&!document.activeElement?.matches('#nt'))H.notes=h.notes;A.H=H;snapSent();Object.keys(waiting).forEach(f=>{if(JSON.stringify(F[f](H))===waiting[f])delete waiting[f]});LS.set('waiting',waiting)}
@@ -33,8 +43,8 @@ function render(){return `<div class="card"><h3 style="margin-top:0">Стол М
 function fmtG(g){return g>=1?(Math.round(g*10)/10).toLocaleString('ru')+' зм':g>=.1?Math.round(g*10)+' см':Math.max(1,Math.round(g*100))+' мм'}
 function buyReq(x){const m={t:'buy',shop:shop.id,k:x.k,q:1};if(!live)return toast('Нужна связь с Мастером');try{conn.send(m)}catch(e){}toast('Запрос на покупку отправлен Мастеру')}
 function bind(){document.querySelectorAll('[data-shb]').forEach(b=>b.onclick=e=>{e.stopPropagation();const x=shop.items.find(y=>y.k===b.dataset.shb);if(x)buyReq(x)});document.querySelectorAll('[data-shi]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-shb]'))return;const x=shop.items.find(y=>y.k===b.dataset.shi);const i=x.item&&(window.PDATA||{items:[]}).items.find(y=>y.id===x.item);openSheet(`<h3>${esc(x.n)}</h3>${x.unid?'<p class="muted">Торговец и сам толком не знает, что это. Свойства откроются после опознания.</p>':window.PITEM?window.PITEM(i,{d:x.cat}):''}<div class="row" style="margin-top:10px"><b class="grow">${fmtG(x.p)}</b><button class="btn ac" id="shbq">Купить</button></div>`,r=>{r.querySelector('#shbq').onclick=()=>{buyReq(x);closeSheet()}})});
-const g=$('#sgo');if(g)g.onclick=()=>{S.code=$('#scode').value.trim().toUpperCase();S.name=$('#sname').value.trim();S.auto=true;sv();retry=0;connect()};
- const d=$('#sdis');if(d)d.onclick=()=>{S.auto=false;sv();try{conn.close()}catch(e){}live=false;st='не подключено';init=null;map=null;A.render()};
+const g=$('#sgo');if(g)g.onclick=()=>{S.code=$('#scode').value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();try{relay&&relay.end()}catch(e){}relay=null;S.name=$('#sname').value.trim();S.auto=true;sv();retry=0;connect()};
+ const d=$('#sdis');if(d)d.onclick=()=>{S.auto=false;sv();try{mode==='relay'&&relay.send('dm',{t:'bye'})}catch(e){}try{conn.close()}catch(e){}try{relay&&relay.end()}catch(e){}relay=null;clearTimeout(p2pT);clearInterval(helloT);clearInterval(pingT);live=false;mode='';st='не подключено';init=null;map=null;A.render()};
  $('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(A.H))));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};
  $('#impb').onclick=()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim().replace(/^KP1:/,'')))));A.H=Object.assign(A.H,h);A.save();toast('Герой загружен');A.render()}catch(e){toast('Неверный код')}}}
 window.KP={linked:()=>live||!!(S.code&&lastSent.notes!==undefined),online:()=>live,can:f=>!lock&&perm[f]&&perm[f]!=='off',mode:f=>lock?'off':perm[f]||'off',locked:()=>lock,party:()=>party,waiting:()=>waiting,trade,render,bind,onLocal};

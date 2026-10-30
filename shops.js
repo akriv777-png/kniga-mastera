@@ -76,7 +76,7 @@ function open(id){const s=SH.find(x=>x.id===id);if(!s)return list();restock(s);c
  <div class="shp-o"><span>Место:</span>${TOWN.map(([k,n])=>`<button class="chip ${s.town===k?'on':''}" data-tw="${k}">${n}</button>`).join('')}</div>
  <div class="shp-o"><span>Достаток:</span>${WEALTH.map((w,i)=>`<button class="chip ${s.wealth===i?'on':''}" data-wl="${i}">${w[0]}</button>`).join('')}</div>
  <input class="inp" id="shf" placeholder="Поиск в лавке…" value="${esc(filt)}" style="margin:8px 0">
- <div class="list">${rows||'<p class="muted">Пусто. Нажми «Завоз».</p>'}</div>
+ <div class="list" data-nolist>${rows||'<p class="muted">Пусто. Нажми «Завоз».</p>'}</div>
  <div class="row" style="margin-top:10px"><button class="btn sm grow" id="sha">＋ Предмет из книги</button><button class="btn sm grow" id="shc">＋ Свой товар</button></div>
  <div class="row" style="margin-top:6px"><button class="btn sm grow" id="shn2">✎ Переименовать</button><button class="btn sm grow" id="shm">↻ Новый торговец</button><button class="btn sm dark" id="shd">Закрыть лавку</button></div>
  <button class="btn sm" id="shb" style="width:100%;margin-top:6px">← Все лавки</button>`,r=>{
