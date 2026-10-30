@@ -73,13 +73,13 @@ function go(i,dirHint){
   if(flipping&&i!==S.sec&&i>=0&&i<SECTIONS.length){go.q=[i,dirHint];return}
   if(i<0||i>=SECTIONS.length||i===S.sec||flipping){if(i===S.sec)page.scrollTo({top:0,behavior:'smooth'});return}
   const fwd=dirHint!=null?dirHint>0:i>S.sec;flipping=true;
-  const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';
+  const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';snap.querySelectorAll('canvas').forEach(c=>{c.width=c.height=0;c.remove()});
   const st=page.scrollTop;book.append(snap);snap.scrollTop=st;
   const prevSec=S.sec;S.sec=i;render();page.scrollTop=0;markRib();save();if(window.KMTab&&!window.__kmFromBack)KMTab(prevSec);window.__kmFromBack=0;
   const dur=380,ease='cubic-bezier(.3,.7,.2,1)',dx=fwd?1:-1;
   snap.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-dx*28}%) scale(.96)`,opacity:0}],{duration:dur,easing:ease,fill:'forwards'});
   const a=page.animate([{transform:`translateX(${dx*40}%)`,opacity:0},{transform:'none',opacity:1}],{duration:dur,easing:ease});
-  a.onfinish=()=>{snap.remove();flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}};
+  let fin=0;const done=()=>{if(fin)return;fin=1;clearTimeout(go.ft);snap.remove();document.querySelectorAll('#book > .page:not(#'+page.id+')').forEach(n=>{if(n!==page&&!n.id)n.remove()});flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}};a.onfinish=done;a.oncancel=done;go.ft=setTimeout(done,dur+250);
 }
 /* swipe: только от края экрана, никогда — из прокручиваемых, карты, жетонов, полей */
 (function(){let x0,y0,t0,ok;const el=$('#book');const EDGE=40;

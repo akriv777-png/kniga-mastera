@@ -17,6 +17,9 @@ function bind(cv){const P=new Map();let base=null;
   st.x+=(now.cx-base.cx)*dpr;st.y+=(now.cy-base.cy)*dpr;base=snap();draw()},{passive:false});
  const end=e=>{[...e.changedTouches].forEach(t=>P.delete(t.identifier));base=snap()};cv.addEventListener('touchend',end);cv.addEventListener('touchcancel',end);
  function snap(){const a=[...P.values()];if(!a.length)return null;const cx=a.reduce((s,p)=>s+p[0],0)/a.length,cy=a.reduce((s,p)=>s+p[1],0)/a.length;const d=a.length>1?Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1:1;return{n:a.length,cx,cy,d,s:st.s}}}
-document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.pm-fs');if(!b)return;const box=document.getElementById('pmap');box.classList.toggle('fs');b.textContent=box.classList.contains('fs')?'✕':'⤢';lastCv=null;const cv=box.querySelector('canvas');cv.width=0;draw()});
+function PFS(on){const box=document.getElementById('pmap');if(!box)return;box.classList.toggle('fs',on);document.documentElement.classList.toggle('pm-lock',on);const b=box.querySelector('.pm-fs');if(b)b.textContent=on?'✕ Закрыть':'⤢';if(on){try{history.pushState({pfs:1},'')}catch(e){}}else if(history.state&&history.state.pfs){PFS.pop=1;history.back()}lastCv=null;const cv=box.querySelector('canvas');if(cv)cv.width=0;draw()}
+addEventListener('popstate',()=>{if(PFS.pop){PFS.pop=0;return}const box=document.getElementById('pmap');if(box&&box.classList.contains('fs'))PFS(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const box=document.getElementById('pmap');if(box&&box.classList.contains('fs'))PFS(false)}});
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.pm-fs');if(!b)return;const box=document.getElementById('pmap');PFS(!box.classList.contains('fs'));lastCv=null;const cv=box.querySelector('canvas');cv.width=0;draw()});
 setInterval(()=>{const m=window.__kpMap,box=document.getElementById('pmap');if(!box||!m)return;const cv=box.querySelector('canvas');if(m!==lastM||cv!==lastCv||m.ping||cv.width!==Math.round(box.clientWidth*Math.min(2,devicePixelRatio||1)))draw()},120);
 window.KPMap={draw,st}})();

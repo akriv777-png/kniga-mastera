@@ -75,13 +75,13 @@ function go(i,dirHint){
   if(flipping&&i!==S.sec&&i>=0&&i<SECTIONS.length){go.q=[i,dirHint];return}
   if(i<0||i>=SECTIONS.length||i===S.sec||flipping){if(i===S.sec)page.scrollTo({top:0,behavior:'smooth'});return}
   const fwd=dirHint!=null?dirHint>0:i>S.sec;flipping=true;
-  const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';
+  const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';snap.querySelectorAll('canvas').forEach(c=>{c.width=c.height=0;c.remove()});
   const st=page.scrollTop;book.append(snap);snap.scrollTop=st;
   const prevSec=S.sec;S.sec=i;render();page.scrollTop=0;markRib();save();if(window.KMTab&&!window.__kmFromBack)KMTab(prevSec);window.__kmFromBack=0;
   const dur=380,ease='cubic-bezier(.3,.7,.2,1)',dx=fwd?1:-1;
   snap.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-dx*28}%) scale(.96)`,opacity:0}],{duration:dur,easing:ease,fill:'forwards'});
   const a=page.animate([{transform:`translateX(${dx*40}%)`,opacity:0},{transform:'none',opacity:1}],{duration:dur,easing:ease});
-  a.onfinish=()=>{snap.remove();flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}};
+  let fin=0;const done=()=>{if(fin)return;fin=1;clearTimeout(go.ft);snap.remove();document.querySelectorAll('#book > .page:not(#'+page.id+')').forEach(n=>{if(n!==page&&!n.id)n.remove()});flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}};a.onfinish=done;a.oncancel=done;go.ft=setTimeout(done,dur+250);
 }
 /* swipe: только от края экрана, никогда — из прокручиваемых, карты, жетонов, полей */
 (function(){let x0,y0,t0,ok;const el=$('#book');const EDGE=40;
@@ -1241,7 +1241,7 @@ const PAL={dark:{stone:['#3a3633','#2e2a27','#151211','#4a4440'],sand:['#4a3e2e'
  parch:{stone:['#e6d6b0','#dccaa0','#3a2a1a','#c9b588'],sand:['#ead8ac','#e0cb98','#4a3216','#cdb37e'],moss:['#dcdcb0','#cfd0a0','#2e3a1e','#b8bd88'],blood:['#e8d2b0','#dfc29e','#5a1810','#c9a888']}};
 const cache=new Map();
 function base(m,CS){const key=m.id+'|'+CS+'|'+(m.style||'dark')+(m.theme||'stone')+(m.grid!==false)+(m.gs||2)+(m.coord?'c':'')+'|'+m.g.join(',').length+'|'+hashG(m.g);const c0=cache.get(m.id);if(c0&&c0.key===key)return c0.cv;
- const cv=document.createElement('canvas');cv.width=m.W*CS;cv.height=m.H*CS;const g=cv.getContext('2d');paint(g,m,CS);cache.set(m.id,{key,cv});if(cache.size>6)cache.delete(cache.keys().next().value);return cv}
+ const cv=document.createElement('canvas');cv.width=m.W*CS;cv.height=m.H*CS;const g=cv.getContext('2d');paint(g,m,CS);{const o=cache.get(m.id);if(o&&o.cv!==cv)o.cv.width=o.cv.height=0}cache.set(m.id,{key,cv});if(cache.size>6){const k0=cache.keys().next().value;const o=cache.get(k0);o.cv.width=o.cv.height=0;cache.delete(k0)}return cv}
 function hashG(a){let h=0;for(let i=0;i<a.length;i++){const s=a[i];h=(h*31+(s?s.charCodeAt(0)*7+s.length:1)+i)|0}return h}
 function paint(g,m,CS){const P=(PAL[m.style]||PAL.dark)[m.theme]||PAL.dark.stone,par=m.style==='parch',r=R(m.seed||7),W=m.W,H=m.H,get=(x,y)=>x>=0&&y>=0&&x<W&&y<H?m.g[y*W+x]:'';
  g.fillStyle=par?'#d9c49a':'#0b0807';g.fillRect(0,0,W*CS,H*CS);
@@ -1316,7 +1316,7 @@ function lightLayer(m,CS){const key=m.id+'L'+hashG(m.g)+m.tok.map(t=>t.k==='pc'?
  if(m.type==='forest'||m.type==='village')L.length=0;
  L.forEach(([x,y,r])=>{const X=x*CS+CS/2,Y=y*CS+CS/2,gr=g.createRadialGradient(X,Y,0,X,Y,r*CS);gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(.6,'rgba(0,0,0,.7)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(X-r*CS,Y-r*CS,r*CS*2,r*CS*2)});
  g.globalCompositeOperation='source-over';L.forEach(([x,y,r],i)=>{const X=x*CS+CS/2,Y=y*CS+CS/2,gr=g.createRadialGradient(X,Y,0,X,Y,r*CS*.8);gr.addColorStop(0,'rgba(255,160,60,.16)');gr.addColorStop(1,'rgba(255,120,40,0)');g.fillStyle=gr;g.fillRect(X-r*CS,Y-r*CS,r*CS*2,r*CS*2)});
- cache.set(m.id+'L',{key,cv});return cv}
+ if(c0&&c0.cv!==cv)c0.cv.width=c0.cv.height=0;cache.set(m.id+'L',{key,cv});return cv}
 window.drawMap=drawMap=function(g,m,CS,fogA){g.drawImage(base(m,CS),0,0);
  if(m.light&&m.type!=='forest'&&m.type!=='village')g.drawImage(lightLayer(m,CS),0,0);
  window.KM_DEC&&KM_DEC(g,m,CS);
@@ -1610,8 +1610,8 @@ KM.genSet=generateSet;KM.LOCTYPES=LT;
 /* ---------- отрисовка декора и переходов ---------- */
 const BC=new Map();const LORD={floor:0,object:1,top:2};
 function bmp(id,r,f,S){const k=id+'|'+r+'|'+f+'|'+S;let c=BC.get(k);if(c)return c;const MD=window.MAPDECOR,o=MD&&MD.byId[id];if(!o)return null;const w=o.w*S,h=o.h*S;const a=document.createElement('canvas');a.width=w;a.height=h;MD.render(a.getContext('2d'),id,S,{seed:id});
- const rw=r%2?h:w,rh=r%2?w:h;c=document.createElement('canvas');c.width=rw;c.height=rh;const x=c.getContext('2d');x.translate(rw/2,rh/2);x.rotate(r*Math.PI/2);if(f)x.scale(-1,1);x.drawImage(a,-w/2,-h/2);if(BC.size>700)BC.clear();BC.set(k,c);return c}
-window.KM_DEC=function(g,m,CS){const MD=window.MAPDECOR;if(m.dec&&m.dec.length&&MD){const S=64;const arr=m._decS&&m._decS.n===m.dec.length?m._decS.a:(()=>{const a=m.dec.slice().sort((p,q)=>(LORD[p.l||(MD.byId[p.id]||{}).layer]??1)-(LORD[q.l||(MD.byId[q.id]||{}).layer]??1));Object.defineProperty(m,'_decS',{value:{n:m.dec.length,a},configurable:true,enumerable:false,writable:true});return a})();
+ const rw=r%2?h:w,rh=r%2?w:h;c=document.createElement('canvas');c.width=rw;c.height=rh;const x=c.getContext('2d');x.translate(rw/2,rh/2);x.rotate(r*Math.PI/2);if(f)x.scale(-1,1);x.drawImage(a,-w/2,-h/2);a.width=a.height=0;BC.px=(BC.px||0)+rw*rh;if(BC.px>12e6||BC.size>400){BC.forEach(v=>{v.width=v.height=0});BC.clear();BC.px=rw*rh}BC.set(k,c);return c}
+window.KM_DEC=function(g,m,CS){const MD=window.MAPDECOR;if(m.dec&&m.dec.length&&MD){const S=32;const arr=m._decS&&m._decS.n===m.dec.length?m._decS.a:(()=>{const a=m.dec.slice().sort((p,q)=>(LORD[p.l||(MD.byId[p.id]||{}).layer]??1)-(LORD[q.l||(MD.byId[q.id]||{}).layer]??1));Object.defineProperty(m,'_decS',{value:{n:m.dec.length,a},configurable:true,enumerable:false,writable:true});return a})();
   for(const d of arr){const b=bmp(d.id,d.r||0,d.f?1:0,S);if(!b)continue;const s=d.s||1;g.drawImage(b,d.x*CS,d.y*CS,b.width/S*CS*s,b.height/S*CS*s)}}
  (m.links||[]).forEach(l=>{const X=l.x*CS+CS/2,Y=l.y*CS+CS/2;g.save();g.strokeStyle='#e8c77a';g.lineWidth=2.5;g.setLineDash([4,3]);g.beginPath();g.arc(X,Y,CS*.46,0,7);g.stroke();g.setLineDash([]);g.fillStyle='#e8c77a';g.font=`700 ${CS*.42}px sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('⇄',X,Y);g.restore()})};
 window.KM_SOLID=function(m,x,y){const MD=window.MAPDECOR;if(!m.dec||!MD)return false;for(const d of m.dec){const o=MD.byId[d.id];if(!o||!o.solid||o.layer==='floor')continue;const w=(d.r%2?o.h:o.w)*(d.s||1),h=(d.r%2?o.w:o.h)*(d.s||1);if(x>=d.x&&y>=d.y&&x<d.x+w&&y<d.y+h)return true}return false};
@@ -1667,7 +1667,7 @@ window.KM&&(KM.gen2=generate);
 const MDo=()=>window.MAPDECOR;const oOf=d=>MDo()&&MDo().byId[d.id];
 const dims=d=>{const o=oOf(d)||{w:1,h:1},s=d.s||1;return {w:(d.r%2?o.h:o.w)*s,h:(d.r%2?o.w:o.h)*s}};
 const thumbs=new Map();
-function thumb(id){if(thumbs.has(id))return thumbs.get(id);const MD=MDo(),o=MD.byId[id];const S=Math.max(6,Math.floor(56/Math.max(o.w,o.h)));const c=document.createElement('canvas');c.width=o.w*S;c.height=o.h*S;try{MD.render(c.getContext('2d'),id,S,{seed:id})}catch(e){}const u=c.toDataURL();thumbs.set(id,u);return u}
+function thumb(id){if(thumbs.has(id))return thumbs.get(id);const MD=MDo(),o=MD.byId[id];const S=Math.max(6,Math.floor(56/Math.max(o.w,o.h)));const c=document.createElement('canvas');c.width=o.w*S;c.height=o.h*S;try{MD.render(c.getContext('2d'),id,S,{seed:id})}catch(e){}const u=c.toDataURL();c.width=c.height=0;thumbs.set(id,u);return u}
 let st={q:'',cat:'',lim:48};
 function palette(){const MD=MDo();if(!MD||!MD.items.length)return toast('Библиотека декора не загружена');const cats=[...new Set(MD.items.map(x=>x.cat))].sort();
  openSheet(`<div class="sb-title" data-noshow>Декор для карты</div><div class="sb-sub">${MD.items.length} предметов · тап — выбрать, затем тап по клетке карты</div>

@@ -1,0 +1,5 @@
+'use strict';(()=>{const show=t=>{try{let b=document.getElementById('kmerr');if(!b){b=document.createElement('div');b.id='kmerr';b.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:2147483647;background:rgba(60,8,8,.95);color:#ffe;font:12px/1.35 monospace;padding:8px 34px 8px 10px;border-radius:10px;border:1px solid #f66;max-height:30vh;overflow:auto;white-space:pre-wrap';b.onclick=()=>b.remove();document.body.append(b)}b.textContent=('⚠ Ошибка (сделайте скриншот, тап — скрыть)\n'+t+'\n'+(b.dataset.p||'')).slice(0,1500);b.dataset.p=t.slice(0,300)}catch(e){}};
+addEventListener('error',e=>show((e.message||'error')+' @'+String(e.filename||'').split('/').pop()+':'+e.lineno+':'+e.colno));
+addEventListener('unhandledrejection',e=>show('Promise: '+(e.reason&&(e.reason.stack||e.reason.message)||e.reason)));
+try{new PerformanceObserver(l=>l.getEntries().forEach(x=>{if(x.duration>1500)show('Зависание '+Math.round(x.duration)+' мс')})).observe({type:'longtask'})}catch(e){}
+window.KM_err=show})();

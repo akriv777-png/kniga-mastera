@@ -4,7 +4,7 @@
 const MDo=()=>window.MAPDECOR;const oOf=d=>MDo()&&MDo().byId[d.id];
 const dims=d=>{const o=oOf(d)||{w:1,h:1},s=d.s||1;return {w:(d.r%2?o.h:o.w)*s,h:(d.r%2?o.w:o.h)*s}};
 const thumbs=new Map();
-function thumb(id){if(thumbs.has(id))return thumbs.get(id);const MD=MDo(),o=MD.byId[id];const S=Math.max(6,Math.floor(56/Math.max(o.w,o.h)));const c=document.createElement('canvas');c.width=o.w*S;c.height=o.h*S;try{MD.render(c.getContext('2d'),id,S,{seed:id})}catch(e){}const u=c.toDataURL();thumbs.set(id,u);return u}
+function thumb(id){if(thumbs.has(id))return thumbs.get(id);const MD=MDo(),o=MD.byId[id];const S=Math.max(6,Math.floor(56/Math.max(o.w,o.h)));const c=document.createElement('canvas');c.width=o.w*S;c.height=o.h*S;try{MD.render(c.getContext('2d'),id,S,{seed:id})}catch(e){}const u=c.toDataURL();c.width=c.height=0;thumbs.set(id,u);return u}
 let st={q:'',cat:'',lim:48};
 function palette(){const MD=MDo();if(!MD||!MD.items.length)return toast('Библиотека декора не загружена');const cats=[...new Set(MD.items.map(x=>x.cat))].sort();
  openSheet(`<div class="sb-title" data-noshow>Декор для карты</div><div class="sb-sub">${MD.items.length} предметов · тап — выбрать, затем тап по клетке карты</div>
