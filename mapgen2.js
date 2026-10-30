@@ -2,11 +2,11 @@
 /* ===== Генератор локаций v2: 60+ типов, декор MAPDECOR, связанные карты ===== */
 const RNG=s=>{let a=typeof s==='string'?[...s].reduce((h,c)=>(h*31+c.charCodeAt(0))|0,7):(s>>>0||1);return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
 /* новые грунты */
-const GND={sand:['Песок','#8a7448','#d8c48e'],snow:['Снег','#b9bec6','#eef0f2'],mud:['Топь','#2f301c','#a89a6a'],ice:['Лёд','#6f98ad','#c8dde6'],wood:['Доски','#4f3722','#b08a5a'],dirt:['Земля','#3f3122','#bba277'],carpet:['Ковёр (пол)','#4a1418','#a0464a'],pit:['Пропасть','#020101','#3a2a1a'],ash:['Пепел','#2b2726','#9a948e'],moss:['Мох','#25331d','#a0b07a']};
+const GND={sand:['Песок','#8a7448','#d8c48e'],snow:['Снег','#b9bec6','#eef0f2'],mud:['Топь','#2f301c','#a89a6a'],ice:['Лёд','#6f98ad','#c8dde6'],wood:['Доски','#4f3722','#b08a5a'],dirt:['Земля','#3f3122','#bba277'],carpet:['Ковёр (пол)','#4a1418','#a0464a'],pit:['Пропасть','#020101','#3a2a1a'],ash:['Пепел','#2b2726','#9a948e'],moss:['Мох','#25331d','#a0b07a'],slime:['Слизь','#3f6a14','#9cc25a'],cloud:['Облака','#aebdcc','#eef2f6'],air:['Небо','#1f3f63','#9dbad6']};
 Object.entries(GND).forEach(([k,v])=>{if(!TC[k]){const t=[k,v[0],v[1]];TILES.push(t);TC[k]=t}});
 window.KM_GROUND=GND;
-const FREE=new Set(['floor','wood','carpet','dirt','grass','road','sand','snow','mud','ice','moss','ash','rug']);
-const BLOCK=new Set(['wall','pit','water','lava','tree','']);
+const FREE=new Set(['floor','wood','carpet','dirt','grass','road','sand','snow','mud','ice','moss','ash','rug','slime']);
+const BLOCK=new Set(['wall','pit','water','lava','tree','cloud','air','rock','']);
 /* ---------- утилиты сетки ---------- */
 function G0(W,H,R,fill){const g=Array(W*H).fill(fill||'');const G={W,H,g,R,rooms:[],start:null,ri:(a,b)=>a+Math.floor(R()*(b-a+1)),pick:a=>a[Math.floor(R()*a.length)],
  get:(x,y)=>x<0||y<0||x>=W||y>=H?null:g[y*W+x],set:(x,y,t)=>{if(x>=0&&y>=0&&x<W&&y<H)g[y*W+x]=t},
@@ -124,7 +124,21 @@ function mine(G,o){cave(G,{ft:'dirt',fill:.5,liq:o.liq});const {W,H}=G;for(let k
  for(let i=0;i<W*H;i++)if(G.g[i]==='wall'&&G.R()<.03)G.g[i]='crystal';const keep=largest(G,t=>t&&!BLOCK.has(t)||t==='door');for(let i=0;i<W*H;i++){const t=G.g[i];if(t&&!BLOCK.has(t)&&!keep.has(i))G.g[i]='wall'}}
 function cellar(G,o){const {W,H}=G;G.rect(0,0,W,H,'');G.box(1,1,W-2,H-2,'wall',o.ft||'floor');const list=[];partition(G,2,2,W-4,H-4,3,o.depth||2,list);G.rooms.push(...list);G.set(2,2,'stairs');G.start={x:2,y:2}}
 function floorPlan(G,o){/* этаж здания без улицы */const {W,H}=G;G.rect(0,0,W,H,'');G.box(1,1,W-2,H-2,'wall',o.ft||'wood');const list=[];if(o.hall){const hw=Math.max(5,Math.round((W-4)*o.hall));for(let j=2;j<H-2;j++)G.set(1+hw,j,'wall');G.set(1+hw,G.ri(3,H-4),'door');G.rooms.push({x:2,y:2,w:hw-1,h:H-4,cx:1+(hw>>1),cy:H>>1,hall:1});partition(G,2+hw,2,W-4-hw,H-4,3,3,list)}else partition(G,2,2,W-4,H-4,3,o.depth||3,list);G.rooms.push(...list);G.set(W-3,2,'stairs');G.start={x:W-3,y:2}}
-const ALG={bsp,cave,nature,building,tower,ship,castle,temple,streets,village,camp,ruins,sewer,arena,mine,cellar,floorPlan};
+function sky(G,o){/* парящие острова над облаками, верёвочные мосты */const {W,H,R}=G;const n=fbm(R,W,H,4);for(let y=0;y<H;y++)for(let x=0;x<W;x++)G.set(x,y,n(x,y)>.55?'cloud':'air');
+ const isl=[];const k=Math.max(4,Math.round(W*H/240));for(let t=0;t<k*12&&isl.length<k;t++){const r=G.ri(4,Math.max(5,Math.min(W,H)/4|0)),cx=G.ri(r+1,W-r-2),cy=G.ri(r+1,H-r-2);if(isl.some(i=>Math.hypot(i.cx-cx,i.cy-cy)<i.r+r+2))continue;isl.push({cx,cy,r})}
+ isl.forEach((I,ix)=>{for(let y=I.cy-I.r-1;y<=I.cy+I.r+1;y++)for(let x=I.cx-I.r-1;x<=I.cx+I.r+1;x++){const d=Math.hypot(x-I.cx,(y-I.cy)*1.1)+(n(x,y)-.5)*2.4;if(d<I.r-.6)G.set(x,y,ix===0?'floor':(R()<.15?'moss':'grass'));else if(d<I.r+.4)G.set(x,y,'rock')}
+  G.rooms.push({x:I.cx-I.r+1,y:I.cy-I.r+1,w:2*I.r-1,h:2*I.r-1,cx:I.cx,cy:I.cy})});
+ const I0=isl[0];if(I0){for(let j=-1;j<=1;j++){G.set(I0.cx-2,I0.cy+j*2,'pillar');G.set(I0.cx+2,I0.cy+j*2,'pillar')}G.set(I0.cx,I0.cy-1,'altar')}
+ const near=(a)=>isl.filter(b=>b!==a).sort((p,q)=>Math.hypot(p.cx-a.cx,p.cy-a.cy)-Math.hypot(q.cx-a.cx,q.cy-a.cy));const done=new Set([0]);
+ while(done.size<isl.length){let best=null;done.forEach(i=>isl.forEach((b,j)=>{if(done.has(j))return;const d=Math.hypot(b.cx-isl[i].cx,b.cy-isl[i].cy);if(!best||d<best[2])best=[i,j,d]}));lpath(G,{x:isl[best[0]].cx,y:isl[best[0]].cy},{x:isl[best[1]].cx,y:isl[best[1]].cy},'wood',1,new Set(['floor','grass','moss','pillar','altar']));done.add(best[1])}
+ isl.slice(1).forEach(I=>{for(let t=0;t<3;t++){const x=I.cx+G.ri(-I.r+1,I.r-1),y=I.cy+G.ri(-I.r+1,I.r-1);if(G.get(x,y)==='grass')G.set(x,y,'tree')}});
+ const L=isl[isl.length-1]||{cx:W>>1,cy:H>>1};G.start={x:L.cx,y:L.cy}}
+function slime(G,o){/* сырые пещеры: камеры-пузыри, слизистые тоннели, озёра слизи */const {W,H,R}=G;cave(G,{fill:.5,iter:5});const n=fbm(R,W,H,4);
+ const ch=[];for(let t=0;t<Math.max(4,W*H/260|0);t++){const r=G.ri(2,3),cx=G.ri(r+2,W-r-3),cy=G.ri(r+2,H-r-3);for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++)if(Math.hypot(x-cx,y-cy)+(n(x,y)-.5)*2<r)G.set(x,y,'floor');ch.push({x:cx,y:cy})}
+ const s=G.start||ch[0];ch.forEach((c,i)=>lpath(G,i?ch[i-1]:s,c,'floor',1));for(let i=0;i<G.W*G.H;i++)if(G.g[i]==='wall')G.g[i]='';walls(G);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=G.get(x,y);if(t==='floor'){const v=n(x,y);if(v>.6)G.set(x,y,'slime');else if(v>.52)G.set(x,y,'mud');else if(R()<.02)G.set(x,y,'bones')}}
+ ch.forEach(c=>G.rooms.push({x:c.x-2,y:c.y-2,w:5,h:5,cx:c.x,cy:c.y}))}
+const ALG={sky,slime,bsp,cave,nature,building,tower,ship,castle,temple,streets,village,camp,ruins,sewer,arena,mine,cellar,floorPlan};
 /* ---------- каталог локаций ---------- */
 /* [id,имя,группа,алгоритм,параметры,темы декора,монстры(ty|рег.выр.),связи[[тип,подпись]],вне помещения?] */
 const LT=[
@@ -144,7 +158,7 @@ const LT=[
 ['underdark','Подземье','Пещеры','cave',{fill:.44,liq:['water',.12]},['подземье','пещера'],'аберрация|/дроу|дуэргар/',[]],
 ['dragon','Логово дракона','Пещеры','cave',{fill:.42,liq:['lava',.1]},['логово дракона','сокровищница','пещера'],'дракон',[]],
 ['spider','Логово паука','Пещеры','cave',{fill:.5},['логово паука','пещера'],'/паук|ettercap|эттеркап/',[]],
-['slime','Логово слизи','Пещеры','cave',{fill:.47,liq:['mud',.2]},['логово слизи','пещера'],'слизь',[]],
+['slime','Логово слизи','Пещеры','slime',{},['логово слизи','пещера'],'слизь',[]],
 ['icecave','Ледяная пещера','Пещеры','cave',{ft:'ice',fill:.45,alt:['snow',.35]},['ледник','снег','пещера'],'/ледян|морозн|йети/|элементаль',[]],
 ['volcano','Жерло вулкана','Пещеры','cave',{ft:'ash',fill:.42,liq:['lava',.22]},['вулкан','пепелище'],'элементаль|/огн|саламандр/',[]],
 ['mine','Шахта','Пещеры','mine',{},['шахта','дварфы'],'/кобольд|дуэргар|гоблин/|конструкт',[]],
@@ -203,13 +217,13 @@ const LT=[
 ['desertruins','Руины в песках','Особые','ruins',{sand:1},['руины','пустыня'],'нежить|/мумия/',[]],
 ['arena','Арена','Особые','arena',{},['поле боя','город'],'гуманоид|чудовище',[]],
 ['infernal','Инфернальный план','Особые','cave',{ft:'ash',fill:.4,liq:['lava',.3]},['инфернальное'],'исчадие',[]],
-['sky','Небесная цитадель','Особые','temple',{out:'',ft:'floor'},['небесное'],'небожитель|элементаль',[]],
+['sky','Небесная цитадель','Особые','sky',{},['небесное'],'небожитель|элементаль',[]],
 ['witch','Хижина ведьмы на болоте','Особые','village',{base:'mud',n:1,trees:.3,pond:1},['логово ведьмы','болото'],'/карга|ведьм/|фея',[]],
 ['druid','Круг друидов','Особые','camp',{n:8,trees:.4},['друиды','лес'],'фея|зверь',[]],
 ['huntlodge','Охотничий домик','Особые','village',{n:1,trees:.45,big:1},['охотничий домик','лес'],'зверь',[]]];
 const LTI=Object.fromEntries(LT.map(x=>[x[0],x]));
 const GROUPS=['Подземелья','Пещеры','Природа','Поселения','Здания','Особые'];
-const OUTD=new Set(['nature','village','streets','camp','ruins','castle']);
+const OUTD=new Set(['sky','nature','village','streets','camp','ruins','castle']);
 /* ---------- генерация одной карты ---------- */
 function generate(o){const lt=LTI[o.type]||LT[0];const W=o.W,H=o.H;const seed=o.seed||'1';const R=RNG(String(seed)+'|'+lt[0]);const G=G0(W,H,R);
  const p=Object.assign({},lt[4]);if(lt[3]==='nature'&&p.trees!=null)p.trees=Math.min(.7,p.trees*(.5+o.dens/100));
@@ -221,7 +235,7 @@ function generate(o){const lt=LTI[o.type]||LT[0];const W=o.W,H=o.H;const seed=o.
  if(o.traps){const n=Math.round(free.length*.006*(.3+dang*1.7));for(let k=0;k<n;k++){const i=G.pick(free);if(FREE.has(G.g[i])&&far(i)&&nearOK(i))G.g[i]='trap'}}
  if(o.chests){const rs=G.rooms.length?G.rooms:[{cx:W>>1,cy:H>>1}];const n=Math.max(1,Math.round(rs.length*.35*(.5+dang)));for(let k=0;k<n;k++){const r=G.pick(rs);for(let t=0;t<12;t++){const x=r.cx+G.ri(-2,2),y=r.cy+G.ri(-2,2),c=G.get(x,y);if(c&&FREE.has(c)&&far(y*W+x)){G.set(x,y,'chest');break}}}}
  if(!o.doors)for(let i=0;i<W*H;i++)if(G.g[i]==='door')G.g[i]=FREE.has(G.g[i-1])?G.g[i-1]:'floor';
- const m={id:uid(),name:'',W,H,g:G.g,fog:Array(W*H).fill(0),tok:[],dec:[],links:[],style:'dark',theme:{склеп:'stone',пустыня:'sand',лес:'moss',инфернальное:'blood'}[lt[5][0]]||(OUTD.has(lt[3])?'moss':'stone'),light:!OUTD.has(lt[3])&&lt[3]!=='ship',grid:true,seed:Number(String(seed).replace(/\D/g,'').slice(0,9))||1,type:lt[3]==='cave'||lt[3]==='mine'?'cave':OUTD.has(lt[3])?'forest':'dungeon',gen:Object.assign({},o),lt:lt[0]};
+ const m={id:uid(),name:'',W,H,g:G.g,fog:Array(W*H).fill(0),tok:[],dec:[],links:[],style:'dark',theme:{склеп:'stone',пустыня:'sand',лес:'moss',инфернальное:'blood'}[lt[5][0]]||(OUTD.has(lt[3])?'moss':'stone'),light:!OUTD.has(lt[3])&&lt[3]!=='ship',grid:true,seed:Number(String(seed).replace(/\D/g,'').slice(0,9))||1,type:lt[3]==='cave'||lt[3]==='mine'||lt[3]==='slime'?'cave':OUTD.has(lt[3])?'forest':'dungeon',gen:Object.assign({},o),lt:lt[0]};
  if(o.dec)m.dec=furnish(G,R,[...(o.th?[o.th]:lt[5]),...(o.th2?[o.th2]:[])],o.dens/100,!OUTD.has(lt[3]));
  if(o.mons)m.tok.push(...spawn(G,R,lt,dang,o));
  if(o.pcs&&G.start)placePCs(m,G);
