@@ -14,7 +14,7 @@ async function pasteInto(el){let txt='';try{txt=await navigator.clipboard.readTe
 function enhance(root){(root||document).querySelectorAll('#scode,#imp,#tbi').forEach(el=>{if(el.dataset.pst)return;el.dataset.pst=1;
  const b=document.createElement('button');b.type='button';b.className='btn sm pst-b';b.textContent='📋 Вставить';b.onclick=e=>{e.preventDefault();pasteInto(el)};
  const w=document.createElement('div');w.className='pst-row';w.appendChild(b);
- if(isRoom(el)){const h=document.createElement('span');h.className='pst-h';h.textContent='или наведи камеру iPhone на QR-код Мастера';w.appendChild(h)}
+ if(isRoom(el)){const h=document.createElement('span');h.className='pst-h';h.textContent='или наведи камеру телефона на QR-код Мастера';w.appendChild(h)}
  el.after(w)})}
 new MutationObserver(m=>{for(const r of m)for(const n of r.addedNodes)if(n.nodeType===1&&(n.matches('#scode,#imp,#tbi')||n.querySelector('#scode,#imp,#tbi')))enhance(n.parentNode||n)}).observe(document.body,{childList:true,subtree:true});
 enhance();
