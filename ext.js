@@ -177,7 +177,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   $('#zi').onclick=()=>zoom(1.25);$('#zo').onclick=()=>zoom(.8);$('#zf').onclick=fit;
   function zoom(k){const w=wrap.clientWidth/2,h=wrap.clientHeight/2;const s=Math.max(.3,Math.min(4,view.s*k));const kk=s/view.s;view.x=w-(w-view.x)*kk;view.y=h-(h-view.y)*kk;view.s=s;LS.set('mapview',view);draw()}
   opts();size();if(!LS.get('mapview',null)||view._fit!==m.id){fit();view._fit=m.id}
-  window.KM.mapDraw=draw}
+  window.KM.mapDraw=draw;KM.mapCur=()=>curMap();KM.mapSave=()=>saveMaps()}
 function tileIcon(k){return {door:'▮',stairs:'≡',chest:'▣',trap:'✕',tree:'♣',water:'≈',lava:'≈'}[k]||''}
 function drawMap(g,m,CS,fogA){
   for(let y=0;y<m.H;y++)for(let x=0;x<m.W;x++){const t=m.g[y*m.W+x];const X=x*CS,Y=y*CS;
