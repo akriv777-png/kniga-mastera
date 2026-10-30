@@ -96,7 +96,11 @@ const TC=Object.fromEntries(TILES.map(t=>[t[0],t]));
 let maps=LS.get('maps',null);
 if(!maps){maps=[sampleMap()];LS.set('maps',maps)}
 let mapCur=LS.get('mapcur',maps[0].id);
-let mt={tool:'paint',tile:'wall',fogView:false,tokKind:'pc'};
+let mt={tool:'pan',tile:'wall',fogView:false,tokKind:'pc',locked:true,autoLock:LS.get('autolock',true)};
+const snap=m=>JSON.stringify({g:m.g,fog:m.fog,tok:m.tok});
+function histPush(m){m.hist=m.hist||[];m.redo=[];m.hist.push(snap(m));if(m.hist.length>60)m.hist.shift()}
+function histMove(m,from,to){if(!(m[from]||[]).length)return false;m[to]=m[to]||[];m[to].push(snap(m));const o=JSON.parse(m[from].pop());m.g=o.g;m.fog=o.fog;m.tok=o.tok;saveMaps();return true}
+let relockT;
 let view=LS.get('mapview',{s:1,x:0,y:0});
 function sampleMap(){const W=20,H=20,g=Array(W*H).fill('');const set=(x,y,t)=>{if(x>=0&&y>=0&&x<W&&y<H)g[y*W+x]=t};
   for(let y=2;y<12;y++)for(let x=2;x<11;x++)set(x,y,(x===2||x===10||y===2||y===11)?'wall':'floor');set(10,6,'door');
@@ -109,11 +113,16 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>
   <div class="map-wrap" id="mw"><canvas id="mc"></canvas><div class="zoom"><button id="zi">＋</button><button id="zo">−</button><button id="zf">⤢</button></div></div>
-  <div class="seg tools" id="mtools">${[['paint','🖌 Кисть'],['erase','⌫ Стереть'],['token','◉ Фишка'],['fog','☁ Туман'],['pan','✋ Двигать']].map(([k,l])=>`<button data-t="${k}" class="${mt.tool===k?'on':''}">${l}</button>`).join('')}</div>
-  <div id="mopts"></div>`;
+  <div class="row" style="margin:8px 0"><button class="btn sm${mt.locked?'':' red'}" id="mLock">${mt.locked?'🔒 Редактировать':'🔓 Готово (заблокировать)'}</button><button class="btn sm" id="mUndo" aria-label="Отменить">↶ Отменить</button><button class="btn sm" id="mRedo" aria-label="Повторить">↷ Повторить</button></div>
+  <div class="seg tools" id="mtools">${[['paint','🖌 Кисть'],['erase','⌫ Стереть'],['token','◉ Фишка'],['fog','☁ Туман'],['pan','✋ Двигать']].map(([k,l])=>`<button data-t="${k}" class="${!mt.locked&&mt.tool===k?'on':''}">${l}</button>`).join('')}</div>
+  <div id="mopts"></div><label class="row muted" style="font-size:12.5px;margin-top:8px"><input type="checkbox" id="mAuto"${mt.autoLock?' checked':''}> Автоблокировка через 30 с бездействия</label>`;
+  const setLock=v=>{mt.locked=v;if(v)mt.tool='pan';rMap();if(!v)toast('Режим правки: можно рисовать')};
+  $('#mLock').onclick=()=>setLock(!mt.locked);$('#mAuto').onchange=e=>{mt.autoLock=e.target.checked;LS.set('autolock',mt.autoLock)};
+  const bump=()=>{clearTimeout(relockT);if(mt.autoLock&&!mt.locked)relockT=setTimeout(()=>{if(S.sec===SECTIONS.findIndex(x=>x[0]==='map')&&!mt.locked){setLock(true);toast('Карта заблокирована')}else mt.locked=true},30000)};bump();
+  $('#mUndo').onclick=()=>{histMove(m,'hist','redo')?draw():toast('Нечего отменять')};$('#mRedo').onclick=()=>{histMove(m,'redo','hist')?draw():toast('Нечего повторять')};
   $('#mSel').onchange=e=>{mapCur=e.target.value;saveMaps();view={s:1,x:0,y:0};rMap()};
   $('#mNew').onclick=newMap;$('#mMenu').onclick=mapMenu;
-  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
+  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;if(mt.locked&&mt.tool!=='pan'){mt.locked=false;$('#mLock').textContent='🔓 Готово (заблокировать)';$('#mLock').classList.add('red')}$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
   const cv=$('#mc'),wrap=$('#mw');const dpr=Math.min(2,devicePixelRatio||1);const CS=32;
   function size(){const w=wrap.clientWidth,h=wrap.clientHeight;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';draw()}
   function fit(){const w=wrap.clientWidth,h=wrap.clientHeight;view.s=Math.min(w/(m.W*CS),h/(m.H*CS));view.x=(w-m.W*CS*view.s)/2;view.y=(h-m.H*CS*view.s)/2;draw()}
@@ -123,11 +132,11 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
     if(mt.tool==='paint')O.innerHTML=`<div class="tiles">${TILES.map(([k,l,c])=>`<button data-tile="${k}" class="${mt.tile===k?'on':''}"><i style="background:${c}">${tileIcon(k)}</i>${l}</button>`).join('')}</div>`;
     else if(mt.tool==='token')O.innerHTML=`${chips('tk',[['pc','Герой'],['mon','Монстр'],['npc','NPC'],['del','Удалить фишку']],mt.tokKind)}<div class="muted" style="font-size:12.5px">Тапни клетку — поставить. Перетащи фишку — двигать.</div><div class="row" style="margin-top:6px">${players.map(p=>`<button class="btn sm" data-pp="${p.id}">${esc(p.name)}</button>`).join('')}</div>`;
     else if(mt.tool==='fog')O.innerHTML=`${chips('fv',[['0','Вид Мастера'],['1','Вид игроков']],mt.fogView?1:0)}<div class="row" style="margin-top:6px"><button class="btn sm" id="fAll">Скрыть всё</button><button class="btn sm" id="fNone">Открыть всё</button></div><div class="muted" style="font-size:12.5px;margin-top:6px">Води пальцем: скрытые клетки открываются, открытые — скрываются.</div>`;
-    else O.innerHTML=`<div class="muted" style="font-size:12.5px">Двумя пальцами — зум и сдвиг в любом режиме.</div>`;
+    else O.innerHTML=`<div class="muted" style="font-size:12.5px">${mt.locked?'🔒 Карта заблокирована: касания только двигают и масштабируют. Нажми «Редактировать» или выбери инструмент.':'Двумя пальцами — зум и сдвиг в любом режиме.'}</div>`;
     $$('[data-tile]',O).forEach(b=>b.onclick=()=>{mt.tile=b.dataset.tile;opts()});
     bindChips(O,(n,v)=>{if(n==='tk')mt.tokKind=v;if(n==='fv'){mt.fogView=v==='1';draw()}opts()});
-    $$('[data-pp]',O).forEach(b=>b.onclick=()=>{const p=players.find(x=>x.id===b.dataset.pp);m.tok.push({id:uid(),x:Math.floor(m.W/2),y:Math.floor(m.H/2),n:p.name[0],c:'#d6b26a',k:'pc',photo:p.photo||null});saveMaps();draw()});
-    const fa=$('#fAll',O);if(fa){fa.onclick=()=>{m.fog.fill(1);saveMaps();draw()};$('#fNone',O).onclick=()=>{m.fog.fill(0);saveMaps();draw()}}}
+    $$('[data-pp]',O).forEach(b=>b.onclick=()=>{histPush(m);const p=players.find(x=>x.id===b.dataset.pp);m.tok.push({id:uid(),x:Math.floor(m.W/2),y:Math.floor(m.H/2),n:p.name[0],c:'#d6b26a',k:'pc',photo:p.photo||null});saveMaps();draw()});
+    const fa=$('#fAll',O);if(fa){fa.onclick=()=>{histPush(m);m.fog.fill(1);saveMaps();draw()};$('#fNone',O).onclick=()=>{histPush(m);m.fog.fill(0);saveMaps();draw()}}}
   // input
   const pts=new Map();let gest=null,drag=null,fogMode=null,last=null;
   const cell=(cx,cy)=>{const r=cv.getBoundingClientRect();const x=Math.floor(((cx-r.left)-view.x)/view.s/CS),y=Math.floor(((cy-r.top)-view.y)/view.s/CS);return x>=0&&y>=0&&x<m.W&&y<m.H?{x,y}:null};
@@ -137,10 +146,10 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pts.size===2){drag=null;const [a,b]=[...pts.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return}
     last=null;fogMode=null;const c=cell(e.clientX,e.clientY);
-    if(mt.tool==='pan'){drag={pan:1,x:e.clientX,y:e.clientY,v:{...view}};return}
-    if(mt.tool==='token'&&c){const t=m.tok.find(t=>t.x===c.x&&t.y===c.y);if(mt.tokKind==='del'){if(t){m.tok=m.tok.filter(z=>z!==t);saveMaps();draw()}return}
-      if(t){drag={tok:t};return}const n=mt.tokKind==='pc'?'Г':mt.tokKind==='mon'?'М':'N';const lbl=prompt('Буква/имя фишки',n);if(lbl==null)return;m.tok.push({id:uid(),x:c.x,y:c.y,n:lbl.slice(0,2),c:mt.tokKind==='pc'?'#d6b26a':mt.tokKind==='mon'?'#d42a22':'#5aa2ff',k:mt.tokKind});saveMaps();draw();return}
-    drag={paint:1};apply(c)});
+    bump();if(mt.locked||mt.tool==='pan'){drag={pan:1,x:e.clientX,y:e.clientY,v:{...view}};return}
+    if(mt.tool==='token'&&c){const t=m.tok.find(t=>t.x===c.x&&t.y===c.y);if(mt.tokKind==='del'){if(t){histPush(m);m.tok=m.tok.filter(z=>z!==t);saveMaps();draw()}return}
+      if(t){histPush(m);drag={tok:t};return}histPush(m);const n=mt.tokKind==='pc'?'Г':mt.tokKind==='mon'?'М':'N';const lbl=prompt('Буква/имя фишки',n);if(lbl==null)return;m.tok.push({id:uid(),x:c.x,y:c.y,n:lbl.slice(0,2),c:mt.tokKind==='pc'?'#d6b26a':mt.tokKind==='mon'?'#d42a22':'#5aa2ff',k:mt.tokKind});saveMaps();draw();return}
+    if(c)histPush(m);drag={paint:1};apply(c)});
   cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(gest&&pts.size>=2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=cv.getBoundingClientRect();
       const s=Math.max(.3,Math.min(4,gest.v.s*d/gest.d));const k=s/gest.v.s;view.s=s;view.x=(gest.cx-r.left)-((gest.cx-r.left)-gest.v.x)*k+(cx-gest.cx);view.y=(gest.cy-r.top)-((gest.cy-r.top)-gest.v.y)*k+(cy-gest.cy);draw();return}
@@ -180,7 +189,7 @@ function mapMenu(){const m=curMap();openSheet(`<div class="sb-title">${esc(m.nam
   $('#mx1',r).onclick=()=>exportPNG(m);
   $('#mx2',r).onclick=()=>{const n=prompt('Название',m.name);if(n){m.name=n;saveMaps();closeSheet();rMap()}};
   $('#mx3',r).onclick=()=>{const c=JSON.parse(JSON.stringify(m));c.id=uid();c.name+=' (копия)';maps.push(c);mapCur=c.id;saveMaps();closeSheet();rMap()};
-  $('#mx5',r).onclick=()=>{m.g=m.g.map(t=>t||'floor');saveMaps();closeSheet();rMap()};
+  $('#mx5',r).onclick=()=>{histPush(m);m.g=m.g.map(t=>t||'floor');saveMaps();closeSheet();rMap()};
   $('#mx4',r).onclick=()=>{if(maps.length<2)return toast('Должна остаться хотя бы одна карта');if(confirm('Удалить «'+m.name+'»?')){maps=maps.filter(x=>x!==m);mapCur=maps[0].id;saveMaps();closeSheet();rMap()}}})}
 function exportPNG(m){const CS=48,c=document.createElement('canvas');c.width=m.W*CS;c.height=m.H*CS;const g=c.getContext('2d');g.scale(CS/32,CS/32);drawMap(g,m,32,1);
   c.toBlob(b=>{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=(m.name||'map')+'.png';document.body.append(a);a.click();a.remove();
