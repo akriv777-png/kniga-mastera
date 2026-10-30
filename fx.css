@@ -323,3 +323,5 @@ body:has(#sheet.open) #kdock,body:has(.as-box.on) #kdock{display:none}
 
 #lootOut .lt{contain:layout paint}
 #lootOut{overflow-anchor:none}
+.tkHp{position:relative;height:18px;border-radius:9px;background:rgba(0,0,0,.18);overflow:hidden;margin:8px 0}.tkHp i{position:absolute;left:0;top:0;bottom:0;transition:width .3s}.tkHp span{position:relative;display:block;text-align:center;font-size:12px;line-height:18px;font-weight:700}
+.tkS{gap:14px;flex-wrap:wrap;margin:4px 0}.tkA,.tkR{font-size:14px;margin:3px 0}.tkB{color:#8a2a1a;font-weight:700}.tkCd{margin:6px 0}

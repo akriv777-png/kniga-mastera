@@ -97,7 +97,7 @@ function go(i,dirHint){
 
 /* ---------- sheet ---------- */
 const sheet=$('#sheet'),sp=$('#sheetPage');
-function openSheet(html,after){clearTimeout(closeSheet.t);window.KM_sheetRet=null;const ot=(sp.querySelector('.sb-title,h3')||{}).textContent,oy=sp.scrollTop,was=sheet.classList.contains('show');sp.innerHTML=html;const nt=(sp.querySelector('.sb-title,h3')||{}).textContent;sp.scrollTop=was&&ot&&ot===nt?oy:0;{const kv=sp.querySelector('#kmver');kv&&window.KM_ver&&KM_ver().then(v=>kv.textContent='версия '+v)}sheet.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>sheet.classList.add('show')));after&&after(sp)}
+function openSheet(html,after){clearTimeout(closeSheet.t);window.KM_sheetRet=null;const ot=(sp.querySelector('.sb-title,h3')||{}).textContent,oy=sp.scrollTop,was=sheet.classList.contains('show');sp.innerHTML=html;const nt=(sp.querySelector('.sb-title,h3')||{}).textContent;sp.scrollTop=was&&ot&&ot===nt?oy:0;{const kv=sp.querySelector('#kmver');kv&&window.KM_ver&&KM_ver().then(v=>kv.textContent='версия '+v)}sheet.classList.add('open');requestAnimationFrame(()=>requestAnimationFrame(()=>{if(sheet.classList.contains('open'))sheet.classList.add('show')}));after&&after(sp)}
 function closeSheet(){const RT=window.KM_sheetRet;if(RT){window.KM_sheetRet=null;RT();return}sheet.classList.remove('show');clearTimeout(closeSheet.t);closeSheet.t=setTimeout(()=>sheet.classList.remove('open'),420)}
 $('.bg',sheet).onclick=closeSheet;$('.x',sheet).onclick=closeSheet;
 (function(){let y0,ok;const sh=$('.sh',sheet);sh.addEventListener('touchstart',e=>{ok=sp.scrollTop<=0;y0=e.touches[0].clientY},{passive:true});
