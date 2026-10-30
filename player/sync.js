@@ -30,6 +30,7 @@ function snapSent(){Object.keys(F).forEach(f=>lastSent[f]=JSON.stringify(F[f](A.
 /* изменения офлайн копятся (lastSent хранится) и уходят при переподключении; Мастер — источник истины */
 function flush(re){if(!live)return;const ch={};Object.keys(F).forEach(f=>{const v=JSON.stringify(F[f](A.H));if(lastSent[f]!==undefined&&v!==lastSent[f]&&(re||perm[f]&&perm[f]!=='off')){ch[f]=F[f](A.H);if(perm[f]==='approve'){waiting[f]=v}}});LS.set('waiting',waiting);if(Object.keys(ch).length)try{conn.send({t:'edit',ch});if(Object.keys(ch).some(f=>perm[f]==='approve'))toast('Отправлено Мастеру на одобрение')}catch(e){}}
 function onLocal(){if(!S.code)return;if(!live){const n=Object.keys(F).filter(f=>JSON.stringify(F[f](A.H))!==lastSent[f]).length;if(n&&lastSent.notes!==undefined)toast('Нет связи — изменения отправятся Мастеру при подключении');return}flush(false)}
+function build(hero,kind){const m={t:'build',hero,kind:kind||'new'};if(live){try{conn.send(m)}catch(e){}toast('Отправлено Мастеру на одобрение')}else{const q=LS.get('trades',[]);q.push(m);LS.set('trades',q);toast('Отправится Мастеру при подключении')}}
 function trade(item,to){const m={t:'trade',item,to};if(live){try{conn.send(m)}catch(e){}toast('Запрос на передачу отправлен Мастеру')}else{const q=LS.get('trades',[]);q.push(m);LS.set('trades',q);toast('Передача отправится при подключении')}}
 function paint(){const b=$('#link');if(b){b.className='lk'+(live?' on':'');b.textContent=live?'◉':'◌'}if(A&&localStorage.getItem('kp_tab')==='"table"'&&!document.activeElement?.matches('input,textarea'))A.render()}
 const PN={notes:'Записи',slots:'Ячейки',conds:'Состояния',hp:'Хиты',inv:'Сумка',lvl:'Уровень и хар-ки',trade:'Обмен'};
@@ -49,7 +50,7 @@ const g=$('#sgo');if(g)g.onclick=()=>{S.code=$('#scode').value.replace(/[^a-zA-Z
  const d=$('#sdis');if(d)d.onclick=()=>{S.auto=false;sv();try{mode==='relay'&&relay.send('dm',{t:'bye'})}catch(e){}try{conn.close()}catch(e){}try{relay&&relay.end()}catch(e){}relay=null;clearTimeout(p2pT);clearInterval(helloT);clearInterval(pingT);live=false;mode='';st='не подключено';init=null;map=null;A.render()};
  $('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(A.H))));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};
  $('#impb').onclick=()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim().replace(/^KP1:/,'')))));A.H=Object.assign(A.H,h);A.save();toast('Герой загружен');A.render()}catch(e){toast('Неверный код')}}}
-window.KP={linked:()=>live||!!(S.code&&lastSent.notes!==undefined),online:()=>live,can:f=>!lock&&perm[f]&&perm[f]!=='off',mode:f=>lock?'off':perm[f]||'off',locked:()=>lock,party:()=>party,waiting:()=>waiting,trade,render,bind,onLocal};
+window.KP={linked:()=>live||!!(S.code&&lastSent.notes!==undefined),online:()=>live,can:f=>!lock&&perm[f]&&perm[f]!=='off',mode:f=>lock?'off':perm[f]||'off',locked:()=>lock,party:()=>party,waiting:()=>waiting,trade,build,render,bind,onLocal};
 $('#link').onclick=()=>{localStorage.setItem('kp_tab','"table"');location.hash='';A.render();KM.go(4)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.auto&&!live){retry=0;connect()}});
 if(S.code&&(S.auto||q))connect();
