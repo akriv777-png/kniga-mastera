@@ -314,3 +314,6 @@ body:has(#sheet.open) #kdock,body:has(.as-box.on) #kdock{display:none}
 #kdock{transition:transform .28s cubic-bezier(.3,.7,.2,1),opacity .28s}
 #kdock.kd-hide{transform:translateX(calc(100% + 14px));opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){#kdock{transition:none}}
+
+.map-wrap{height:calc(100vh - 420px)}@supports(height:100dvh){.map-wrap{height:calc(100dvh - 420px)}}
+#mtools{margin-top:0;margin-bottom:8px}

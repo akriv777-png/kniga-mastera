@@ -128,10 +128,10 @@ const saveMaps=()=>{try{LS.set('maps',maps);LS.set('mapcur',mapCur)}catch(e){toa
 function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>
-  <div class="map-wrap" id="mw"><canvas id="mc"></canvas><div class="zoom"><button id="zi">＋</button><button id="zo">−</button><button id="zf">⤢</button></div></div>
   <div class="row" style="margin:8px 0"><button class="btn sm${mt.locked?'':' red'}" id="mLock">${mt.locked?'🔒 Редактировать':'🔓 Готово (заблокировать)'}</button><button class="btn sm" id="mUndo" aria-label="Отменить">↶ Отменить</button><button class="btn sm" id="mRedo" aria-label="Повторить">↷ Повторить</button></div>
   <div class="seg tools" id="mtools">${[['paint','🖌 Кисть'],['erase','⌫ Стереть'],['token','◉ Фишка'],['fog','☁ Туман'],['pan','✋ Двигать']].map(([k,l])=>`<button data-t="${k}" class="${!mt.locked&&mt.tool===k?'on':''}">${l}</button>`).join('')}</div>
-  <div id="mopts"></div><label class="row muted" style="font-size:12.5px;margin-top:8px"><input type="checkbox" id="mAuto"${mt.autoLock?' checked':''}> Автоблокировка через 30 с бездействия</label>`;
+    <div class="map-wrap" id="mw"><canvas id="mc"></canvas><div class="zoom"><button id="zi">＋</button><button id="zo">−</button><button id="zf">⤢</button></div></div>
+<div id="mopts"></div><label class="row muted" style="font-size:12.5px;margin-top:8px"><input type="checkbox" id="mAuto"${mt.autoLock?' checked':''}> Автоблокировка через 30 с бездействия</label>`;
   const setLock=v=>{mt.locked=v;if(v)mt.tool='pan';rMap();if(!v)toast('Режим правки: можно рисовать')};
   $('#mLock').onclick=()=>setLock(!mt.locked);$('#mAuto').onchange=e=>{mt.autoLock=e.target.checked;LS.set('autolock',mt.autoLock)};
   const bump=()=>{clearTimeout(relockT);if(mt.autoLock&&!mt.locked)relockT=setTimeout(()=>{if(S.sec===SECTIONS.findIndex(x=>x[0]==='map')&&!mt.locked){setLock(true);toast('Карта заблокирована')}else mt.locked=true},30000)};bump();
@@ -154,24 +154,25 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
     $$('[data-pp]',O).forEach(b=>b.onclick=()=>{histPush(m);const p=players.find(x=>x.id===b.dataset.pp);m.tok.push({id:uid(),x:Math.floor(m.W/2),y:Math.floor(m.H/2),n:p.name[0],c:'#d6b26a',k:'pc',photo:p.photo||null});saveMaps();draw()});
     const fa=$('#fAll',O);if(fa){fa.onclick=()=>{histPush(m);m.fog.fill(1);saveMaps();draw()};$('#fNone',O).onclick=()=>{histPush(m);m.fog.fill(0);saveMaps();draw()}}}
   // input
+  const dist=t=>{let d=document.getElementById('mdist');if(!t){d&&d.remove();return}if(!d){d=document.createElement('div');d.id='mdist';d.style.cssText='position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(10,6,5,.85);color:#e8c77a;border:1px solid #a87b3e;border-radius:12px;padding:4px 12px;font-size:15px;pointer-events:none;z-index:5';$('#mw').append(d)}d.textContent=t};
   const pts=new Map();let gest=null,drag=null,fogMode=null,last=null;
   const cell=(cx,cy)=>{const r=cv.getBoundingClientRect();const x=Math.floor(((cx-r.left)-view.x)/view.s/CS),y=Math.floor(((cy-r.top)-view.y)/view.s/CS);return x>=0&&y>=0&&x<m.W&&y<m.H?{x,y}:null};
   function apply(c){if(!c)return;const i=c.y*m.W+c.x;if(last===i)return;last=i;
     if(mt.tool==='paint')m.g[i]=mt.tile;else if(mt.tool==='erase'){m.g[i]='';m.tok=m.tok.filter(t=>t.x!==c.x||t.y!==c.y)}
     else if(mt.tool==='fog'){if(fogMode==null)fogMode=m.fog[i]?0:1;m.fog[i]=fogMode}draw()}
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(pts.size===2){drag=null;const [a,b]=[...pts.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return}
+    if(pts.size===2){if(drag&&drag.snap){const o=JSON.parse(drag.snap);m.g=o.g;m.fog=o.fog;m.tok=o.tok;if(m.hist&&m.hist.length)m.hist.pop();draw()}drag=null;dist(null);const [a,b]=[...pts.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return}
     last=null;fogMode=null;const c=cell(e.clientX,e.clientY);
     bump();if(mt.locked||mt.tool==='pan'){drag={pan:1,x:e.clientX,y:e.clientY,v:{...view}};return}
     if(mt.tool==='token'&&c){const t=m.tok.find(t=>t.x===c.x&&t.y===c.y);if(mt.tokKind==='del'){if(t){histPush(m);m.tok=m.tok.filter(z=>z!==t);saveMaps();draw()}return}
-      if(t){histPush(m);drag={tok:t};return}histPush(m);const n=mt.tokKind==='pc'?'Г':mt.tokKind==='mon'?'М':'N';const lbl=prompt('Буква/имя фишки',n);if(lbl==null)return;m.tok.push({id:uid(),x:c.x,y:c.y,n:lbl.slice(0,2),c:mt.tokKind==='pc'?'#d6b26a':mt.tokKind==='mon'?'#d42a22':'#5aa2ff',k:mt.tokKind});saveMaps();draw();return}
-    if(c)histPush(m);drag={paint:1};apply(c)});
+      if(t){const sn=JSON.stringify({g:m.g,fog:m.fog,tok:m.tok});histPush(m);drag={tok:m.tok.find(z=>z.id===t.id)||t,snap:sn,ox:t.x,oy:t.y};return}histPush(m);const n=mt.tokKind==='pc'?'Г':mt.tokKind==='mon'?'М':'N';const lbl=prompt('Буква/имя фишки',n);if(lbl==null)return;m.tok.push({id:uid(),x:c.x,y:c.y,n:lbl.slice(0,2),c:mt.tokKind==='pc'?'#d6b26a':mt.tokKind==='mon'?'#d42a22':'#5aa2ff',k:mt.tokKind});saveMaps();draw();return}
+    const sn=JSON.stringify({g:m.g,fog:m.fog,tok:m.tok});if(c)histPush(m);drag={paint:1,snap:sn};apply(c)});
   cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(gest&&pts.size>=2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y),cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;const r=cv.getBoundingClientRect();
       const s=Math.max(.3,Math.min(4,gest.v.s*d/gest.d));const k=s/gest.v.s;view.s=s;view.x=(gest.cx-r.left)-((gest.cx-r.left)-gest.v.x)*k+(cx-gest.cx);view.y=(gest.cy-r.top)-((gest.cy-r.top)-gest.v.y)*k+(cy-gest.cy);draw();return}
     if(!drag)return;if(drag.pan){view.x=drag.v.x+e.clientX-drag.x;view.y=drag.v.y+e.clientY-drag.y;draw()}
-    else if(drag.tok){const c=cell(e.clientX,e.clientY);if(c){drag.tok.x=c.x;drag.tok.y=c.y;draw()}}else if(drag.paint)apply(cell(e.clientX,e.clientY))});
-  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)gest=null;if(!pts.size){if(drag&&!drag.pan)saveMaps();drag=null;LS.set('mapview',view)}};
+    else if(drag.tok){const c=cell(e.clientX,e.clientY);if(c&&m.g[c.y*m.W+c.x]==='wall'){dist('⛔ Стена');return}if(c){drag.tok.x=c.x;drag.tok.y=c.y;dist(`${(Math.max(Math.abs(c.x-drag.ox),Math.abs(c.y-drag.oy))*1.5).toLocaleString('ru')} м`);draw()}}else if(drag.paint)apply(cell(e.clientX,e.clientY))});
+  const up=e=>{pts.delete(e.pointerId);dist(null);if(pts.size<2)gest=null;if(!pts.size){if(drag&&!drag.pan)saveMaps();drag=null;LS.set('mapview',view)}};
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   $('#zi').onclick=()=>zoom(1.25);$('#zo').onclick=()=>zoom(.8);$('#zf').onclick=fit;
   function zoom(k){const w=wrap.clientWidth/2,h=wrap.clientHeight/2;const s=Math.max(.3,Math.min(4,view.s*k));const kk=s/view.s;view.x=w-(w-view.x)*kk;view.y=h-(h-view.y)*kk;view.s=s;LS.set('mapview',view);draw()}
