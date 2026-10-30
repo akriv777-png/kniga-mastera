@@ -46,3 +46,4 @@ html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)
 .pmap.fs .pm-fs{position:fixed!important;top:calc(env(safe-area-inset-top,0px) + 10px)!important;right:12px!important;left:auto!important;bottom:auto!important;z-index:10001!important;width:auto!important;min-width:44px;height:44px;padding:0 14px;font-size:16px;border-radius:22px;background:rgba(20,12,8,.92);color:#f0dcb0;border:1px solid #b39a6e}
 html.pm-lock,html.pm-lock body{overflow:hidden!important;overscroll-behavior:none;touch-action:none}
 .pmap.fs{touch-action:none}
+#kpAway{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 6px);z-index:9000;background:rgba(40,30,20,.88);color:#f3e3c0;font:600 12.5px/1 system-ui,sans-serif;padding:7px 12px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.35);pointer-events:none}
