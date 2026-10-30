@@ -65,8 +65,9 @@ rib.addEventListener('click',e=>{const b=e.target.closest('.rib');if(b)go(+b.dat
 function markRib(){$$('.rib').forEach((b,i)=>b.classList.toggle('on',i===S.sec))}
 
 /* ---------- page flip ---------- */
-const page=$('#page'),book=$('#book');let flipping=false;
+const page=$('#page'),book=$('#book');let flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}
 function go(i,dirHint){
+  if(flipping&&i!==S.sec&&i>=0&&i<SECTIONS.length){go.q=[i,dirHint];return}
   if(i<0||i>=SECTIONS.length||i===S.sec||flipping){if(i===S.sec)page.scrollTo({top:0,behavior:'smooth'});return}
   const fwd=dirHint!=null?dirHint>0:i>S.sec;flipping=true;
   const snap=page.cloneNode(true);snap.removeAttribute('id');snap.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));snap.style.pointerEvents='none';
@@ -75,7 +76,7 @@ function go(i,dirHint){
   const dur=380,ease='cubic-bezier(.3,.7,.2,1)',dx=fwd?1:-1;
   snap.animate([{transform:'translateX(0)',opacity:1},{transform:`translateX(${-dx*28}%) scale(.96)`,opacity:0}],{duration:dur,easing:ease,fill:'forwards'});
   const a=page.animate([{transform:`translateX(${dx*40}%)`,opacity:0},{transform:'none',opacity:1}],{duration:dur,easing:ease});
-  a.onfinish=()=>{snap.remove();flipping=false};
+  a.onfinish=()=>{snap.remove();flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}};
 }
 /* swipe: только от края экрана, никогда — из прокручиваемых, карты, жетонов, полей */
 (function(){let x0,y0,t0,ok;const el=$('#book');const EDGE=40;

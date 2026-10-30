@@ -44,7 +44,7 @@ rItems=(function(prev){return function(){if(lootTab==='cat'){prev();if(!$('#artC
  $('#gen').onclick=()=>{loot2.list=genLoot2(loot2.t,loot2.src,loot2.list.filter(e=>e.lock));saveLoot();chestFx(()=>{renderLoot();$$('#lootOut .lt').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px) scale(.96)'},{opacity:1,transform:'none'}],{duration:420,delay:i*70,fill:'backwards',easing:'cubic-bezier(.2,.8,.2,1)'}))})};
  $('#lootOut').onclick=e=>{const op=e.target.closest('[data-open]');const row=e.target.closest('[data-e]');const b=e.target.closest('[data-act]');
   if(e.target.closest('#clrAll')){if(!confirm('Очистить всю добычу?'))return;const old=loot2.list;loot2.list=[];saveLoot();renderLoot();KM.undoToast('Добыча очищена',()=>{loot2.list=old;saveLoot();renderLoot()});return}
-  if(e.target.closest('#giveAll')){const c=loot2.list.find(x=>x.type==='coins');if(c)splitGold(c.val,c.coins);return}
+  if(e.target.closest('#giveAll')){const c=loot2.list.find(x=>x.type==='coins');if(c){const bk=JSON.stringify(players.map(p=>[p.coins,p.gold])),i=loot2.list.indexOf(c);splitGold(c.val,c.coins);loot2.list.splice(i,1);saveLoot();renderLoot();setTimeout(()=>KM.undoToast('Монеты розданы',()=>{JSON.parse(bk).forEach(([co,g],j)=>{if(players[j]){players[j].coins=co;players[j].gold=g}});save();loot2.list.splice(i,0,c);saveLoot();renderLoot()}),900)}else toast('Монет в добыче нет');return}
   if(!row)return;const i=loot2.list.findIndex(x=>x.id===row.dataset.e),en=loot2.list[i];
   if(!b){if(op)showItem(op.dataset.open);return}const a=b.dataset.act;
   if(a==='lock'){en.lock=!en.lock;saveLoot();renderLoot()}
