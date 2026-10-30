@@ -1,0 +1,133 @@
+'use strict';{
+/* ===== Paperless: full hero sheet, roll entry, level-up, encounter builder, campaign ===== */
+const SK=[['Акробатика',1],['Анализ',3],['Атлетика',0],['Внимательность',4],['Выживание',4],['Выступление',5],['Запугивание',5],['История',3],['Ловкость рук',1],['Магия',3],['Медицина',4],['Обман',5],['Природа',3],['Проницательность',4],['Религия',3],['Скрытность',1],['Убеждение',5],['Уход за животными',4]];
+const AB=['СИЛ','ЛОВ','ТЕЛ','ИНТ','МДР','ХАР'];
+const HD={'Варвар':12,'Воин':10,'Паладин':10,'Следопыт':10,'Бард':8,'Жрец':8,'Друид':8,'Монах':8,'Плут':8,'Колдун':8,'Изобретатель':8,'Волшебник':6,'Чародей':6};
+const XPL=[0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+const md=v=>Math.floor((v-10)/2),fm=v=>(v>=0?'+':'')+v,pb=l=>2+Math.floor((Math.max(1,l)-1)/4);
+const hdOf=p=>{for(const k in HD)if((p.cls||'').toLowerCase().includes(k.toLowerCase()))return HD[k];return 8};
+function fix(p){p.prof=p.prof||[];p.exp=p.exp||[];p.svp=p.svp||[];p.thp=p.thp||0;p.hdu=p.hdu||0;p.ds=p.ds||{s:0,f:0};p.exh=p.exh||0;p.insp=!!p.insp;p.coins=p.coins||{мм:0,см:0,эм:0,зм:p.gold||0,пм:0};p.xp=p.xp||0;p.spd=p.spd||9;p.feat=p.feat||'';p.profs=p.profs||'';return p}
+const skMod=(p,i)=>md(p.st[SK[i][1]])+(p.exp.includes(i)?2*pb(p.lvl):p.prof.includes(i)?pb(p.lvl):0);
+const svMod=(p,j)=>md(p.st[j])+(p.svp.includes(j)?pb(p.lvl):0);
+/* ---- roll entry: physical die or virtual, vs AC/DC ---- */
+function rollEntry(o){let adv=0;const die=o.die||20;
+ openSheet(`<div class="sb-title">${esc(o.label)}</div><div class="sb-sub">${o.mod!=null?'модификатор '+fm(o.mod):''}${o.vs?` · против ${o.vsL||'СЛ'} ${o.vs}`:''}</div>
+ ${die===20?chips('adv',[['0','Обычный'],['1','Преимущество'],['-1','Помеха']],0):''}
+ <div class="re-out" id="reo">Введи, что выпало на кубике</div>
+ <div class="re-pad">${Array.from({length:die},(_,i)=>`<button data-v="${i+1}" class="${i+1===die?'n20':i===0?'n1':''}">${i+1}</button>`).join('')}</div>
+ <div class="row" style="margin-top:10px"><button class="btn red grow" id="rev">🎲 Бросить за меня</button></div>`,r=>{
+ bindChips(r,(n,v)=>{adv=+v});
+ const show=(nat,extra)=>{const t=nat+(o.mod||0);let h=`<b class="re-t">${t}</b> <small>(${extra||nat}${o.mod?' '+fm(o.mod):''})</small>`;let ok=null;
+  if(o.vs!=null){ok=die===20&&nat===20&&o.atk?true:die===20&&nat===1&&o.atk?false:t>=o.vs;h+=`<div class="re-v ${ok?'ok':'no'}">${die===20&&nat===20?'Критическое попадание! ':die===20&&nat===1?'Критический провал. ':''}${ok?(o.atk?'Попадание':'Успех'):(o.atk?'Промах':'Провал')}</div>`}
+  else if(die===20&&nat===20)h+='<div class="re-v ok">Натуральная 20!</div>';else if(die===20&&nat===1)h+='<div class="re-v no">Натуральная 1</div>';
+  $('#reo',r).innerHTML=h;$('#reo',r).classList.remove('pop');void $('#reo',r).offsetWidth;$('#reo',r).classList.add('pop');
+  KM.logS&&KM.logS(`${o.label}: ${t}${ok==null?'':ok?' — успех':' — провал'}`);
+  if(o.on)o.on(t,nat,ok,r)};
+ $('.re-pad',r).onclick=e=>{const b=e.target.closest('[data-v]');if(b)show(+b.dataset.v)};
+ $('#rev',r).onclick=()=>{const a=1+Math.floor(Math.random()*die),b=1+Math.floor(Math.random()*die);const n=adv>0?Math.max(a,b):adv<0?Math.min(a,b):a;show(n,adv?`${a} и ${b}`:null)}})}
+KM.rollEntry=rollEntry;
+/* ---- full hero sheet ---- */
+function heroSheet(p,tab){fix(p);tab=tab||'main';const P=pb(p.lvl),nx=XPL[Math.min(19,p.lvl)];
+ const T=[['main','Основное'],['skills','Навыки'],['gear','Кошель'],['feat','Черты'],['lvl','Уровень']];
+ let h=`<div class="sb-title">${esc(p.name)}</div><div class="sb-sub">${esc(p.cls)} · ${p.lvl} ур. · мастерство ${fm(P)}</div><div class="seg" id="hst">${T.map(([k,l])=>`<button data-t="${k}" class="${k===tab?'on':''}">${l}</button>`).join('')}</div>`;
+ if(tab==='main'){h+=`<div class="hs-grid"><div class="hs-box"><small>Хиты</small><b>${p.hp}<i>/${p.maxhp}</i></b><div class="row"><button class="btn sm" data-hp="-1">−</button><button class="btn sm" data-hp="1">＋</button><button class="btn sm red" data-dmg>Урон/лечение</button></div></div>
+  <div class="hs-box"><small>Врем. хиты</small><b>${p.thp}</b><div class="row"><button class="btn sm" data-thp="-1">−</button><button class="btn sm" data-thp="1">＋</button><button class="btn sm" data-thp="0">0</button></div></div>
+  <div class="hs-box"><small>Кости хитов к${hdOf(p)}</small><b>${p.lvl-p.hdu}<i>/${p.lvl}</i></b><button class="btn sm" data-spendhd ${p.lvl-p.hdu>0?'':'disabled'}>Потратить</button></div>
+  <div class="hs-box"><small>КД · Скорость · Иниц.</small><b>${p.ac} · ${p.spd} м · ${fm(md(p.st[1]))}</b><button class="btn sm" data-init>Бросок инициативы</button></div></div>
+  <div class="hs-row"><button class="chip${p.insp?' on':''}" data-insp>✦ Вдохновение</button><span class="muted">Истощение</span>${[0,1,2,3,4,5,6].map(i=>`<button class="pip${p.exh>=i&&i?' on':''}" data-exh="${i}">${i||'0'}</button>`).join('')}</div>
+  ${p.hp<=0?`<div class="hs-ds"><b>Спасброски от смерти</b><div>Успехи ${[1,2,3].map(i=>`<button class="pip g${p.ds.s>=i?' on':''}" data-ds="s${i}"></button>`).join('')}</div><div>Провалы ${[1,2,3].map(i=>`<button class="pip r${p.ds.f>=i?' on':''}" data-ds="f${i}"></button>`).join('')}</div><button class="btn sm red" data-dsroll>Бросок к20</button></div>`:''}
+  <div class="sec-h">Спасброски</div><div class="hs-sv">${AB.map((a,j)=>`<button data-sv="${j}" class="${p.svp.includes(j)?'on':''}"><small>${a}</small><b>${fm(svMod(p,j))}</b></button>`).join('')}</div>
+  <div class="muted" style="font-size:12px">Тап — бросок. Долгий тап — владение.</div>
+  <div class="row" style="margin-top:10px"><button class="btn" data-rest="s">☾ Короткий отдых</button><button class="btn" data-rest="l">☀ Долгий отдых</button></div>`}
+ if(tab==='skills')h+=`<div class="hs-sk">${SK.map(([n,a],i)=>`<div class="hs-s"><button class="dot${p.exp.includes(i)?' x':p.prof.includes(i)?' on':''}" data-pr="${i}" aria-label="Владение"></button><span data-sk="${i}">${n} <small>${AB[a]}</small></span><b data-sk="${i}">${fm(skMod(p,i))}</b></div>`).join('')}</div><div class="muted" style="font-size:12px;margin-top:6px">Кружок: нет → владение → компетентность. Тап по навыку — проверка (можно ввести число с кубика). Пассивная Внимательность: <b>${10+skMod(p,3)}</b></div>`;
+ if(tab==='gear')h+=`<div class="hs-coins">${['мм','см','эм','зм','пм'].map(c=>`<label><small>${c}</small><input type="number" inputmode="numeric" data-coin="${c}" value="${p.coins[c]}"></label>`).join('')}</div><div class="muted" style="font-size:12.5px;margin:6px 0">Всего ≈ <b>${(p.coins.мм/100+p.coins.см/10+p.coins.эм/2+ +p.coins.зм+p.coins.пм*10).toFixed(1)} зм</b></div><div class="row"><button class="btn sm" data-conv>Обменять мелочь на золото</button></div><div class="muted" style="margin-top:10px;font-size:12.5px">Инвентарь — на карточке героя (${p.inv.length} предм.)</div>`;
+ if(tab==='feat')h+=`<label class="f">Владения (доспехи, оружие, инструменты, языки)</label><textarea class="inp" data-tx="profs" rows="3">${esc(p.profs)}</textarea><label class="f">Умения и черты</label><textarea class="inp" data-tx="feat" rows="6" placeholder="Ярость (2/день), Безрассудная атака…">${esc(p.feat)}</textarea><label class="f">Раса · предыстория</label><input class="inp" data-tx="race" value="${esc(p.race||'')}">`;
+ if(tab==='lvl')h+=`<div class="hs-box"><small>Опыт</small><b>${p.xp.toLocaleString('ru')}<i> / ${nx.toLocaleString('ru')}</i></b><div class="hpbar"><i style="width:${Math.min(100,p.xp/nx*100)}%"></i></div><div class="row"><input class="inp" id="xpa" type="number" inputmode="numeric" placeholder="+ опыт" style="flex:1"><button class="btn sm" data-xp>Начислить</button></div></div>
+  <button class="btn red" data-lvlup style="margin-top:12px;width:100%">⬆ Повысить до ${p.lvl+1} уровня</button><div class="muted" style="font-size:12.5px;margin-top:6px">Хиты +${Math.floor(hdOf(p)/2)+1+md(p.st[2])} (среднее к${hdOf(p)} + ТЕЛ), кость хитов, бонус мастерства, ячейки заклинаний — автоматически. ${p.xp>=nx?'<b style="color:#c9a45a">Опыта хватает!</b>':''}</div>`;
+ openSheet(h,r=>{const re=t=>{save();heroSheet(p,t||tab);KM.rPcsSoft&&KM.rPcsSoft()};
+  $('#hst',r).onclick=e=>{const b=e.target.closest('[data-t]');if(b)heroSheet(p,b.dataset.t)};
+  r.oninput=e=>{const t=e.target;if(t.dataset.coin){p.coins[t.dataset.coin]=+t.value||0;p.gold=p.coins.зм;save()}if(t.dataset.tx){p[t.dataset.tx]=t.value;save()}};
+  let lp;r.onpointerdown=e=>{const b=e.target.closest('[data-sv]');if(b)lp=setTimeout(()=>{lp='x';const j=+b.dataset.sv;p.svp=p.svp.includes(j)?p.svp.filter(x=>x!==j):[...p.svp,j];re()},500)};r.onpointerup=()=>{if(lp!=='x')clearTimeout(lp)};
+  r.onclick=e=>{const t=e.target,d=t.closest('button,[data-sk]')?.dataset||{};
+   if(d.hp){p.hp=Math.max(0,Math.min(p.maxhp,p.hp+ +d.hp));re()}
+   if(d.thp!=null&&t.closest('[data-thp]')){p.thp=+d.thp?Math.max(0,p.thp+ +d.thp):0;re()}
+   if(t.closest('[data-dmg]'))return dmgHeal(p,()=>heroSheet(p,'main'));
+   if(t.closest('[data-spendhd]')){const D=hdOf(p);rollEntry({label:`Кость хитов к${D}`,die:D,mod:md(p.st[2]),on:(v)=>{p.hdu++;p.hp=Math.min(p.maxhp,p.hp+Math.max(1,v));save();setTimeout(()=>heroSheet(p,'main'),900);toast(`+${Math.max(1,v)} хитов`)}})}
+   if(t.closest('[data-init]'))rollEntry({label:p.name+': инициатива',mod:md(p.st[1]),on:v=>{p.init=v;save()}});
+   if(t.closest('[data-insp]')){p.insp=!p.insp;re()}
+   if(d.exh!=null&&t.closest('[data-exh]')){p.exh=+d.exh;re()}
+   if(d.ds){const k=d.ds[0],n=+d.ds[1];p.ds[k]=p.ds[k]>=n?n-1:n;re()}
+   if(t.closest('[data-dsroll]'))rollEntry({label:'Спасбросок от смерти',mod:0,vs:10,on:(v,nat)=>{if(nat===20){p.hp=1;p.ds={s:0,f:0};toast('Встаёт с 1 хитом!')}else if(nat===1)p.ds.f=Math.min(3,p.ds.f+2);else if(v>=10)p.ds.s=Math.min(3,p.ds.s+1);else p.ds.f=Math.min(3,p.ds.f+1);if(p.ds.s>=3)toast(p.name+' стабилизирован');if(p.ds.f>=3)toast(p.name+' погиб…');save()}});
+   if(d.sv!=null&&t.closest('[data-sv]')&&lp!=='x'){const j=+d.sv;rollEntry({label:`${p.name}: спасбросок ${AB[j]}`,mod:svMod(p,j)})}
+   if(d.pr!=null){const i=+d.pr;if(p.exp.includes(i))p.exp=p.exp.filter(x=>x!==i);else if(p.prof.includes(i)){p.prof=p.prof.filter(x=>x!==i);p.exp.push(i)}else p.prof.push(i);if(i===3)p.pp=10+skMod(p,3);re()}
+   if(d.sk!=null&&!t.closest('[data-pr]')){const i=+d.sk;rollEntry({label:`${p.name}: ${SK[i][0]}`,mod:skMod(p,i)})}
+   if(t.closest('[data-rest]'))rest(p,d.rest,()=>heroSheet(p,'main'));
+   if(t.closest('[data-conv]')){const c=p.coins;const tot=c.мм+c.см*10+c.эм*50;c.зм+=Math.floor(tot/100);const rem=tot%100;c.эм=0;c.см=Math.floor(rem/10);c.мм=rem%10;p.gold=c.зм;re()}
+   if(t.closest('[data-xp]')){p.xp+=+$('#xpa',r).value||0;re();if(p.xp>=XPL[Math.min(19,p.lvl)])toast('Можно повысить уровень!')}
+   if(t.closest('[data-lvlup]'))levelUp(p)}})}
+function dmgHeal(p,back){openSheet(`<div class="sb-title">${esc(p.name)}</div><div class="sb-sub">${p.hp}/${p.maxhp} хитов${p.thp?' · врем. '+p.thp:''}</div><input class="inp" id="dv" type="number" inputmode="numeric" placeholder="Сколько?" style="font-size:22px;text-align:center;margin-top:12px"><div class="row" style="margin-top:10px"><button class="btn red grow" id="dd">Урон</button><button class="btn grow" id="dh">Лечение</button></div>`,r=>{setTimeout(()=>$('#dv',r).focus(),100);
+ $('#dd',r).onclick=()=>{let v=+$('#dv',r).value||0;const a=Math.min(p.thp,v);p.thp-=a;v-=a;const was=p.hp;p.hp=Math.max(0,p.hp-v);if(was>0&&p.hp===0){p.ds={s:0,f:0};toast(p.name+' без сознания!')}else if(was===0&&v>0){p.ds.f=Math.min(3,p.ds.f+1);toast('Урон при 0 хитов — провал спасброска')}
+  if((p.conds||[]).includes('Концентрация')&&v>0)toast(`Концентрация: спасбросок ТЕЛ СЛ ${Math.max(10,Math.floor(v/2))}`);KM.logS&&KM.logS(`${p.name}: −${v+a} хитов`);save();back()};
+ $('#dh',r).onclick=()=>{const v=+$('#dv',r).value||0;if(p.hp===0)p.ds={s:0,f:0};p.hp=Math.min(p.maxhp,p.hp+v);KM.logS&&KM.logS(`${p.name}: +${v} хитов`);save();back()}})}
+function rest(p,k,back){if(k==='l'){const old=JSON.stringify(p);p.hp=p.maxhp;p.thp=0;p.hdu=Math.max(0,p.hdu-Math.max(1,Math.floor(p.lvl/2)));if(p.exh)p.exh--;p.ds={s:0,f:0};if(p.slots)for(const l in p.slots){const s=p.slots[l];if(s&&typeof s==='object'&&'u' in s)s.u=0}if(p.slotsUsed)p.slotsUsed={};p.conds=(p.conds||[]).filter(c=>c!=='Концентрация');save();KM.logS&&KM.logS(p.name+': долгий отдых');back();KM.undoToast('Долгий отдых: всё восстановлено',()=>{Object.assign(p,JSON.parse(old));save();back()})}
+ else{toast('Короткий отдых: трать кости хитов');if(/колдун/i.test(p.cls)&&p.slots)for(const l in p.slots){const s=p.slots[l];if(s&&'u' in s)s.u=0}save();back()}}
+function levelUp(p){const old=JSON.stringify(p);const add=Math.max(1,Math.floor(hdOf(p)/2)+1+md(p.st[2]));p.lvl++;p.maxhp+=add;p.hp+=add;try{KM.ensureSlots&&KM.ensureSlots(p)}catch(e){}save();KM.logS&&KM.logS(`${p.name} достигает ${p.lvl} уровня (+${add} хитов)`);
+ KM.summon&&KM.summon();heroSheet(p,'lvl');KM.undoToast(`${p.name}: ${p.lvl} уровень, +${add} хитов`,()=>{Object.assign(p,JSON.parse(old));save();heroSheet(p,'lvl')})}
+KM.heroSheet=heroSheet;
+/* inject into hero cards */
+const _r=rPcs;window.rPcs=rPcs=function(){_r.apply(this,arguments);$$('.hero').forEach(h=>{const p=fix(players[+h.dataset.i]);if(!p)return;
+ const strip=document.createElement('div');strip.className='hs-strip';strip.innerHTML=`<button class="btn sm red" data-sheet>📜 Лист героя</button><button class="btn sm" data-dmg2>± Хиты</button><button class="btn sm" data-chk>🎲 Проверка</button>${p.thp?`<span class="chip on">врем. ${p.thp}</span>`:''}${p.insp?'<span class="chip on">✦</span>':''}${p.exh?`<span class="chip">истощ. ${p.exh}</span>`:''}${p.hp<=0?`<span class="chip red">при смерти ${p.ds.s}✓ ${p.ds.f}✗</span>`:''}`;
+ h.querySelector('.pcstats4').before(strip);
+ strip.onclick=e=>{e.stopPropagation();if(e.target.closest('[data-sheet]'))heroSheet(p);if(e.target.closest('[data-dmg2]'))dmgHeal(p,()=>{closeSheet();rPcs()});if(e.target.closest('[data-chk]'))heroSheet(p,'skills')}})};
+KM.rPcsSoft=()=>{if(KM.SECTIONS[S.sec][0]==='pcs'){const st=page.scrollTop;rPcs();page.scrollTop=st}};
+/* ---- encounter builder ---- */
+const THR=[[25,50,75,100],[50,100,150,200],[75,150,225,400],[125,250,375,500],[250,500,750,1100],[300,600,900,1400],[350,750,1100,1700],[450,900,1400,2100],[550,1100,1600,2400],[600,1200,1900,2800],[800,1600,2400,3600],[1000,2000,3000,4500],[1100,2200,3400,5100],[1250,2500,3800,5700],[1400,2800,4300,6400],[1600,3200,4800,7200],[2000,3900,5900,8800],[2100,4200,6300,9500],[2400,4900,7300,10900],[2800,5700,8500,12700]];
+const DIFN=['Лёгкий','Средний','Трудный','Смертельный'];
+const mult=n=>n<=1?1:n===2?1.5:n<=6?2:n<=10?2.5:n<=14?3:4;
+let enc=LS.get('enc',[]);
+function encounter(q){const party=players.length?players:[{lvl:1}];const th=[0,0,0,0];party.forEach(p=>THR[Math.min(19,Math.max(0,p.lvl-1))].forEach((v,i)=>th[i]+=v));
+ const n=enc.reduce((a,e)=>a+e.c,0),raw=enc.reduce((a,e)=>a+(DATA.monsters.find(m=>m.id===e.id)?.xp||0)*e.c,0),adj=raw*mult(n);let d=-1;th.forEach((v,i)=>{if(adj>=v)d=i});
+ const res=q?DATA.monsters.filter(m=>m.n.toLowerCase().includes(q.toLowerCase())).slice(0,8):[];
+ openSheet(`<div class="sb-title">Конструктор столкновения</div><div class="sb-sub">Отряд: ${party.length} × ур. ${party.map(p=>p.lvl).join(', ')}</div>
+ <div class="enc-bar">${DIFN.map((l,i)=>`<div class="${d>=i?'on':''} d${i}"><small>${l}</small><b>${th[i]}</b></div>`).join('')}</div>
+ <div class="enc-sum">Опыт: ${raw} × ${mult(n)} = <b>${Math.round(adj)}</b> → <b class="d${Math.max(0,d)}">${d<0?'Пустяк':DIFN[d]}</b><br><small>Награда отряду: ${raw} опыта (по ${Math.floor(raw/party.length)} каждому)</small></div>
+ <div class="list">${enc.map((e,i)=>{const m=DATA.monsters.find(x=>x.id===e.id);return m?`<div class="card enc-r"><div class="grow"><div class="t">${esc(m.n)}</div><div class="m">ПО ${m.cr} · ${m.xp} оп. · КД ${m.ac} · ${m.hp} хит.</div></div><button class="btn sm" data-c="${i}" data-d="-1">−</button><b>${e.c}</b><button class="btn sm" data-c="${i}" data-d="1">＋</button></div>`:''}).join('')}</div>
+ <input class="inp" id="eq" placeholder="Найти монстра…" value="${esc(q||'')}" style="margin-top:8px"><div class="list" id="eres">${res.map(m=>`<button class="card" data-add="${m.id}"><div class="t">${esc(m.n)}</div><div class="m">ПО ${m.cr} · ${m.xp} оп.</div></button>`).join('')}</div>
+ <div class="row" style="margin-top:12px"><button class="btn red grow" id="ego" ${enc.length?'':'disabled'}>⚔ В бой (+ герои)</button><button class="btn" id="ecl">Очистить</button><button class="btn" id="exp">＋ опыт героям</button></div>`,r=>{
+ const sv=()=>LS.set('enc',enc);let tm;$('#eq',r).oninput=e=>{clearTimeout(tm);tm=setTimeout(()=>{encounter(e.target.value);setTimeout(()=>{const i=$('#eq');if(i){i.focus();i.setSelectionRange(99,99)}},30)},250)};
+ r.onclick=e=>{const a=e.target.closest('[data-add]');if(a){const x=enc.find(z=>z.id===a.dataset.add);x?x.c++:enc.push({id:a.dataset.add,c:1});sv();encounter('')}
+  const c=e.target.closest('[data-c]');if(c){const x=enc[+c.dataset.c];x.c+= +c.dataset.d;if(x.c<=0)enc.splice(+c.dataset.c,1);sv();encounter(q)}};
+ $('#ecl',r).onclick=()=>{const o=enc;enc=[];sv();encounter('');KM.undoToast('Столкновение очищено',()=>{enc=o;sv();encounter('')})};
+ $('#exp',r).onclick=()=>{const each=Math.floor(raw/party.length);players.forEach(p=>{fix(p);p.xp+=each});save();toast(`+${each} опыта каждому`);KM.logS&&KM.logS(`Опыт: +${each} каждому`)};
+ $('#ego',r).onclick=()=>{players.forEach(p=>{if(!combat.list.some(c=>c.name===p.name))addCombatant({n:p.name,hp:p.hp,maxhp:p.maxhp,ac:p.ac,st:p.st},true)});enc.forEach(e=>{const m=DATA.monsters.find(x=>x.id===e.id);for(let i=0;i<e.c;i++)addCombatant({...m,n:m.n})});closeSheet();KM.go(KM.SECTIONS.findIndex(x=>x[0]==='combat'));setTimeout(()=>{try{rCombat()}catch(e){}},450);toast('Бой начат: бросьте инициативу')}})}
+KM.encounter=encounter;
+const _rc=rCombat;window.rCombat=rCombat=function(){_rc.apply(this,arguments);if($('#encB'))return;const b=document.createElement('button');b.id='encB';b.className='btn';b.style.cssText='width:100%;margin:6px 0';b.textContent='⚖ Конструктор столкновения · сложность';b.onclick=()=>encounter('');const hd=page.querySelector('.hdr,header,.page-h');(hd&&hd.nextSibling?hd.parentNode.insertBefore(b,hd.nextSibling):page.prepend(b))};
+/* ---- campaign: quests, handouts, calendar & weather, shop ---- */
+let camp=LS.get('camp',{q:[],h:[],day:1,month:0,year:1492,wx:'',shop:[]});const csave=()=>LS.set('camp',camp);
+const MON=['Молотень','Альтурьяк','Чесс','Тарсак','Миртул','Китторн','Флеймрул','Элизиас','Элейнт','Марпенот','Уктар','Найтал'];
+const WX=[['☀','Ясно',22,30],['⛅','Облачно',14,22],['🌧','Дождь',8,16],['⛈','Гроза',12,20],['🌫','Туман',4,10],['❄','Снег',-12,0],['🌬','Сильный ветер',2,12]];
+function weather(){const seasonCold=[0,1,10,11].includes(camp.month);const pool=seasonCold?[1,4,5,6,5]:[0,0,1,2,3,4,6];const w=WX[pool[Math.floor(Math.random()*pool.length)]];const t=w[2]+Math.floor(Math.random()*(w[3]-w[2]+1));camp.wx=`${w[0]} ${w[1]}, ${t} °C`;csave()}
+let cview='notes';
+const _rn=rNotes;window.rNotes=rNotes=function(){const seg=`<div class="seg" id="cseg">${[['notes','Заметки'],['q','Квесты'],['h','Раздатки'],['cal','Календарь'],['shop','Лавка']].map(([k,l])=>`<button data-v="${k}" class="${cview===k?'on':''}">${l}</button>`).join('')}</div>`;
+ if(cview==='notes'){_rn.apply(this,arguments);const h=page.querySelector('.hdr,.ph,header');const d=document.createElement('div');d.innerHTML=seg;(page.children[1]?page.insertBefore(d.firstChild,page.children[1]):page.append(d.firstChild))}
+ else{page.onclick=null;page.oninput=null;page.innerHTML=header('Сюжет','кампания','tri',0)+seg+'<div id="cbody"></div>';campBody()}
+ $('#cseg').onclick=e=>{const b=e.target.closest('[data-v]');if(b){cview=b.dataset.v;rNotes()}}};
+function campBody(){const B=$('#cbody');
+ if(cview==='q'){B.innerHTML=`<div class="row"><input class="inp grow" id="qn" placeholder="Новый квест: найти пропавшую дочь мельника…"><button class="btn red" id="qa">＋</button></div><div class="list" style="margin-top:8px">${camp.q.map((q,i)=>`<div class="card q-${q.s}"><div class="grow"><div class="t">${q.s==='done'?'✓ ':q.s==='fail'?'✗ ':''}${esc(q.n)}</div><textarea class="inp" data-qt="${i}" rows="2" placeholder="Зацепки, награда, кто дал…">${esc(q.t||'')}</textarea></div><div class="col"><button class="btn sm" data-qs="${i}">${q.s==='open'?'Выполнен':q.s==='done'?'Провален':'Открыть'}</button><button class="btn sm dark" data-qd="${i}">✕</button></div></div>`).join('')||'<div class="muted">Квестов пока нет.</div>'}</div>`;
+  $('#qa').onclick=()=>{const v=$('#qn').value.trim();if(!v)return;camp.q.unshift({n:v,s:'open',t:''});csave();campBody()};
+  B.oninput=e=>{const i=e.target.dataset.qt;if(i!=null){camp.q[+i].t=e.target.value;csave()}};
+  B.onclick=e=>{const s=e.target.dataset.qs,d=e.target.dataset.qd;if(s!=null){const q=camp.q[+s];q.s=q.s==='open'?'done':q.s==='done'?'fail':'open';csave();campBody()}if(d!=null){const o=camp.q.slice();camp.q.splice(+d,1);csave();campBody();KM.undoToast('Квест удалён',()=>{camp.q=o;csave();campBody()})}}}
+ if(cview==='h'){B.innerHTML=`<div class="muted" style="font-size:12.5px">Раздатки — письма, карты, записки. Открой на весь экран и покажи игрокам.</div><div class="row" style="margin:8px 0"><button class="btn red" id="ha">＋ Текст</button><label class="btn">＋ Картинка<input type="file" accept="image/*" id="hi" hidden></label></div><div class="list">${camp.h.map((h,i)=>`<div class="card"><div class="grow" data-hv="${i}"><div class="t">${esc(h.n)}</div><div class="m">${h.img?'изображение':esc((h.t||'').slice(0,60))}</div></div><button class="btn sm" data-hv="${i}">Показать</button><button class="btn sm dark" data-hd="${i}">✕</button></div>`).join('')}</div>`;
+  $('#ha').onclick=()=>{openSheet(`<div class="sb-title">Раздатка</div><input class="inp" id="hn" placeholder="Название"><textarea class="inp" id="ht" rows="8" placeholder="Текст письма…" style="margin-top:8px"></textarea><button class="btn red" id="hs" style="margin-top:10px">Сохранить</button>`,r=>{$('#hs',r).onclick=()=>{camp.h.unshift({n:$('#hn',r).value||'Письмо',t:$('#ht',r).value});csave();closeSheet();campBody()}})};
+  $('#hi').onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas'),k=Math.min(1,1200/Math.max(im.width,im.height));c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);camp.h.unshift({n:f.name.replace(/\.\w+$/,''),img:c.toDataURL('image/jpeg',.75)});try{csave()}catch(e){toast('Мало места')}campBody()};im.src=fr.result};fr.readAsDataURL(f)};
+  B.onclick=e=>{const v=e.target.closest('[data-hv]'),d=e.target.dataset.hd;if(d!=null){const o=camp.h.slice();camp.h.splice(+d,1);csave();campBody();KM.undoToast('Раздатка удалена',()=>{camp.h=o;csave();campBody()});return}if(v){const h=camp.h[+v.dataset.hv];const o=document.createElement('div');o.className='handout';o.innerHTML=h.img?`<img src="${h.img}">`:`<div class="hand-t">${esc(h.t).replace(/\n/g,'<br>')}</div>`;o.onclick=()=>o.remove();document.body.append(o)}}}
+ if(cview==='cal'){if(!camp.wx)weather();B.innerHTML=`<div class="hs-box" style="text-align:center"><small>Сегодня</small><b style="font-size:26px">${camp.day} ${MON[camp.month]}</b><div class="muted">${camp.year} г.</div><div style="font-size:20px;margin:8px 0">${camp.wx}</div><div class="row" style="justify-content:center"><button class="btn sm" data-dd="-1">◀ День</button><button class="btn sm red" data-dd="1">День ▶</button><button class="btn sm" data-dd="7">+ Неделя</button><button class="btn sm" data-wx>⟳ Погода</button></div></div><label class="f">Месяц</label>${chips('mon',MON.map((m,i)=>[i,m]),camp.month)}`;
+  bindChips(B,(n,v)=>{camp.month=+v;csave();campBody()});
+  B.onclick=e=>{const d=e.target.dataset.dd;if(d){camp.day+= +d;while(camp.day>30){camp.day-=30;camp.month++;if(camp.month>11){camp.month=0;camp.year++}}while(camp.day<1){camp.day+=30;camp.month--;if(camp.month<0){camp.month=11;camp.year--}}weather();KM.logS&&KM.logS(`День: ${camp.day} ${MON[camp.month]} — ${camp.wx}`);campBody()}if(e.target.closest('[data-wx]')){weather();campBody()}}}
+ if(cview==='shop'){if(!camp.shop.length)stock();B.innerHTML=`<div class="row"><button class="btn sm" id="sr">⟳ Новый ассортимент</button>${chips('mk',[['0.8','Дёшево'],['1','Обычно'],['1.3','Дорого']],camp.mk||1)}</div><div class="list" style="margin-top:8px">${camp.shop.map((id,i)=>{const it=DATA.items.find(x=>x.id===id);if(!it)return'';return`<div class="card"><div class="grow" data-io="${id}"><div class="t">${esc(it.n)}</div><div class="m">${esc(it.cat)} · ${it.rar||''}</div></div><b class="price">${price(it)}</b><button class="btn sm" data-buy="${id}">Продать</button></div>`}).join('')}</div>`;
+  bindChips(B,(n,v)=>{camp.mk=+v;csave();campBody()});$('#sr').onclick=()=>{stock();campBody()};
+  B.onclick=e=>{const o=e.target.closest('[data-io]');if(o)return showItem(o.dataset.io);const b=e.target.closest('[data-buy]');if(b){const it=DATA.items.find(x=>x.id===b.dataset.buy);openSheet(`<div class="sb-title">Кто покупает?</div><div class="sb-sub">${esc(it.n)} · ${price(it)}</div><div class="list" style="margin-top:12px">${players.map((p,i)=>`<button class="card" data-pi="${i}"><div class="t">${esc(p.name)}</div><div class="m">${fix(p).coins.зм} зм</div></button>`).join('')}</div>`,r=>{r.onclick=ev=>{const x=ev.target.closest('[data-pi]');if(!x)return;const p=players[+x.dataset.pi],c=gp(it);if(p.coins.зм<c)return toast('Не хватает золота');p.coins.зм-=Math.ceil(c);p.gold=p.coins.зм;giveItem(p,it);closeSheet()}})}}}}
+const gp=it=>{const m=String(it.cost||'').replace(/\s/g,'').match(/([\d,.]+)(мм|см|эм|зм|пм)/);if(!m)return 0;return +m[1].replace(',','.')*({мм:.01,см:.1,эм:.5,зм:1,пм:10}[m[2]])*(camp.mk||1)};
+const price=it=>{const v=gp(it);return v?(v>=1?Math.round(v)+' зм':Math.round(v*10)+' см'):'—'};
+function stock(){const pool=DATA.items.filter(i=>gp(i)>0&&!i.art&&(i.rar==='Обычный'||!i.rar||Math.random()<.04));camp.shop=Array.from({length:14},()=>pool[Math.floor(Math.random()*pool.length)].id).filter((v,i,a)=>a.indexOf(v)===i);csave()}
+}
