@@ -15,6 +15,6 @@
 .pbk .init div{display:flex;gap:10px;padding:8px;border-radius:10px}.pbk .init .cur{background:rgba(212,42,34,.18);border:1px solid rgba(212,42,34,.4)}
 #mapc{width:100%;border-radius:12px;border:1px solid var(--line);touch-action:none}
 .sig{max-width:100%}
-#link.lk{position:fixed;left:14px;top:calc(12px + env(safe-area-inset-top));z-index:45;width:42px;height:42px;border-radius:50%;border:1px solid #c4a15a;background:radial-gradient(#2a120c,#0e0706);color:#f0d68a;font-size:20px}#link.lk.on{color:#ff5a4c;box-shadow:0 0 14px rgba(212,42,34,.7)}
+#link.lk{position:fixed;right:58px;top:calc(14px + env(safe-area-inset-top));z-index:45;width:42px;height:42px;border-radius:50%;border:1px solid #c4a15a;background:radial-gradient(#2a120c,#0e0706);color:#f0d68a;font-size:20px}#link.lk.on{color:#ff5a4c;box-shadow:0 0 14px rgba(212,42,34,.7)}
 body:has(#sheet.open) #link{display:none}
 #sheetPage h3{font:600 22px 'Cormorant Garamond',Georgia,serif;color:var(--gold,#d9b46a)}#sheetPage .inp{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--line);background:rgba(10,6,5,.7);color:#eee;padding:10px;font-size:16px}

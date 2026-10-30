@@ -2,25 +2,28 @@
 const A=window.KPA;const {$,$$,esc,LS,toast}=A;const PREFIX='kniga-mastera-v1-';
 const S=LS.get('sync',{code:'',name:'',pid:'',auto:false});if(!S.pid){S.pid='p'+A.uid()+A.uid();LS.set('sync',S)}
 const q=new URLSearchParams(location.search).get('room');if(q){S.code=q.toUpperCase().slice(0,8);LS.set('sync',S)}
-let peer=null,conn=null,st='не подключено',live=false,perm={},init=null,map=null,lastSent={},retry=0,tmr;
+let peer=null,conn=null,st='не подключено',live=false,perm=LS.get('perm',{}),init=null,map=null,lastSent=LS.get('lastSent',{}),retry=0,tmr,lock=LS.get('lock',false),party=[],waiting=LS.get('waiting',{});
 const sv=()=>LS.set('sync',S);
 function connect(){if(!window.Peer){st='модуль связи не загружен';return paint()}if(!S.code)return;clearTimeout(tmr);
  if(!peer||peer.destroyed){peer=new Peer({debug:0});peer.on('open',()=>dial());peer.on('error',e=>{st=e.type==='peer-unavailable'?'стол Мастера не открыт — жду…':'ошибка связи ('+e.type+')';live=false;paint();again()});peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
  else if(peer.open)dial();st='подключение…';paint()}
 function dial(){try{conn&&conn.close()}catch(e){}conn=peer.connect(PREFIX+S.code,{reliable:true});
- conn.on('open',()=>{live=true;retry=0;st='за столом';S.auto=true;sv();conn.send({t:'hello',name:S.name||A.H.name,pid:S.pid,hero:{id:A.H.id,name:A.H.name}});paint();toast('Связь с Мастером установлена')});
+ conn.on('open',()=>{live=true;retry=0;st='за столом';S.auto=true;sv();conn.send({t:'hello',name:S.name||A.H.name,pid:S.pid,hero:{id:A.H.id,name:A.H.name}});const q=LS.get('trades',[]);q.forEach(t=>conn.send(t));LS.set('trades',[]);flush(true);paint();toast('Связь с Мастером установлена')});
  conn.on('data',onState);conn.on('close',()=>{live=false;st='связь потеряна — переподключаюсь…';paint();again()});conn.on('error',()=>{})}
 function again(){clearTimeout(tmr);if(!S.auto)return;tmr=setTimeout(connect,Math.min(20000,1500*(++retry)))}
-function onState(d){if(!d||d.t!=='state')return;perm=d.perm||{};init=d.init;map=d.map;LS.set('handouts',d.handouts||[]);
- if(d.hero){const H=A.H;const h=d.hero;['id','name','cls','lvl','hp','maxhp','thp','ac','spd','st','inv','coins','spells','slots','ds','insp','xp','conds'].forEach(f=>{if(h[f]!==undefined)H[f]=h[f]});if(typeof h.notes==='string'&&!document.activeElement?.matches('#nt'))H.notes=h.notes;A.H=H;snapSent()}
+function onState(d){if(!d||d.t!=='state')return;perm=d.perm||{};lock=!!d.lock;LS.set('perm',perm);LS.set('lock',lock);party=d.party||[];init=d.init;map=d.map;LS.set('handouts',d.handouts||[]);
+ if(d.hero){const H=A.H;const h=d.hero;['id','name','cls','lvl','hp','maxhp','thp','ac','spd','st','inv','coins','spells','slots','ds','insp','xp','conds'].forEach(f=>{if(h[f]!==undefined)H[f]=h[f]});if(typeof h.notes==='string'&&!document.activeElement?.matches('#nt'))H.notes=h.notes;A.H=H;snapSent();Object.keys(waiting).forEach(f=>{if(JSON.stringify(F[f](H))===waiting[f])delete waiting[f]});LS.set('waiting',waiting)}
  A.render()}
-const F={notes:H=>H.notes,slots:H=>H.slots,conds:H=>H.conds,inv:H=>({inv:H.inv,coins:H.coins}),hp:H=>({hp:H.hp,maxhp:H.maxhp,thp:H.thp,ds:H.ds})};
-function snapSent(){Object.keys(F).forEach(f=>lastSent[f]=JSON.stringify(F[f](A.H)))}
-function onLocal(){if(!live)return;const ch={};Object.keys(F).forEach(f=>{const v=JSON.stringify(F[f](A.H));if(v!==lastSent[f]&&perm[f]&&perm[f]!=='off'){ch[f]=F[f](A.H);lastSent[f]=v;if(perm[f]==='approve')toast('Отправлено Мастеру на одобрение')}});if(Object.keys(ch).length)try{conn.send({t:'edit',ch})}catch(e){}}
+const F={notes:H=>H.notes,slots:H=>H.slots,conds:H=>H.conds,inv:H=>({inv:H.inv,coins:H.coins}),hp:H=>({hp:H.hp,thp:H.thp,ds:H.ds}),lvl:H=>({lvl:H.lvl,xp:H.xp||0,maxhp:H.maxhp,st:H.st,ac:H.ac,spd:H.spd,cls:H.cls,race:H.race,name:H.name})};
+function snapSent(){Object.keys(F).forEach(f=>lastSent[f]=JSON.stringify(F[f](A.H)));LS.set('lastSent',lastSent)}
+/* изменения офлайн копятся (lastSent хранится) и уходят при переподключении; Мастер — источник истины */
+function flush(re){if(!live)return;const ch={};Object.keys(F).forEach(f=>{const v=JSON.stringify(F[f](A.H));if(lastSent[f]!==undefined&&v!==lastSent[f]&&(re||perm[f]&&perm[f]!=='off')){ch[f]=F[f](A.H);if(perm[f]==='approve'){waiting[f]=v}}});LS.set('waiting',waiting);if(Object.keys(ch).length)try{conn.send({t:'edit',ch});if(Object.keys(ch).some(f=>perm[f]==='approve'))toast('Отправлено Мастеру на одобрение')}catch(e){}}
+function onLocal(){if(!S.code)return;if(!live){const n=Object.keys(F).filter(f=>JSON.stringify(F[f](A.H))!==lastSent[f]).length;if(n&&lastSent.notes!==undefined)toast('Нет связи — изменения отправятся Мастеру при подключении');return}flush(false)}
+function trade(item,to){const m={t:'trade',item,to};if(live){try{conn.send(m)}catch(e){}toast('Запрос на передачу отправлен Мастеру')}else{const q=LS.get('trades',[]);q.push(m);LS.set('trades',q);toast('Передача отправится при подключении')}}
 function paint(){const b=$('#link');if(b){b.className='lk'+(live?' on':'');b.textContent=live?'◉':'◌'}if(A&&localStorage.getItem('kp_tab')==='"table"'&&!document.activeElement?.matches('input,textarea'))A.render()}
-const PN={notes:'Записи',slots:'Ячейки',conds:'Состояния',inv:'Сумка',hp:'Хиты'};
+const PN={notes:'Записи',slots:'Ячейки',conds:'Состояния',hp:'Хиты',inv:'Сумка',lvl:'Уровень и хар-ки',trade:'Обмен'};
 function render(){return `<div class="card"><h3 style="margin-top:0">Стол Мастера</h3><div class="row"><span class="grow ${live?'':'muted'}">${live?'◉ ':'◌ '}${esc(st)}</span></div>
- ${live?`<div style="margin-top:8px">${Object.keys(PN).map(f=>`<span class="chip${perm[f]&&perm[f]!=='off'?' on':''}">${PN[f]}: ${perm[f]==='direct'?'сам':perm[f]==='approve'?'через Мастера':'только Мастер'}</span>`).join('')}</div><button class="btn" id="sdis" style="width:100%;margin-top:8px">Выйти из-за стола</button>`:`
+ ${lock?'<div class="tb-warn" style="font-size:14px">🔒 Мастер заблокировал лист — изменения недоступны.</div>':''}${Object.keys(waiting).length?`<div class="muted" style="margin-top:6px">⏳ Ждут одобрения: ${Object.keys(waiting).map(f=>PN[f]).join(', ')}</div>`:''}${live?`<div style="margin-top:8px">${Object.keys(PN).map(f=>`<span class="chip${perm[f]&&perm[f]!=='off'?' on':''}">${PN[f]}: ${perm[f]==='direct'?'сам':perm[f]==='approve'?'через Мастера':'только Мастер'}</span>`).join('')}</div><button class="btn" id="sdis" style="width:100%;margin-top:8px">Выйти из-за стола</button>`:`
  <input class="inp" id="scode" placeholder="Код комнаты (от Мастера)" value="${esc(S.code)}" style="text-transform:uppercase;font-size:24px;letter-spacing:6px;text-align:center;margin-top:8px" maxlength="8" autocapitalize="characters">
  <input class="inp" id="sname" placeholder="Ваше имя (игрок)" value="${esc(S.name)}" style="margin-top:6px"><button class="btn ac" id="sgo" style="width:100%;margin-top:8px;padding:14px">◎ Сесть за стол</button>`}</div>
  ${init?`<h3>Инициатива · раунд ${init.round}</h3><div class="card init">${init.list.map((c,i)=>`<div class="${i===init.turn?'cur':''}" style="${c.dead?'opacity:.45':''}"><b style="width:30px">${esc(c.init)}</b><span class="grow">${esc(c.n)}${i===init.turn?' <small class="soon">ходит</small>':''}${c.conds.length?`<br><small class="muted">${c.conds.map(esc).join(', ')}</small>`:''}</span><span class="muted">${esc(c.st)}</span></div>`).join('')}</div>`:''}
@@ -30,7 +33,7 @@ function bind(){const g=$('#sgo');if(g)g.onclick=()=>{S.code=$('#scode').value.t
  const d=$('#sdis');if(d)d.onclick=()=>{S.auto=false;sv();try{conn.close()}catch(e){}live=false;st='не подключено';init=null;map=null;A.render()};
  $('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(A.H))));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};
  $('#impb').onclick=()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#imp').value.trim().replace(/^KP1:/,'')))));A.H=Object.assign(A.H,h);A.save();toast('Герой загружен');A.render()}catch(e){toast('Неверный код')}}}
-window.KP={linked:()=>live,can:f=>perm[f]&&perm[f]!=='off',render,bind,onLocal};
+window.KP={linked:()=>live||!!(S.code&&lastSent.notes!==undefined),online:()=>live,can:f=>!lock&&perm[f]&&perm[f]!=='off',mode:f=>lock?'off':perm[f]||'off',locked:()=>lock,party:()=>party,waiting:()=>waiting,trade,render,bind,onLocal};
 $('#link').onclick=()=>{localStorage.setItem('kp_tab','"table"');location.hash='';A.render();KM.go(4)};
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.auto&&!live){retry=0;connect()}});
 if(S.code&&(S.auto||q))connect();

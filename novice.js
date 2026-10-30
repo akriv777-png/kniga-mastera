@@ -20,13 +20,13 @@ function hub(tab){tab=tab||'ref';const tabs=[['ref','Шпаргалки'],['flow
   tab==='ref'?Object.keys(REF).map(k=>`<button class="btn nv-big" data-rf="${k}">${k}</button>`).join(''):
   tab==='flow'?Object.keys(FLOW).map(k=>`<button class="btn nv-big" data-fl="${k}">▶ ${k} — шаг за шагом</button>`).join(''):
   (NV.rec.length?NV.rec.map(r=>`<button class="btn nv-big" data-rc="${esc(r.k)}|${esc(r.id)}">${esc(r.n)} <small>${esc(r.k)}</small></button>`).join(''):'<div class="empty">Здесь появится то, что ты открывал.</div>')
- }</div><label class="nv-tg"><input type="checkbox" id="nvon" ${NV.on?'checked':''}> Режим новичка (подсказки «что делать сейчас»)</label>`,r=>{
-  r.querySelector('#nvs').onclick=()=>{closeSheet();setTimeout(()=>KM.assist&&KM.assist.open?KM.assist.open():document.querySelector('#eye,.eye-fab')?.click(),250)};
+ }</div><button class="btn dark" id="nvbk2" style="width:100%;margin-top:12px">🛡 Сохранность данных и экскурсия</button><label class="nv-tg"><input type="checkbox" id="nvon" ${NV.on?'checked':''}> Режим новичка (подсказки «что делать сейчас»)</label>`,r=>{
+  r.querySelector('#nvs').onclick=()=>{closeSheet();setTimeout(()=>KM.assist&&KM.assist.open?KM.assist.open():document.querySelector('.as-fab')?.click(),250)};
   r.querySelectorAll('[data-nt]').forEach(b=>b.onclick=()=>hub(b.dataset.nt));
   r.querySelectorAll('[data-rf]').forEach(b=>b.onclick=()=>openSheet(`<div class="sb-title">${b.dataset.rf}</div>${card('',REF[b.dataset.rf])}<button class="btn dark" id="nvbk" style="width:100%">← Назад</button>`,q=>q.querySelector('#nvbk').onclick=()=>hub('ref')));
   r.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>flow(b.dataset.fl,0));
   r.querySelectorAll('[data-rc]').forEach(b=>b.onclick=()=>{const [k,id]=b.dataset.rc.split('|');closeSheet();setTimeout(()=>OPEN[k]&&OPEN[k](id),250)});
-  r.querySelector('#nvon').onchange=e=>{NV.on=e.target.checked?1:0;nsv();now()}})}
+  r.querySelector('#nvbk2').onclick=()=>KM.tour.ui();r.querySelector('#nvon').onchange=e=>{NV.on=e.target.checked?1:0;nsv();now()}})}
 function flow(k,i){const st=FLOW[k];openSheet(`<div class="sb-title">${k}: шаг ${i+1} из ${st.length}</div><div class="nv-prog"><i style="width:${(i+1)/st.length*100}%"></i></div><p class="nv-step">${st[i]}</p>${k==='Проверка'&&i===2?`<div class="chips">${[['Легко',10],['Средне',15],['Трудно',20]].map(([l,v])=>`<button class="chip" data-dc="${v}">${l} · СЛ ${v}</button>`).join('')}</div>`:''}<div style="display:flex;gap:8px;margin-top:14px"><button class="btn dark" id="fp" style="flex:1">${i?'← Назад':'← Меню'}</button><button class="btn red" id="fn" style="flex:2">${i<st.length-1?'Дальше →':'Готово ✓'}</button></div>`,r=>{
  r.querySelector('#fp').onclick=()=>i?flow(k,i-1):hub('flow');r.querySelector('#fn').onclick=()=>{if(i<st.length-1)flow(k,i+1);else{closeSheet();toast('Готово! Сценарий «'+k+'» пройден');if(k==='Бой')KM.go(4)}};
  r.querySelectorAll('[data-dc]').forEach(b=>b.onclick=()=>{const d=1+Math.floor(Math.random()*20);toast(`СЛ ${b.dataset.dc}: на к20 выпало ${d} — добавь модификатор игрока`)})})}
