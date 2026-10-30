@@ -16,7 +16,7 @@ function rPcs(){page.oninput=null;
    <div class="pcstats4"><div class="shield"><small>ХИТЫ</small><div class="hpin"><input data-k="hp" type="number" inputmode="numeric" value="${p.hp}"><em>/</em><input data-k="maxhp" type="number" inputmode="numeric" value="${p.maxhp}" class="mx"></div></div>
     <div class="shield"><small>КД</small><input data-k="ac" type="number" inputmode="numeric" value="${p.ac}"></div>
     <div class="shield"><small>ВНИМ.</small><input data-k="pp" type="number" inputmode="numeric" value="${p.pp}"></div>
-    <div class="shield gold"><small>ЗОЛОТО</small><input data-k="gold" type="number" inputmode="numeric" value="${p.gold}"></div></div>
+    <button class="shield gold" data-purse="${p.id}" style="font:inherit"><small>КОШЕЛЁК</small><b style="font-size:20px;color:#f0c64a">${KM.coin.fmtTot(p)}</b><i style="display:block;font-size:10px;opacity:.75;font-style:normal">${KM.coin.mini(p)}</i></button></div>
    <div class="abil hero-ab">${p.st.map((v,j)=>`<div><small>${ABN[j]}</small><input data-st="${j}" type="number" inputmode="numeric" value="${v}"><i>${fmod(mod(v))}</i></div>`).join('')}</div>
    <div class="conds-row">${p.conds.map(c=>`<span class="cond">${esc(c)}</span>`).join('')}<button class="chip" data-conds>${p.conds.length?'✎':'＋ Состояние'}</button></div>
    <div class="inv-h"><b>Инвентарь</b><span>${p.inv.length} предм. · ${kg(invW(p))}</span><button class="btn sm" data-addinv>＋</button></div>
@@ -83,7 +83,22 @@ function lootHtml(r){const gp=Math.round(((r.coins.cp||0)/100+(r.coins.sp||0)/10
   return `<div class="loot-coins">${Object.entries(r.coins).map(([c,v])=>`<div><b>${v.toLocaleString('ru')}</b><small>${CN[c]}</small></div>`).join('')}${r.gems?`<div class="gem"><b>${r.gems.n}×${r.gems.v}</b><small>зм · ${r.gems.k}</small></div>`:''}</div>
   ${gp?`<button class="btn sm" data-gold="${gp}" style="margin:2px 0 10px">⚖ Всего ≈ ${gp.toLocaleString('ru')} зм — поделить между героями</button>`:''}
   <div class="list">${r.items.map(id=>{const i=D.items.find(x=>x.id===id);if(!i)return'';const c=RCOL[i.rar]||'#aaa';return `<div class="card loot" style="--rc:${c}" data-open="${i.id}"><div class="t">${esc(i.n)}</div><div class="m"><span style="color:${c};font-weight:700">${esc(i.cat==='Магические'?i.rar:i.cat)}</span> · ${esc(i.sub||'')}${i.w?' · '+kg(i.w):''}</div><button class="btn sm red give" data-give="${i.id}">В инвентарь</button></div>`}).join('')}</div>`}
-function splitGold(g){const n=players.length;const each=Math.floor(g/n);players.forEach(p=>p.gold=(+p.gold||0)+each);save();toast(`Каждому по ${each} зм`)}
+/* 5e кошелёк: мм/см/эм/зм/пм, p.gold = coins.зм (совместимость) */
+const CV={мм:1,см:10,эм:50,зм:100,пм:1000},CK=['мм','см','эм','зм','пм'];
+function purse(p){if(!p.coins||typeof p.coins!=='object')p.coins={мм:0,см:0,эм:0,зм:+p.gold||0,пм:0};CK.forEach(k=>p.coins[k]=Math.max(0,Math.floor(+p.coins[k]||0)));if(!p._c2){if((+p.gold||0)!==p.coins.зм&&p.coins.зм===0)p.coins.зм=+p.gold||0;p._c2=1}p.gold=p.coins.зм;return p.coins}
+const cpOf=p=>{const c=purse(p);return CK.reduce((a,k)=>a+c[k]*CV[k],0)};
+const nf=v=>(Math.round(v*100)/100).toLocaleString('ru-RU');
+function addCoins(p,c){const P=purse(p);Object.keys(c||{}).forEach(k=>{const kk={pm:'пм',zm:'зм',em:'эм',sm:'см',mm:'мм'}[k]||k;if(CV[kk])P[kk]+=Math.floor(+c[k]||0)});p.gold=P.зм}
+function addCp(p,cp){const P=purse(p);cp=Math.floor(cp);[['пм',1000],['зм',100],['см',10],['мм',1]].forEach(([k,v])=>{const n=Math.floor(cp/v);if(k==='пм')return;P[k]+=n;cp-=n*v});p.gold=P.зм}
+KM.coin={CV,CK,purse,cpOf,addCoins,addCp,fmtTot:p=>'≈'+nf(cpOf(p)/100),mini:p=>{const c=purse(p);return CK.slice().reverse().filter(k=>c[k]).map(k=>c[k]+' '+k).join(' · ')||'пусто'}};
+players.forEach(purse);
+function purseUI(p){const draw=()=>openSheet(`<div class="sb-title">Кошелёк — ${esc(p.name)}</div><div class="sb-sub">1 пм = 10 зм · 1 зм = 2 эм = 10 см = 100 мм</div>
+ <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px">${CK.slice().reverse().map(k=>`<label style="text-align:center"><small class="muted">${k}</small><input class="inp" data-pc="${k}" type="number" inputmode="numeric" value="${p.coins[k]}" style="text-align:center;padding:8px 2px"></label>`).join('')}</div>
+ <p style="margin:10px 0">Всего ≈ <b id="pctot">${nf(cpOf(p)/100)}</b> зм</p><div class="row"><button class="btn grow" id="pcx">Обменять мелочь на золото</button><button class="btn ac" id="pcok">Готово</button></div>`,()=>{
+  $$('[data-pc]').forEach(i=>i.oninput=()=>{p.coins[i.dataset.pc]=Math.max(0,+i.value||0);p.gold=p.coins.зм;$('#pctot').textContent=nf(cpOf(p)/100);save()});
+  $('#pcx').onclick=()=>{const c=p.coins;const cp=c.мм+c.см*10+c.эм*50;c.мм=cp%10;c.см=Math.floor(cp%100/10);c.эм=0;c.зм+=Math.floor(cp/100);p.gold=c.зм;save();draw()};$('#pcok').onclick=()=>{closeSheet();rPcs()}});draw()}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-purse]');if(!b)return;const p=players.find(x=>x.id===b.dataset.purse);if(p)purseUI(p)});
+function splitGold(g,coins){const n=players.length;if(!n)return;const cp=coins?CK.reduce((a,k)=>a+(+coins[{мм:'mm',см:'sm',эм:'em',зм:'zm',пм:'pm'}[k]]||+coins[k]||0)*CV[k],0):Math.round(g*100);const each=Math.floor(cp/n);players.forEach(p=>addCp(p,each));save();toast(`Каждому по ${nf(each/100)} зм (монетами)`)}
 /* item sheet: add give button */
 const _showItem=showItem;
 showItem=function(id){_showItem(id);const it=D.items.find(x=>x.id===id);if(!it)return;$('#sheetPage').insertAdjacentHTML('beforeend',`<div class="row" style="margin-top:18px"><button class="btn red" id="giveIt">🎒 В инвентарь</button></div>`);$('#giveIt').onclick=()=>choosePlayer(it)};

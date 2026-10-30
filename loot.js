@@ -44,13 +44,13 @@ rItems=(function(prev){return function(){if(lootTab==='cat'){prev();if(!$('#artC
  $('#gen').onclick=()=>{loot2.list=genLoot2(loot2.t,loot2.src,loot2.list.filter(e=>e.lock));saveLoot();chestFx(()=>{renderLoot();$$('#lootOut .lt').forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(14px) scale(.96)'},{opacity:1,transform:'none'}],{duration:420,delay:i*70,fill:'backwards',easing:'cubic-bezier(.2,.8,.2,1)'}))})};
  $('#lootOut').onclick=e=>{const op=e.target.closest('[data-open]');const row=e.target.closest('[data-e]');const b=e.target.closest('[data-act]');
   if(e.target.closest('#clrAll')){if(!confirm('Очистить всю добычу?'))return;const old=loot2.list;loot2.list=[];saveLoot();renderLoot();KM.undoToast('Добыча очищена',()=>{loot2.list=old;saveLoot();renderLoot()});return}
-  if(e.target.closest('#giveAll')){const c=loot2.list.find(x=>x.type==='coins');if(c)splitGold(Math.floor(c.val));return}
+  if(e.target.closest('#giveAll')){const c=loot2.list.find(x=>x.type==='coins');if(c)splitGold(c.val,c.coins);return}
   if(!row)return;const i=loot2.list.findIndex(x=>x.id===row.dataset.e),en=loot2.list[i];
   if(!b){if(op)showItem(op.dataset.open);return}const a=b.dataset.act;
   if(a==='lock'){en.lock=!en.lock;saveLoot();renderLoot()}
   if(a==='re'){const n=rollEntry(en.type,loot2.t,loot2.src);loot2.list[i]=n;saveLoot();renderLoot();$(`[data-e="${n.id}"]`)?.animate([{transform:'rotateX(90deg)'},{transform:'none'}],{duration:380})}
   if(a==='del'){loot2.list.splice(i,1);saveLoot();renderLoot();KM.undoToast(`«${en.n}» удалено`,()=>{loot2.list.splice(i,0,en);saveLoot();renderLoot()})}
-  if(a==='give'){if(en.type==='coins'){splitGold(Math.floor(en.val))}else{choosePlayer(en.item?D.items.find(x=>x.id===en.item):{id:'loot-'+en.id,n:`${en.n} (${en.val} зм)`,w:en.w});const j=loot2.list.indexOf(en);if(j>=0){loot2.list.splice(j,1);saveLoot();renderLoot()}}}}}})(rItems);
+  if(a==='give'){if(en.type==='coins'){splitGold(en.val,en.coins)}else{choosePlayer(en.item?D.items.find(x=>x.id===en.item):{id:'loot-'+en.id,n:`${en.n} (${en.val} зм)`,w:en.w});const j=loot2.list.indexOf(en);if(j>=0){loot2.list.splice(j,1);saveLoot();renderLoot()}}}}}})(rItems);
 function chestFx(done){if(calm()){done();return}const o=document.createElement('div');o.className='chest-fx';o.innerHTML=`<div class="cf-seal">${inkSealSvg({key:'chest'+Date.now(),name:'добыча',kind:'item',inline:1,size:220,cls:'ssig big'})}</div><div class="cf-flash"></div>`;document.body.append(o);
  o.querySelectorAll('path').forEach(p=>p.setAttribute('pathLength','1'));setTimeout(()=>o.classList.add('open'),900);setTimeout(()=>{done();o.classList.add('out')},1250);setTimeout(()=>o.remove(),1900)}
 /* D: deleting heroes / notes etc. with undo (replace confirm) */
