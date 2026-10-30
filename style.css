@@ -312,3 +312,4 @@ select.inp{appearance:none;-webkit-appearance:none}
 .tb-panel{margin-bottom:14px}.tb-panel .sb-title{font-size:22px}
 .tb-panel .tb-qr{max-width:150px;margin:6px auto}.tb-panel .tb-qr svg{width:100%;height:auto}
 html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)}
+.list>.card{content-visibility:auto;contain-intrinsic-size:auto 92px}
