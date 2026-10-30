@@ -32,15 +32,15 @@ function gen(k){const L=avgL();const tier=L<=4?0:L<=10?1:L<=16?2:3;
  switch(k){
  case'name':{const r=NM[ST.race],s=pk(['м','ж']);const nm=pk(r[s])+' '+pk(r.ф);return{t:nm,s:`${ST.race}, ${s==='м'?'мужчина':'женщина'}`,note:[nm,`${ST.race}. `],opt:'race'}}
  case'npc':{const o=`Внешность: ${pk(NPCF.look)}.\nМанера: ${pk(NPCF.how)}.\nХочет: ${pk(NPCF.want)}.\nТайна: ${pk(NPCF.sec)}.`;return{t:'Характер НИП',b:o,note:['НИП',o]}}
- case'tav':{const n=`«${pk(TV.a)} ${pk(TV.b)}»`,f=pk(TV.f),fd=pk(TV.food),dr=pk(TV.drink),rm=pk(TV.room);const b=`Особенность: ${f}.\nБлюдо дня: ${fd[0]} — ${fd[1]}.\nНапиток: ${dr[0]} — ${dr[1]}.\nНочлег: ${rm[0]} — ${rm[1]}.`;return{t:'Таверна '+n,b,note:['Таверна '+n,b]}}
- case'rum':{const r=pk(RU);return{t:'Слух',b:r[0],s:r[1]?'Правда (или почти)':'Ложь — но кому-то выгодно, чтобы в неё верили',note:['Слух',r[0]+(r[1]?' (правда)':' (ложь)')]}}
- case'hook':{const h=pk(HK);return{t:'Зацепка',b:h,note:['Зацепка',h]}}
+ case'tav':{const X=(window.TABLES_EXTRA||{}).tavern||{};const n=`«${pk(TV.a.concat(X.a||[]))} ${pk(TV.b.concat(X.b||[]))}»`,f=pk(TV.f),fd=pk(TV.food),dr=pk(TV.drink),rm=pk(TV.room);const b=`Особенность: ${f}.\nБлюдо дня: ${fd[0]} — ${fd[1]}.\nНапиток: ${dr[0]} — ${dr[1]}.\nНочлег: ${rm[0]} — ${rm[1]}.`+(X.owner&&X.owner.length?`\nХозяин: ${[].concat(pk(X.owner)).join(' — ')}.`:'');return{t:'Таверна '+n,b,note:['Таверна '+n,b]}}
+ case'rum':{const X=window.TABLES_EXTRA;const r=pk(X&&X.rumor?RU.concat(X.rumor):RU);return{t:'Слух',b:r[0],s:r[1]?'Правда (или почти)':'Ложь — но кому-то выгодно, чтобы в неё верили',note:['Слух',r[0]+(r[1]?' (правда)':' (ложь)')]}}
+ case'hook':{const Q=(window.TABLES_EXTRA||{}).quest;const h=Q&&Math.random()<.5?`${pk(Q.giver)[0].toUpperCase()+pk(Q.giver).slice(1)} просит ${pk(Q.task)} — ${pk(Q.where)}.\nПодвох: ${pk(Q.twist)}.\nНаграда: ${pk(Q.reward)}.`:pk(HK);return{t:'Зацепка',b:h,note:['Зацепка',h]}}
  case'twist':{const h=pk(TW);return{t:'Осложнение',b:h,note:null}}
  case'riddle':{const r=pk(RD);return{t:'Загадка',b:'«'+r[0]+'»',hid:r[1],note:['Загадка',r[0]+'\nОтвет: '+r[1]]}}
  case'pock':{const c=d(6)*(tier+1);return{t:'В карманах',b:`${pk(POCK)}, ${pk(POCK)} и ${c} ${pk(['мм','см','см','зм'])}.`,note:null}}
  case'trap':{const t=pk(TR),dc=[[10,12],[12,15],[15,18],[18,21]][tier],dm=['2к10','4к10','10к10','18к10'][tier],sev=pk(['неудобная','опасная']);const DC=sev==='опасная'?dc[1]:dc[0];
    return{t:t[0],b:`Заметить: ${t[1]} СЛ ${DC}.\nИзбежать: спасбросок ${t[2]} СЛ ${DC}.\nУрон: ${t[3].startsWith('—')?t[3].slice(2):dm+' ('+t[3]+')'}.\nОбезвредить: Ловкость (воровские инструменты) СЛ ${DC}.`,s:`Уровень отряда ${L} · ${sev}`,note:[t[0],'']}}
- case'enc':{const e=enc(ST.ter);if(!e)return{t:'Встреча',b:'Для этой местности и уровня в бестиарии нет подходящих существ.'};const w=Math.random();
+ case'enc':{const XE=(window.TABLES_EXTRA||{}).enc||{},row=XE[ST.ter==='Подземелье'?'Подземье':ST.ter];if(row&&Math.random()<.45){const v=d(100),it=row.find(x=>v<=x[0])||row[row.length-1],mo=it[2]&&DATA.monsters.find(m=>m.id===it[2]);return{t:'Встреча (к100: '+v+')',b:it[1]+(mo?`\n${mo.n}: КД ${mo.ac}, хиты ${mo.hp}, ПО ${({0.125:'1/8',0.25:'1/4',0.5:'1/2'})[mo.cr]||mo.cr}.`:''),s:ST.ter+' · таблица встреч местности',note:['Встреча',it[1]]}}const e=enc(ST.ter);if(!e)return{t:'Встреча',b:'Для этой местности и уровня в бестиарии нет подходящих существ.'};const w=Math.random();
    const why=pk(['охотятся','охраняют логово','спорят над добычей','спят после пира','преследуют раненого путника','устроили засаду','заблудились и злы','ищут то же, что и герои']);
    return{t:`${e.n} × ${e.m.n}`,b:`${e.m.ty}, ПО ${({0.125:'1/8',0.25:'1/4',0.5:'1/2'})[e.m.cr]||e.m.cr}, КД ${e.m.ac}, хиты ${e.m.hp}.\nЧто делают: ${why}.\nОпыт с поправкой: ${e.adj} из бюджета ${e.budget} (средняя сложность).`,s:ST.ter+' · уровень '+L,enc:e,opt:'ter',note:[`Встреча: ${e.n} × ${e.m.n}`,why]}}
  }}
