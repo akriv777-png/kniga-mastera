@@ -12,7 +12,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-user-select:none;user-select:none;border:0;background:none}
 #app{position:fixed;inset:0;background:radial-gradient(140% 60% at 50% -10%,#2a0d0b 0%,var(--bg) 55%)}
-#app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;background:url(img/runecircle.png) no-repeat 130% -60px/360px;filter:grayscale(1) invert(1)}
+#app::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.07;background:url(img/runecircle.webp) no-repeat 130% -60px/360px;filter:grayscale(1) invert(1)}
 #book{position:absolute;inset:0;overflow:hidden}
 #gutter,#candle{display:none}
 .page{position:absolute;inset:0;padding:calc(var(--sat) + 18px) 16px calc(var(--sab) + var(--tab-h) + 84px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;will-change:transform,opacity}
@@ -198,7 +198,7 @@ p.dropcap{color:var(--tx2)}
 .ctl label{display:block;font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);margin-bottom:4px}
 .ctl .stepper{background:none;border:0;padding:0;width:100%;justify-content:space-between}
 .result{position:relative;border-radius:22px;padding:18px;margin:12px 0;text-align:center;background:radial-gradient(120% 120% at 50% 0%,#2a1110,var(--card) 70%);border:1px solid var(--line2);overflow:hidden}
-.result::before{content:"";position:absolute;inset:-30%;background:url(img/runecircle.png) center/62% no-repeat;filter:invert(1) sepia(1) saturate(5) hue-rotate(-28deg);opacity:.08;animation:spin 90s linear infinite}
+.result::before{content:"";position:absolute;inset:-30%;background:url(img/runecircle.webp) center/62% no-repeat;filter:invert(1) sepia(1) saturate(5) hue-rotate(-28deg);opacity:.08;animation:spin 90s linear infinite}
 .result .tot{position:relative;font-family:var(--num);font-size:64px;line-height:1;color:#fff;text-shadow:0 0 30px rgba(255,60,40,.5)}
 .result .lbl{position:relative;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3)}
 .result .ex{position:relative;color:var(--tx2);font-size:13px;margin-top:6px}
@@ -226,7 +226,7 @@ p.dropcap{color:var(--tx2)}
 @keyframes shake{20%{transform:rotate(-12deg) scale(1.1)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg) scale(1.05)}80%{transform:rotate(3deg)}}
 /* ---------- COVER ---------- */
 #cover{position:absolute;inset:0;z-index:100;transform-origin:0 50%;transform-style:preserve-3d;perspective:1600px;transition:transform 1.4s cubic-bezier(.6,.02,.3,1),opacity .5s 1.0s}
-#cover .face{position:absolute;inset:0;background:#050202 url(img/cover.jpg) center/cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;animation:pulseFlesh 5s ease-in-out infinite}
+#cover .face{position:absolute;inset:0;background:#050202 url(img/cover.webp) center/cover;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;animation:pulseFlesh 5s ease-in-out infinite}
 @keyframes pulseFlesh{50%{filter:brightness(1.08) saturate(1.15)}}
 #cover .face::after{content:"";position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 48%,transparent 35%,rgba(0,0,0,.8) 100%),linear-gradient(180deg,rgba(0,0,0,.75),transparent 28%,transparent 75%,rgba(0,0,0,.8))}
 #cover .inside{position:absolute;inset:0;transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden;background:linear-gradient(90deg,#1a0605,#3a0d0a);box-shadow:inset -20px 0 40px rgba(0,0,0,.7)}
@@ -251,18 +251,18 @@ p.dropcap{color:var(--tx2)}
 @keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),-105vh);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 /* ===== v3 art direction: occult parchment backdrop, clean cards on top ===== */
-#app{background:#0a0606 url(img/pagebg.jpg) center top/cover}
+#app{background:#0a0606 url(img/pagebg.webp) center top/cover}
 #app::before{opacity:1;background:linear-gradient(180deg,rgba(8,4,4,.15),rgba(8,4,4,.55) 40%,rgba(8,4,4,.7));filter:none}
 :root{--card:rgba(24,17,15,.88);--card2:rgba(38,27,24,.92)}
 .card,.cb,.feat,.sp-grid>div,.abil>div,details.rule,.pc,.ctl>div,.hist>div,.search,.tray,.seg,.die,.pad button{backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.ph{margin:-4px -6px 16px;padding:18px 74px 16px 18px;min-height:96px;border-radius:14px;background:url(img/header.jpg) 82% 50%/cover;box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 0 30px rgba(60,25,5,.55);
+.ph{margin:-4px -6px 16px;padding:18px 74px 16px 18px;min-height:96px;border-radius:14px;background:url(img/header.webp) 82% 50%/cover;box-shadow:0 10px 30px rgba(0,0,0,.55),inset 0 0 30px rgba(60,25,5,.55);
   -webkit-mask:radial-gradient(130% 140% at 50% 50%,#000 72%,transparent 100%);mask:radial-gradient(130% 140% at 50% 50%,#000 72%,transparent 100%)}
 .ph h1{color:#1c0f08;text-shadow:0 1px 0 rgba(255,235,190,.4)}
 .ph h1 .cap{color:#9c120c}
 .ph .sub{color:#7a1410;font-family:var(--hand);font-size:19px;margin-top:2px}
 .ph .sig{opacity:0}
 .glyphs{display:none}
-#sheet .sh{background:#120c0b url(img/pagebg.jpg) center/cover}
+#sheet .sh{background:#120c0b url(img/pagebg.webp) center/cover}
 #sheet .sh::before{content:"";position:absolute;inset:0;background:rgba(10,6,6,.72);pointer-events:none}
 #sheetPage{z-index:1}
 #cover .drips i{opacity:.75}
