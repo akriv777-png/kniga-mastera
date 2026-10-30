@@ -232,3 +232,10 @@ body:has(#sheet.open) #tbfab{display:none!important}
 .card{position:relative}.fav{position:absolute;bottom:4px;right:4px;z-index:2;width:36px;height:36px;border:0;background:none;color:#8a7a5a;font-size:20px;line-height:1}.fav.on{color:#f0c64a;text-shadow:0 0 8px rgba(240,198,74,.6)}
 .lq{flex:1;min-width:130px;min-height:36px;border-radius:18px;border:1px solid rgba(196,161,90,.35);background:rgba(20,10,8,.8);color:#eee;padding:4px 12px;font-size:14px}
 .pin{position:absolute;bottom:2px;right:2px;width:34px;height:34px;border:0;background:none;color:#7a6a4a;font-size:18px;z-index:2}.pin.on{color:#f0c64a}
+#nvfab{position:fixed;left:14px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:40;width:46px;height:46px;border-radius:50%;border:1px solid #c4a15a;background:radial-gradient(#3a1a12,#160a08);color:#f0d68a;font:700 22px Georgia,serif;box-shadow:0 0 14px rgba(224,87,76,.35)}
+body:has(#sheet.open) #nvfab{display:none}
+#nvnow{display:flex;gap:10px;align-items:center;margin:10px 0 4px;padding:9px 10px 9px 12px;border-radius:14px;border:1px dashed rgba(196,161,90,.45);background:rgba(40,22,12,.75);color:#e9dcc0;font-size:13.5px;line-height:1.35}#nvnow p{margin:0;flex:1}#nvnow span{color:#e0574c}#nvnow button{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid #c4a15a;background:none;color:#f0d68a;font-weight:700}
+.nv-big{display:block;width:100%;margin:0 0 8px;text-align:left;min-height:48px}.nv-big small{opacity:.6;margin-left:6px}
+.nv-r{display:grid;grid-template-columns:38% 1fr;gap:8px;padding:7px 0;border-top:1px solid rgba(196,161,90,.15);font-size:14px}.nv-r b{color:#f0d68a}
+.nv-step{font-size:17px;line-height:1.5;margin:14px 2px}.nv-prog{height:4px;border-radius:2px;background:rgba(255,255,255,.1)}.nv-prog i{display:block;height:100%;background:#e0574c;border-radius:2px}
+.nv-tg{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:14px;color:#cbb}
