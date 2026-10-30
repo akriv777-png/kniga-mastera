@@ -171,7 +171,7 @@ function showSpell(id){const s=D.spells.find(x=>x.id===id);
   <div class="sp-circle"><img class="r1" src="img/runecircle.png" alt=""><div class="lvl">${s.l===0?'✶':s.l}</div></div>
   <div class="sp-grid"><div><b>Время</b>${esc(s.t)}</div><div><b>Дистанция</b>${esc(s.r)}</div><div><b>Компоненты</b><span class="comp">${[...s.c].map(c=>`<span>${c}</span>`).join('')}</span></div><div><b>Длительность</b>${s.conc?'Концентрация, ':''}${esc(s.d)}</div>${s.dmg?`<div><b>Урон</b>${esc(s.dmg)}</div>`:''}<div><b>Классы</b><span style="font-size:14px">${esc(s.cl.join(', '))}</span></div></div>
   ${s.m?`<div class="kv" style="font-size:13.5px"><b>М:</b> <i>${esc(s.m)}</i></div>`:''}<div class="redline"></div>
-  <div class="desc dropcap">${esc(s.ds)}</div>${s.ru?'':'<p class="muted" style="font-size:12px;margin-top:12px">Описание пока на английском (SRD).</p>'}`)}
+  <div class="desc dropcap">${esc(s.ds)}</div>`)}
 
 /* ---------- ITEMS ---------- */
 const ICATS=['Оружие','Доспехи','Магические','Снаряжение','Инструменты','Транспорт'];
@@ -184,7 +184,7 @@ function fillIt(){let L=D.items;const q=S.itQ;if(S.itCat)L=L.filter(i=>i.cat===S
 function showItem(id){const i=D.items.find(x=>x.id===id);
   openSheet(`<div class="sb-title">${esc(i.n)}</div><div class="sb-sub">${esc(i.sub||i.cat)}${i.cat==='Магические'?', '+esc(i.rar.toLowerCase()):''}${i.att?' (требует настройки)':''}</div><div class="en muted" style="font-style:italic;font-size:13px">${esc(i.en)}</div>${glyphs(3)}
   <div class="sp-grid">${i.dmg?`<div><b>Урон</b>${esc(i.dmg)}</div>`:''}${i.acv?`<div><b>Класс доспеха</b>${esc(i.acv)}</div>`:''}<div><b>Цена</b>${esc(i.cost)}</div><div><b>Вес</b>${i.w?i.w+' кг':'—'}</div><div><b>Редкость</b>${esc(i.rar)}</div>${i.prop?`<div style="grid-column:1/-1"><b>Свойства</b>${esc(i.prop)}</div>`:''}</div>
-  ${i.ds?`<div class="redline"></div><div class="desc dropcap">${esc(i.ds)}</div>${i.ru||!/[a-z]{4}/i.test(i.ds)?'':'<p class="muted" style="font-size:12px">Описание на английском (SRD).</p>'}`:''}`)}
+  ${i.ds?`<div class="redline"></div><div class="desc dropcap">${esc(i.ds)}</div>`:''}`)}
 
 /* ---------- COMBAT ---------- */
 const CONDS=['Ослеплён','Очарован','Оглох','Испуган','Схвачен','Недееспособен','Невидим','Парализован','Окаменел','Отравлен','Лежит ничком','Опутан','Ошеломлён','Без сознания','Истощение','Концентрация'];
