@@ -18,7 +18,7 @@ const toast=t=>window.toast(t);
 function sheet(html,bind){openSheet(html,bind)}
 function close(){closeSheet()}
 
-const TABS=[['hero','⚔','Герой'],['bag','⛁','Сумка'],['spells','✧','Чары'],['notes','✎','Записи'],['table','◎','Стол']];
+const TABS=[['hero','⚔','Герой'],['bag','⛁','Сумка'],['spells','✧','Чары'],['notes','✎','Записи'],['table','👁','Мастер']];
 function nav(){$('#nav').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="${k}" class="${k===tab?'on':''}"><i>${i}</i>${l}</button>`).join('');$$('#nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;LS.set('tab',tab);render();scrollTo(0,0)})}
 const can=f=>!window.KP||!KP.linked()||(KP.online()?KP.can(f):f==='notes');
 function num(title,cb,ph=''){sheet(`<h3>${esc(title)}</h3><input class="inp" id="nv" type="number" inputmode="numeric" placeholder="${ph}" style="font-size:30px;text-align:center"><div class="row" style="margin-top:10px"><button class="btn red grow" id="nm">− Урон</button><button class="btn ac grow" id="np">＋ Лечение</button></div>`,r=>{setTimeout(()=>$('#nv',r).focus(),50);$('#nm',r).onclick=()=>{cb(-Math.abs(+$('#nv',r).value||0));close()};$('#np',r).onclick=()=>{cb(Math.abs(+$('#nv',r).value||0));close()}})}
@@ -83,7 +83,7 @@ function undoBar(msg,fn){document.querySelector('.undob')?.remove();const d=docu
 function rTable(){return window.KP&&KP.render?KP.render():`<div class="card"><h3>Связь со столом Мастера</h3><p class="soon">Живая связь — скоро.</p><p class="muted">Пока можно передать героя Мастеру кодом.</p><button class="btn" id="exp" style="width:100%">Скопировать код героя</button><textarea class="inp" id="imp" placeholder="Вставьте код героя от Мастера" style="margin-top:8px;min-height:80px"></textarea><button class="btn ac" id="impb" style="width:100%;margin-top:6px">Загрузить героя</button></div>`}
 function bTable(){if(window.KP&&KP.bind)return KP.bind();$('#exp').onclick=()=>{const c='KP1:'+btoa(unescape(encodeURIComponent(JSON.stringify(H))));navigator.clipboard?.writeText(c).then(()=>toast('Код скопирован'),()=>{$('#imp').value=c;toast('Код в поле ниже')})};$('#impb').onclick=()=>{try{const v=$('#imp').value.trim().replace(/^KP1:/,'');const h=JSON.parse(decodeURIComponent(escape(atob(v))));H=Object.assign(fresh(),h);save();toast('Герой загружен');render()}catch(e){toast('Неверный код')}}}
 const RN={hero:[()=>roBan()+rHero()+usesCard(),bHero],bag0:0,bag:[()=>roBan()+rBag(),bBag],spells:[rSpells,bSpells],notes:[rNotes,bNotes],table:[rTable,bTable]};
-const HD={hero:['Герой',()=>H.name+' · '+H.cls+' '+H.lvl+' ур.','pent'],bag:['Сумка',()=>'снаряжение и монеты','star'],spells:['Чары',()=>'ячейки и заклинания','eye'],notes:['Записи',()=>'дневник и послания Мастера','tri'],table:['Стол',()=>'связь с Мастером','pent']};
+const HD={hero:['Герой',()=>H.name+' · '+H.cls+' '+H.lvl+' ур.','pent'],bag:['Сумка',()=>'снаряжение и монеты','star'],spells:['Чары',()=>'ячейки и заклинания','eye'],notes:['Записи',()=>'дневник и послания Мастера','tri'],table:['Мастер',()=>'всё, что показывает Мастер','pent']};
 window.PRN=function(i){tab=TABS[i][0];LS.set('tab',tab);const h=HD[tab];page.oninput=null;page.innerHTML=header(h[0],h[1](),h[2],i)+'<div class="pbk">'+RN[tab][0]()+'</div>';RN[tab][1]()};
 function render(){const y=page.scrollTop;PRN(S.sec);page.scrollTop=y}
 window.KPA={get H(){return H},set H(v){H=v;LS.set('hero',H)},render,save,toast,sheet,close,LS,esc,uid,$,$$,D,pb,md,fm};

@@ -26,3 +26,5 @@ body:has(#sheet.open) #link{display:none}
 .pe-empty small{font-size:13px;color:#a8977f;max-width:280px;line-height:1.4}
 @keyframes peIn{from{opacity:0;transform:translateY(6px)}}
 @media (prefers-reduced-motion:reduce){.pe-empty{animation:none}}
+
+.km-newdm #ribbons .rib:last-child{position:relative}.km-newdm #ribbons .rib:last-child::after{content:'';position:absolute;top:4px;right:22%;width:9px;height:9px;border-radius:50%;background:#d22;box-shadow:0 0 8px #f33;animation:kmpulse 1.2s ease-in-out infinite}@keyframes kmpulse{50%{transform:scale(1.4);opacity:.7}}
