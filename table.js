@@ -40,7 +40,7 @@ function apply(h,f,v){if(f==='rest'){KM.partyRest&&KM.partyRest([h.id],v==='l'?'
  const c=combat.list.find(x=>x.pc&&(x.pid===h.id||x.name===h.name));if(c&&f==='hp'){c.hp=h.hp;c.thp=h.thp}if(c&&f==='conds')c.conds=h.conds.map(n=>({n,r:0}))}
 function rRefresh(){try{if(page&&S.sec===6&&window.rPcs)rPcs();if(S.sec===4)rCombat()}catch(e){}}
 /* --- что видит игрок --- */
-function initView(){const k=combat;if(!k.list||!k.list.length)return null;return {round:k.round,turn:k.turn,list:k.list.map(c=>({n:c.name,pc:!!c.pc,init:c.delay?'⏸':c.init,st:c.pc?`${c.hp}/${c.max}`:c.dead?'повержен':c.hp<c.max/2?'тяжело ранен':c.hp<c.max?'ранен':'цел',conds:(c.conds||[]).map(x=>x.n||x).filter(n=>n!=='Подготовлено'),dead:!!c.dead}))}}
+function initView(){const k=combat;if(!k.list||!k.list.length)return null;return {round:k.round,turn:k.turn,log:(k.log||[]).slice(0,4).map(x=>String(x).replace(/\d+\/\d+/g,'')),list:k.list.map(c=>({n:c.name,pc:!!c.pc,init:c.delay?'⏸':c.init,st:c.pc?`${c.hp}/${c.max}`:c.dead?'повержен':c.hp<c.max/2?'тяжело ранен':c.hp<c.max?'ранен':'цел',conds:(c.conds||[]).map(x=>x.n||x).filter(n=>n!=='Подготовлено'),dead:!!c.dead}))}}
 let mapCache={key:'',img:null};
 function mapView(){try{const ms=LS.get('maps',[]);const id=LS.get('mapcur',ms[0]&&ms[0].id);const m=ms.find(x=>x.id===id);if(!m||!m.shared)return null;const key=m.id+'|'+(m.rev||0)+JSON.stringify(m.fog)+JSON.stringify(m.tok)+JSON.stringify(m.g)+[m.grid,m.gs,m.style,m.light,m.coord].join();if(key===mapCache.key)return mapCache.img;
  const CS=24,cv=document.createElement('canvas');cv.width=m.W*CS;cv.height=m.H*CS;const g=cv.getContext('2d');drawMap(g,m,CS,1);mapCache={key,img:{n:m.name,src:cv.toDataURL('image/jpeg',.72),W:m.W,H:m.H}};return mapCache.img}catch(e){return null}}
