@@ -1,4 +1,4 @@
-const V='kp-759b44d4';const FILES=['./','index.html','p.css','player.js','pdata.js','manifest.json','img/icon-192.png','../fonts/CormorantGaramond-normal-600-cyrillic.woff2','../fonts/CormorantGaramond-normal-400-cyrillic.woff2'];
+const V='kp-cc7b3799';const FILES=['./','index.html','p.css','player.js','pdata.js','manifest.json','sync.js','../vendor/peerjs.min.js','img/icon-192.png','../fonts/CormorantGaramond-normal-600-cyrillic.woff2','../fonts/CormorantGaramond-normal-400-cyrillic.woff2'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith('kp-')&&k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;e.respondWith(fetch(e.request).then(res=>{if(res.ok){const c=res.clone();caches.open(V).then(ca=>ca.put(e.request,c))}return res}).catch(()=>caches.match(e.request,{ignoreSearch:true}).then(r=>r||caches.match('./index.html'))))});
