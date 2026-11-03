@@ -179,6 +179,7 @@ function fillSp(){if(!window.KM_core){const e=$('#spList');if(e)e.innerHTML='<di
   L=[...L].sort((a,b)=>a.l-b.l||a.n.localeCompare(b.n,'ru'));
   lazyList($('#spList'),L,s=>`<div class="card" data-id="${s.id}"><div class="t">${esc(s.n)}</div><span class="badge">${s.l===0?'загов.':s.l+' кр.'}</span><div class="m">${esc(s.sc)} · ${esc(s.t)}${s.conc?' · <span class="hand">концентрация</span>':''}${s.rit?' · ритуал':''}</div><div class="m">${s.dmg?`<span style="color:var(--blood);font-style:normal">${esc(s.dmg)}</span>`:''}</div></div>`);
   $('#spList').onclick=e=>{const c=e.target.closest('.card');if(c)showSpell(c.dataset.id)}}
+window.spThumb=s=>window.SPART&&SPART.has(s.id)?`<img class="spthumb" loading="lazy" decoding="async" width="46" height="46" alt="" src="${window.KM_PLAYER?'../':''}img/spt/${s.id}.webp" onerror="this.remove()">`:'';
 window.spArt=id=>window.SPART&&SPART.has(id)?`<div class="spx-art"><img loading="lazy" decoding="async" alt="" src="${window.KM_PLAYER?'../':''}img/sp/${id}.webp" onload="this.parentNode.classList.add('on')" onerror="this.parentNode.remove()"></div>`:'';
 function showSpell(id){const s=D.spells.find(x=>x.id===id);
   openSheet(`<div class="sp-head"><div><div class="sb-title" style="margin-right:0">${esc(s.n)}</div><div class="sb-sub">${lvlName(s.l)}, ${esc(s.sc.toLowerCase())}${s.rit?' (ритуал)':''}</div></div></div>
@@ -399,4 +400,4 @@ window.KM={go,showMon,showSpell,showItem,closeSheet,addCombatant,S,get players()
 window.KM_ver=()=>caches.keys().then(k=>(k.filter(x=>/^k[mp]-/.test(x)).pop()||'—').replace(/^k[mp]-/,''));
 
 /* фоновой прогрев кэша иллюстраций заклинаний (офлайн), понемногу и только когда есть SW */
-setTimeout(()=>{try{if(!window.SPART||!navigator.serviceWorker||!navigator.serviceWorker.controller||(navigator.connection&&navigator.connection.saveData))return;const L=[...SPART],P=(window.KM_PLAYER?'../':'')+'img/sp/';let i=0;const nx=()=>{if(i>=L.length)return;if(document.hidden)return setTimeout(nx,5000);fetch(P+L[i++]+'.webp').catch(()=>{}).finally(()=>setTimeout(nx,400))};nx()}catch(e){}},25000);
+setTimeout(()=>{try{if(!window.SPART||!navigator.serviceWorker||!navigator.serviceWorker.controller||(navigator.connection&&navigator.connection.saveData))return;const B=(window.KM_PLAYER?'../':'')+'img/',L=[...[...SPART].map(x=>'spt/'+x),...[...SPART].map(x=>'sp/'+x)],P=B;let i=0;const nx=()=>{if(i>=L.length)return;if(document.hidden)return setTimeout(nx,5000);fetch(P+L[i++]+'.webp').catch(()=>{}).finally(()=>setTimeout(nx,400))};nx()}catch(e){}},25000);
