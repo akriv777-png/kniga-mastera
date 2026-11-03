@@ -323,3 +323,7 @@ html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)
 .sw-ctl button{position:relative}.sw-ctl button::after{content:'';position:absolute;inset:-8px}
 
 .inv-r .chip.att{padding:2px 7px;font-size:12px;min-height:0;margin-left:4px}.inv-r .chip.att.on{color:#ffd36a;border-color:#d6b26a;box-shadow:0 0 6px rgba(214,178,106,.5)}.att-n{color:#e8d3a2;font-weight:600}.att-n.over{color:#ff6b5b}
+/* tapfix: без задержки двойного тапа и «первого тапа = hover» на iOS */
+button,a,summary,label,select,.btn,.chip,[data-t],[data-tab],[role=button],[onclick]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+i.ink,.ink{pointer-events:none}
+@media (hover:none){.btn:hover,.chip:hover,button:hover{filter:none}}

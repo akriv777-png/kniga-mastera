@@ -51,3 +51,5 @@ html.pm-lock,html.pm-lock body{overflow:hidden!important;overscroll-behavior:non
 .spthumb{border-radius:50%;object-fit:cover;border:1px solid rgba(180,30,30,.55);box-shadow:0 0 8px rgba(160,0,0,.45);background:#120606}
 .spc .spthumb{position:absolute;left:12px;top:50%;margin-top:-23px}
 .it .spthumb{width:40px;height:40px;flex:0 0 40px;margin-right:10px}
+button,a,summary,label,select,.btn,.chip,[data-tab],[role=button]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
+i.ink,.ink{pointer-events:none}
