@@ -37,7 +37,7 @@ function go(src,l,movers,anchor){const dst=maps.find(x=>x.id===l.to);if(!dst)ret
  const snap={a:JSON.stringify(src.tok),b:JSON.stringify(dst.tok),f:dst.fog?dst.fog.slice():null,sh:dst.shared,cur:mapCur,src:src.id,dst:dst.id};
  const back=(dst.links||[]).find(z=>z.to===src.id);const ax=back?back.x:dst.start?dst.start.x:dst.W>>1,ay=back?back.y:dst.start?dst.start.y:dst.H>>1;
  const ex=new Set();movers.sort((p,q)=>Math.hypot(p.x-anchor.x,p.y-anchor.y)-Math.hypot(q.x-anchor.x,q.y-anchor.y));
- movers.forEach(t=>{let x=ax+(t.x-anchor.x),y=ay+(t.y-anchor.y);let c=okC(dst,x,y,ex)&&Math.max(Math.abs(x-ax),Math.abs(y-ay))<=4?[x,y]:near(dst,ax,ay,ex);if(!c)c=[ax,ay];ex.add(c[0]+','+c[1]);t.x=c[0];t.y=c[1]});
+ movers.forEach(t=>{let x=ax+(t.x-anchor.x),y=ay+(t.y-anchor.y);let c=(KM.canPlace?KM.canPlace(dst,t,x,y,ex):okC(dst,x,y,ex))&&Math.max(Math.abs(x-ax),Math.abs(y-ay))<=4?[x,y]:near(dst,ax,ay,ex);if(!c)c=[ax,ay];ex.add(c[0]+','+c[1]);t.x=c[0];t.y=c[1]});
  src.tok=src.tok.filter(t=>!movers.includes(t));movers.forEach(t=>dst.tok.push(t));
  if(dst.fog)movers.forEach(t=>{for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const x=t.x+dx,y=t.y+dy;if(x>=0&&y>=0&&x<dst.W&&y<dst.H)dst.fog[y*dst.W+x]=0}});
  if(src.shared)dst.shared=true;mapCur=dst.id;view={s:1,x:0,y:0};saveMaps();rMap();
@@ -53,9 +53,9 @@ function ask(src,l,tok,org){if(tok&&org){const o=org;const _t=tok;tok.__o=o}cons
  if($i('trO'))$i('trO').onclick=()=>{closeSheet();rs();go(src,l,[tok],a)};
  if($i('trN'))$i('trN').onclick=()=>{closeSheet();rs();go(src,l,[],a)};
  $i('trX').onclick=()=>{if(tok)delete tok.__o;closeSheet()}}
-KM.mapTrans=ask;
+KM.mapTrans=ask;KM.mapTransGo=go;
 /* фишка брошена на переход */
 let pre=null;
 document.addEventListener('pointerdown',e=>{if(!e.target.closest||!e.target.closest('#mc'))return;const m=KM.mapCur&&KM.mapCur();pre=m&&(m.links||[]).length?{m,pos:new Map((m.tok||[]).map(t=>[t,t.x+','+t.y]))}:null},true);
-document.addEventListener('pointerup',()=>{if(!pre)return;const P=pre;pre=null;setTimeout(()=>{const m=KM.mapCur&&KM.mapCur();if(m!==P.m)return;for(const [t,k] of P.pos){if(t.x+','+t.y===k||!m.tok.includes(t))continue;const l=m.links.find(z=>z.x===t.x&&z.y===t.y&&maps.some(q=>q.id===z.to));if(l&&(t.k==='pc'||t.pid)){const [ox,oy]=k.split(',').map(Number);ask(m,l,t,{x:ox,y:oy});return}}},60)});
+document.addEventListener('pointerup',()=>{if(!pre)return;const P=pre;pre=null;setTimeout(()=>{const m=KM.mapCur&&KM.mapCur();if(m!==P.m)return;for(const [t,k] of P.pos){if(t.x+','+t.y===k||!m.tok.includes(t))continue;const F=KM.tokFp?KM.tokFp(t):1;const l=m.links.find(z=>z.x>=t.x&&z.y>=t.y&&z.x<t.x+F&&z.y<t.y+F&&maps.some(q=>q.id===z.to));if(l){const [ox,oy]=k.split(',').map(Number);ask(m,l,t,{x:ox,y:oy});return}}},60)});
 })();
