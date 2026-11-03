@@ -34,14 +34,14 @@ function slotTable(c,l){l=Math.max(1,Math.min(20,l||1));if(['Волшебник'
 function ensureSlots(p){const t=slotTable(heroCls(p),p.lvl);const o=p.slots||{};p.slots={};t.forEach((n,i)=>{if(n)p.slots[i+1]={max:n,used:Math.min(n,o[i+1]?.used||0)}});p.spells=p.spells||[];p.prep=p.prep||[];return p}
 players.forEach(ensureSlots);save();
 /* list */
-let MF=Object.assign({sc:'',tm:'',conc:'',rit:'',dt:'',cp:'',view:'all',hero:0},LS.get('mf',{}));
+let MF=Object.assign({sc:'',tm:'',conc:'',rit:'',dt:'',cp:'',view:'all',hero:0},LS.get('mf',{}));if(MF.lvl!=null)S.spLvl=MF.lvl;if(MF.cls!=null)S.spCls=MF.cls;
 rSpells=function(){page.oninput=null;page.onclick=null;const seg=`<div class="seg" id="mseg"><button data-v="all" class="${MF.view==='all'?'on':''}">Свод заклинаний</button><button data-v="book" class="${MF.view==='book'?'on':''}">Гримуар героя</button></div>`;
  if(MF.view==='book')return rGrimoire(seg);
  page.innerHTML=header('Заклинания','свод чар и заговоров','star',1)+seg+searchBox('spQ','Найти, напр. огненный шар',S.spQ)+
  chips('cls',[['','Все классы'],...[...new Set(CLASSES.concat(D.spells.some(s=>s.cl.includes('Изобретатель'))?['Изобретатель']:[]))].map(c=>[c,c])],S.spCls)+chips('lvl',[['','Все круги'],['0','Заговоры'],...[1,2,3,4,5,6,7,8,9].map(l=>[l,l+'-й круг'])],S.spLvl)+
  `<details class="mfil"${MF.sc||MF.tm||MF.conc||MF.rit||MF.dt||MF.cp?' open':''}><summary>Фильтры: школа, время, концентрация…</summary>`+chips('sc',[['','Любая школа'],...SCHOOLS.map(s=>[s,s])],MF.sc)+chips('tm',[['','Любое время'],['1 действие','Действие'],['1 бонусное действие','Бонусное'],['1 реакция','Реакция'],['long','Минуты и часы']],MF.tm)+
  chips('conc',[['','Концентрация: любая'],['1','Только концентрация'],['0','Без концентрации']],MF.conc)+chips('rit',[['','Ритуал: любой'],['1','Только ритуалы']],MF.rit)+chips('dt',[['','Любой урон'],...Object.keys(DT_C).map(d=>[d,d])],MF.dt)+chips('cp',[['','Любые компоненты'],['noV','Без вербального'],['noS','Без соматического'],['noM','Без материального']],MF.cp)+`</details><div class="list" id="spList"></div>`;
- bindChips(page,(n,v)=>{if(n==='lvl')S.spLvl=v;else if(n==='cls')S.spCls=v;else MF[n]=v;LS.set('mf',MF);rSpells()});bindSearch('spQ',q=>{S.spQ=q;fillSp()});
+ bindChips(page,(n,v)=>{if(n==='lvl')S.spLvl=MF.lvl=v;else if(n==='cls')S.spCls=MF.cls=v;else MF[n]=v;LS.set('mf',MF);rSpells()});bindSearch('spQ',q=>{S.spQ=q;fillSp()});
  $('#mseg').onclick=e=>{const b=e.target.closest('[data-v]');if(b){MF.view=b.dataset.v;LS.set('mf',MF);rSpells()}};fillSp()};
 fillSp=function(){let L=D.spells;let q=S.spQ;if(q){q=q.toLowerCase();const W=q.split(/\s+/).filter(Boolean);L=L.filter(s=>{const h=s._h||(s._h=[s.n,s.sc,s.dt,(s.cl||[]).join(' '),s.dmg,s.conc?'концентрация':'',s.rit?'ритуал':'','круг '+s.l,s.l?'':'заговор'].join(' ').toLowerCase());return W.every(w=>h.includes(w))});L.sort((a,b)=>(b.n.toLowerCase().includes(q)?1:0)-(a.n.toLowerCase().includes(q)?1:0))}if(!q&&S.spLvl!=='')L=L.filter(s=>s.l===+S.spLvl);if(!q&&S.spCls)L=L.filter(s=>s.cl.includes(S.spCls));
  if(MF.sc)L=L.filter(s=>s.sc===MF.sc);if(MF.tm)L=L.filter(s=>MF.tm==='long'?/мин|ч\./.test(s.t):s.t===MF.tm);if(MF.conc)L=L.filter(s=>s.conc===(MF.conc==='1'));if(MF.rit)L=L.filter(s=>s.rit);if(MF.dt)L=L.filter(s=>s.dt===MF.dt);if(MF.cp)L=L.filter(s=>!s.c.includes({noV:'В',noS:'С',noM:'М'}[MF.cp]));

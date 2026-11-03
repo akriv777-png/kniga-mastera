@@ -211,7 +211,7 @@ KM.combat={sort:()=>sortC2(),damage,attack,multi,bulk,initSheet,next,undo,endCom
 
 document.addEventListener('click',e=>{if(!e.target.closest||!e.target.closest('#cbshow'))return;const t=window.KM&&KM.table;if(!t||!t.conns||!Object.keys(t.conns).length){toast('Стол не открыт: откройте ◎ Онлайн, чтобы игроки видели порядок ходов');return}t.push(true);toast('Порядок ходов и текущий ход показаны игрокам (вкладка «Мастер»)')});
 
-document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-rx]');if(!t)return;e.stopPropagation();e.preventDefault();const q=C().list.find(x=>x.id===t.dataset.rx);if(q){q.eco=q.eco||{a:0,b:0,r:0,m:0};q.eco.r^=1;save();rCombat();toast(q.name+(q.eco.r?': реакция потрачена до начала своего хода':': реакция снова доступна'))}},true);
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-rx]');if(!t)return;e.stopPropagation();e.preventDefault();const q=combat.list.find(x=>x.id===t.dataset.rx);if(q){q.eco=q.eco||{a:0,b:0,r:0,m:0};q.eco.r^=1;save();rCombat();toast(q.name+(q.eco.r?': реакция потрачена до начала своего хода':': реакция снова доступна'))}},true);
 
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-surp]');if(!b)return;e.stopPropagation();e.preventDefault();const k=combat;const c=k.list.find(x=>String(x.id)===b.dataset.surp);if(!c)return;c.surp=c.surp?0:1;c.eco=c.eco||{a:0,b:0,r:0,m:0};c.eco.r=c.surp?1:0;if(c.surp&&k.list[k.turn]===c)KM.combat.next();save();rCombat();toast(c.name+(c.surp?': застигнут — пропускает 1-й раунд, без реакции':': не застигнут'))},true);
 

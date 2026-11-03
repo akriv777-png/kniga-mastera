@@ -94,5 +94,5 @@ function pick(){const all=(D().monsters||[]).slice().sort((a,b)=>a.n.localeCompa
  box.onclick=e=>{const c=e.target.closest('[data-crp]');if(!c)return;addMon(cur[+c.dataset.crp]);sheet()};
  document.getElementById('crPB').onclick=sheet}
 KM.creatures=sheet;KM.creaturesPick=pick;
-setInterval(()=>{const mw=document.getElementById('mw');if(!mw||document.getElementById('crBtn'))return;const b=document.createElement('button');b.id='crBtn';b.className='btn sm';b.textContent='🐾 Существа';b.style.cssText='margin:0 0 8px';b.onclick=sheet;const r=document.createElement('div');r.className='row';r.appendChild(b);(document.getElementById('cmbstrip')||mw).before(r)},400);
+setInterval(()=>{const mw=document.getElementById('mw');if(!mw||document.getElementById('crBtn'))return;const b=document.createElement('button');b.id='crBtn';b.className='btn sm';b.textContent='🐾 Существа';b.onclick=sheet;const r=document.querySelector('#page .m-ctl');if(r)r.appendChild(b);else{const q=document.createElement('div');q.className='row';q.appendChild(b);(document.getElementById('cmbstrip')||mw).before(q)}},700);
 })();

@@ -129,7 +129,7 @@ const saveMaps=()=>{const cm=maps.find(x=>x.id===mapCur);if(cm)cm.rev=(cm.rev||0
 function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>
-  <div class="row" style="margin:8px 0"><button class="btn sm${mt.locked?'':' red'}" id="mLock">${mt.locked?'🔒 Редактировать':'🔓 Готово (заблокировать)'}</button><button class="btn sm" id="mUndo" aria-label="Отменить">↶ Отменить</button><button class="btn sm" id="mRedo" aria-label="Повторить">↷ Повторить</button></div>
+  <div class="row m-ctl" style="margin:6px 0;flex-wrap:nowrap"><button class="btn sm${mt.locked?'':' red'}" id="mLock" style="flex:1">${mt.locked?'🔒 Правка':'🔓 Готово'}</button><button class="btn sm" id="mUndo" aria-label="Отменить" style="min-width:48px">↶</button><button class="btn sm" id="mRedo" aria-label="Повторить" style="min-width:48px">↷</button></div>
   <div class="seg tools" id="mtools">${[['paint','🖌 Кисть'],['erase','⌫ Стереть'],['token','◉ Фишка'],['fog','☁ Туман'],['pan','✋ Двигать']].map(([k,l])=>`<button data-t="${k}" class="${!mt.locked&&mt.tool===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="map-wrap" id="mw"><canvas id="mc"></canvas><div class="zoom"><button id="zi">＋</button><button id="zo">−</button><button id="zf">⤢</button></div></div>
 <div id="mopts"></div><label class="row muted" style="font-size:12.5px;margin-top:8px"><input type="checkbox" id="mAuto"${mt.autoLock?' checked':''}> Автоблокировка через 30 с бездействия</label>`;
@@ -139,7 +139,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   $('#mUndo').onclick=()=>{histMove(m,'hist','redo')?draw():toast('Нечего отменять')};$('#mRedo').onclick=()=>{histMove(m,'redo','hist')?draw():toast('Нечего повторять')};
   $('#mSel').onchange=e=>{mapCur=e.target.value;saveMaps();view={s:1,x:0,y:0};rMap()};
   $('#mNew').onclick=newMap;$('#mMenu').onclick=mapMenu;
-  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;if(mt.locked&&mt.tool!=='pan'){mt.locked=false;$('#mLock').textContent='🔓 Готово (заблокировать)';$('#mLock').classList.add('red')}$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
+  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;if(mt.locked&&mt.tool!=='pan'){mt.locked=false;$('#mLock').textContent='🔓 Готово';$('#mLock').classList.add('red')}$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
   const cv=$('#mc'),wrap=$('#mw');const dpr=Math.min(2,devicePixelRatio||1);const CS=32;
   function size(){const w=wrap.clientWidth,h=wrap.clientHeight;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';draw()}
   function fit(){const w=wrap.clientWidth,h=wrap.clientHeight;view.s=Math.min(w/(m.W*CS),h/(m.H*CS));view.x=(w-m.W*CS*view.s)/2;view.y=(h-m.H*CS*view.s)/2;draw()}

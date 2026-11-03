@@ -26,7 +26,7 @@ window.KMRelay=(function(){
    try{cl&&cl.end(true)}catch(e){}
    cl=mqtt.connect(url,{clientId:'km'+Math.random().toString(36).slice(2,12),clean:true,connectTimeout:8000,reconnectPeriod:0,keepalive:30,protocolVersion:4,...(url.includes('shiftr')?{username:'public',password:'public'}:{})});
    cl.on('connect',()=>{fails=0;cl.subscribe(mine,{qos:1},err=>{if(err)return;ok=true;onStatus&&onStatus('ретранслятор подключён ('+R.broker.split(':')[0]+')',true)})});
-   cl.on('message',async(t,p)=>{try{const d=await dec(key,typeof p==='string'?p:td.decode(p));if(d&&d.m)onMsg(d.f,d.m)}catch(e){}});
+   cl.on('message',async(t,p)=>{try{const d=await dec(key,typeof p==='string'?p:td.decode(p));if(d&&d.m)await onMsg(d.f,d.m)}catch(e){}});
    const down=()=>{if(ended)return;const was=ok;ok=false;if(!was)bi++;fails++;onStatus&&onStatus('ретранслятор: нет связи, повтор…',false);clearTimeout(R.t);R.t=setTimeout(go,Math.min(15000,800*fails))};
    cl.on('close',down);cl.on('error',()=>{try{cl.end(true)}catch(e){}})}
   go();return R}

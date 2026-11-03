@@ -21,7 +21,7 @@ function runeRing(r=46,col='#d9b46a',n=24){const R='ᚠᚢᚦᚨᚱᚲᚷᚹᚺ�
  const ps=[...Array(26)].map((_,i)=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,v:.2+Math.random()*.6,s:Math.random()*1.8+.4,k:i%3,ph:Math.random()*6}));let last=0;
  function tick(t){requestAnimationFrame(tick);if(document.hidden||calm()||!FXS.amb||t-last<33)return;last=t;g.clearRect(0,0,W,H);
   for(const p of ps){p.y-=p.v*(p.k?0.6:1);p.x+=Math.sin(t/1400+p.ph)*.35;if(p.y<-10){p.y=H+10;p.x=Math.random()*W}
-   const a=.35+.35*Math.sin(t/400+p.ph);if(p.k===0){g.fillStyle=`rgba(255,${90+60*a|0},40,${a})`;g.shadowColor='rgba(255,60,20,.9)';g.shadowBlur=6}else{g.fillStyle=`rgba(200,180,160,${a*.35})`;g.shadowBlur=0}
+   const a=.35+.35*Math.sin(t/400+p.ph);if(p.k===0){g.fillStyle=`rgba(255,60,20,${a*.25})`;g.beginPath();g.arc(p.x,p.y,p.s*3,0,7);g.fill();g.fillStyle=`rgba(255,${90+60*a|0},40,${a})`}else{g.fillStyle=`rgba(200,180,160,${a*.35})`}
    g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}
  requestAnimationFrame(tick);applyFx();RM.addEventListener?.('change',applyFx)})();
 /* ink press ripple */

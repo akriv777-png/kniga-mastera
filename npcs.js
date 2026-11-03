@@ -22,9 +22,10 @@ let npcView=LS.get('npcview','beasts');let castQ='';
 const _rNpc=rNpc;
 rNpc=function(){page.oninput=null;page.onclick=null;
  if(npcView==='beasts'){_rNpc();$('.ph',page).insertAdjacentHTML('afterend',npcSeg());bindNpcSeg();return}
- page.innerHTML=header('Персонажи','лица, голоса и тайны мира','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div><div class="list" id="castList"></div>`;
+ if(npcView==='leg')return rLeg();
+ page.innerHTML=header('НПС','обычные жители, слуги и встречные','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div><div class="list" id="castList"></div>`;
  bindNpcSeg();bindSearch('castQ',q=>{castQ=q;fillCast()});$('#rndNpc').onclick=()=>{const L=allCast().filter(x=>x&&x.id);if(!L.length)return;const c=L[Math.floor(Math.random()*L.length)];showCast(c.id)};$('#newCast').onclick=()=>editCast();fillCast()};
-const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">Персонажи (${allCast().length})</button></div>`;
+const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">НПС (${allCast().length})</button><button data-nv="leg" class="${npcView==='leg'?'on':''}">Персонажи (${(window.LEGENDS||[]).length})</button></div>`;
 function bindNpcSeg(){$('#nseg').onclick=e=>{const b=e.target.closest('[data-nv]');if(b){npcView=b.dataset.nv;LS.set('npcview',npcView);rNpc()}}}
 function fillCast(){const q=castQ.toLowerCase();const L=allCast().filter(c=>!q||(c.n+' '+c.r+' '+c.look+' '+c.mot).toLowerCase().includes(q));
  lazyList($('#castList'),L,c=>{const rel=npcRel[c.id]?.v||0;return `<div class="card cast${c.base?'':' own'}" data-cid="${c.id}">${npcSigil(c,52)}<div class="t">${esc(c.n)}</div>${rel?`<span class="badge rel${rel}">${REL.find(x=>+x[0]===rel)[1]}</span>`:''}<div class="m">${esc(c.r)}</div><div class="m hand" style="opacity:.8">«${esc(c.ph[0])}»</div></div>`});
@@ -58,4 +59,30 @@ function randomNpc(){const R=a=>a[Math.floor(Math.random()*a.length)];const L=CA
 function editCast(c){const n=c||{id:'u'+uid(),n:'',r:'',look:'',nat:'',quirk:'',mot:'',sec:'',ph:[''],hook:'',stat:'commoner'};const F=[['n','Имя','напр. Мирон Кривой'],['r','Раса и роль','напр. человек · мельник'],['look','Внешность','напр. мука в бороде'],['nat','Характер','напр. ворчлив, но добр'],['quirk','Манера речи','напр. говорит пословицами'],['mot','Чего хочет','напр. вернуть дочь'],['sec','Тайна','напр. сам продал мельницу'],['ph','Фразы через «;»','напр. Мука — не мука!'],['hook','Завязка','напр. по ночам мельница крутится сама']];
  openSheet(`<div class="sb-title">${c?'Изменить персонажа':'Новый персонаж'}</div>${F.map(([k,l,p])=>`<label class="lbl">${l}</label><textarea class="inp" rows="${k==='n'||k==='r'?1:2}" data-f="${k}" placeholder="${p}">${esc(k==='ph'?n.ph.join(';'):n[k])}</textarea>`).join('')}<label class="lbl">Статблок</label><select class="inp" id="cStatS">${D.monsters.filter(m=>m.ty&&m.ty.startsWith('гуманоид')).map(m=>`<option value="${m.id}"${m.id===n.stat?' selected':''}>${esc(m.n)}</option>`).join('')}</select><button class="btn red" id="cSave" style="margin-top:12px">Сохранить</button>`,r=>{
   $('#cSave',r).onclick=()=>{$$('[data-f]',r).forEach(t=>{n[t.dataset.f]=t.dataset.f==='ph'?t.value.split(';').map(s=>s.trim()).filter(Boolean):t.value.trim()});if(!n.ph.length)n.ph=['…'];n.stat=$('#cStatS',r).value;if(!n.n)return toast('Нужно имя');if(!c)ownCast.unshift(n);saveCast();showCast(n.id);if(npcView==='cast')rNpc()}})}
-Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil});
+
+/* ===== Уникальные персонажи (data/legends.js) ===== */
+let legCat=LS.get('legcat',''),legSort=LS.get('legsort','n'),legQ='';
+const LEG=()=>window.LEGENDS||[];
+function rLeg(){const cats=[...new Set(LEG().map(m=>m.L.cat))];
+ page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div>`+
+ chips('legcat',[['','Все'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
+ bindNpcSeg();bindSearch('legQ',q=>{legQ=q;fillLeg()});
+ bindChips(page,(n,v)=>{if(n==='legcat'){legCat=v;LS.set('legcat',v)}else if(n==='legsort'){legSort=v;LS.set('legsort',v)}fillLeg()});
+ $('#rndLeg').onclick=()=>{const L=LEG();if(L.length)showLeg(L[Math.floor(Math.random()*L.length)].id)};fillLeg()}
+function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||m.L.cat===legCat)&&(!q||(m.n+' '+m.L.title+' '+m.L.cat+' '+m.ty).toLowerCase().includes(q)));
+ L=[...L].sort(legSort==='n'?(a,b)=>a.n.localeCompare(b.n,'ru'):legSort==='cr'?(a,b)=>a.cr-b.cr||a.n.localeCompare(b.n,'ru'):(a,b)=>b.cr-a.cr||a.n.localeCompare(b.n,'ru'));
+ const el=$('#legList');if(!L.length){el.innerHTML='<div class="muted">Никого не нашлось</div>';el.onclick=null;return}
+ lazyList(el,L,m=>`<div class="card cast leg" data-lid="${m.id}">${npcSigil({id:m.id,n:m.n,r:m.ty},52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div><div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div></div>`);
+ el.onclick=e=>{const c=e.target.closest('[data-lid]');if(c)showLeg(c.dataset.lid)}}
+function showLeg(id){const m=LEG().find(x=>x.id===id);if(!m)return;const L=m.L;
+ openSheet(`<div class="cast-head">${npcSigil({id:m.id,n:m.n,r:m.ty},110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
+ <div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
+ <div class="fld"><b>Внешность.</b> ${esc(L.look)}</div><div class="fld"><b>Характер.</b> ${esc(L.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(L.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(L.mot)}</div><div class="fld"><b>История.</b> ${esc(L.hist)}</div>
+ <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>
+ <div class="sec-h">Фразы</div>${L.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
+ <div class="sec-h">Завязка</div><div class="fld">${esc(L.hook)}</div>
+ <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>`,r=>{
+  $('#lFight',r).onclick=()=>{addCombatant(m);toast(`${m.n} — в инициативе`)};
+  $('#lStat',r).onclick=()=>showMon(m.id);
+  $('#lScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(m.n)||sess.npcs.push(m.n);LS.set('sess',sess)}toast(`${m.n} — в сцене`)}})}
+Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil,showLeg,LEGENDS:LEG});

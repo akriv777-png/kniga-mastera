@@ -47,6 +47,7 @@ const ICK=window.KM_PLAYER?['pcs','item','spell','notes','map']:['sess','npc','s
 
 /* ---------- state ---------- */
 const S={sec:0,npcQ:'',npcType:'',npcCR:'',npcOnlyTop:true,spQ:'',spCls:'',spLvl:'',itQ:'',itCat:'',itRar:'',noteTag:'',lim:60};
+/* фильтры разделов запоминаются */{const K=['npcType','npcCR','npcOnlyTop','spCls','spLvl','itCat','itRar','noteTag'];try{const v=JSON.parse(localStorage.getItem('km.sf')||'{}');K.forEach(k=>{if(k in v)S[k]=v[k]})}catch(e){}let t;document.addEventListener('click',()=>{clearTimeout(t);t=setTimeout(()=>{const o={};K.forEach(k=>o[k]=S[k]);localStorage.setItem('km.sf',JSON.stringify(o))},300)},true)}
 let ownNpcs=LS.get('npcs',[]);
 let combat=LS.get('combat',{list:[],turn:0,round:1});
 let players=LS.get('players',null)||[
@@ -65,9 +66,9 @@ const findMon=id=>allMonsters().find(m=>m.id===id);
 
 /* ---------- ribbons ---------- */
 const rib=$('#ribbons');
-rib.innerHTML=SECTIONS.map((s,i)=>`<button class="rib" data-i="${i}" aria-label="${s[1]}">${IC[ICK[i]]}<span>${s[2]}</span></button>`).join('');
+const ORD=window.KM_PLAYER||SECTIONS.length!==10?SECTIONS.map((_,i)=>i):[4,5,7,6,1,0,2,3,8,9];rib.innerHTML=ORD.map(i=>[SECTIONS[i],i]).map(([s,i])=>`<button class="rib" data-i="${i}" aria-label="${s[1]}">${IC[ICK[i]]}<span>${s[2]}</span></button>`).join('');
 rib.addEventListener('click',e=>{const b=e.target.closest('.rib');if(b)go(+b.dataset.i)});
-function markRib(){$$('.rib').forEach((b,i)=>b.classList.toggle('on',i===S.sec))}
+function markRib(){$$('.rib').forEach(b=>b.classList.toggle('on',+b.dataset.i===S.sec))}
 
 /* ---------- page flip ---------- */
 const page=$('#page'),book=$('#book');let flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}
@@ -92,7 +93,7 @@ function go(i,dirHint){
  el.addEventListener('touchcancel',()=>{ok=false},{passive:true});
  el.addEventListener('touchend',e=>{if(!ok)return;ok=false;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
   const fromLeft=x0<=EDGE,fromRight=x0>=innerWidth-EDGE;
-  if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2.2&&Date.now()-t0<700&&((fromLeft&&dx>0)||(fromRight&&dx<0))){go(S.sec+(dx<0?1:-1),dx<0?1:-1)}},{passive:true});
+  if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2.2&&Date.now()-t0<700&&((fromLeft&&dx>0)||(fromRight&&dx<0))){{const o=ORD,j=o.indexOf(S.sec)+(dx<0?1:-1);if(j>=0&&j<o.length)go(o[j],dx<0?1:-1)}}},{passive:true});
  window.KM_SWIPE={BLOCK,EDGE};})();
 
 /* ---------- sheet ---------- */
@@ -390,8 +391,12 @@ const RULES=window.RULES_KM=[
 ['Советы новому Мастеру',`<p><span class="tri"></span>Описывай сцену тремя чувствами и спрашивай: «Что вы делаете?»</p><p><span class="tri"></span>Говори «Да, и…» или «Да, но…» вместо «Нет».</p><p><span class="tri"></span>Дай каждому игроку момент славы за сессию.</p><p><span class="tri"></span>Для 3 героев 1-го уровня хороший бой — 3–4 гоблина, 2 волка или 4–5 скелетов/зомби. Сильный бой — багбир + 2 гоблина.</p><p><span class="tri"></span>Не знаешь правило — прими решение сейчас, проверь после игры.</p>`]];
 const CONDR=[['Ослеплённый','Ничего не видит, проваливает проверки, требующие зрения. Атаки по нему — с преимуществом, его атаки — с помехой.'],['Очарованный','Не может атаковать очаровавшего или делать его целью вредящих эффектов. Очаровавший совершает с преимуществом проверки взаимодействия с ним.'],['Оглохший','Ничего не слышит, проваливает проверки, требующие слуха.'],['Испуганный','Помеха на проверки и атаки, пока видит источник страха. Не может добровольно приблизиться к нему.'],['Схваченный','Скорость 0. Оканчивается, если схвативший недееспособен или цель вытолкнута из досягаемости.'],['Недееспособный','Не может совершать действия и реакции.'],['Невидимый','Его нельзя увидеть без магии. Атаки по нему — с помехой, его атаки — с преимуществом.'],['Парализованный','Недееспособен, не двигается и не говорит. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом; попадание в пределах 1,5 м — критическое.'],['Окаменел','Превращён в камень: недееспособен, сопротивление всему урону, иммунитет к яду и болезням.'],['Отравленный','Помеха на броски атаки и проверки характеристик.'],['Лежащий ничком','Может только ползти или встать (половина скорости). Его атаки с помехой. Атаки по нему в пределах 1,5 м — с преимуществом, издалека — с помехой.'],['Опутанный','Скорость 0. Атаки по нему с преимуществом, его атаки с помехой. Помеха на спасброски Ловкости.'],['Ошеломлённый','Недееспособен, не двигается, говорит запинаясь. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом.'],['Без сознания','Недееспособен, не двигается, роняет всё, падает ничком. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом; попадание в пределах 1,5 м — критическое.'],['Истощение','6 степеней: 1 — помеха на проверки; 2 — скорость вдвое; 3 — помеха на атаки и спасброски; 4 — максимум хитов вдвое; 5 — скорость 0; 6 — смерть. Продолжительный отдых снимает 1 степень.']];
 RULES[3][1]=CONDR.map(c=>`<p><span class="tri"></span><b>${c[0]}.</b> ${c[1]}</p>`).join('');
-function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+(window.SCREEN||[]).map(c=>`<details class="rule scr-c"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<p class="dropcap" style="font-size:16px;line-height:1.45">Здесь собраны правила, к которым ты будешь возвращаться чаще всего. Помни: Мастер — арбитр, а не противник игроков.</p>`+
-  RULES.map((r,i)=>`<details class="rule"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`}
+const RCAT=[['','Все'],['ess','⚔ Нужное в игре'],['fight','Бой'],['chk','Проверки'],['world','Мир и отдых'],['book','Своды правил']];
+const RC_F=new Set(['turn','actions','opp','cover','grapple','twf','death','conc','cond','zones']),RC_C=new Set(['dc','adv','mods','skills','dice','stealth']);
+function rcat(id){return RC_F.has(id)?'fight':RC_C.has(id)?'chk':'world'}
+function rulesApply(){const f=LS.get('rulesF','');const E=window.SCREEN_ESS||new Set();$$('#page [data-rc]').forEach(d=>{const id=(d.closest('[data-scr]')||d).dataset.scr;const ok=!f||(f==='ess'?d.classList.contains('scr-c')&&E.has(d.dataset.id):d.dataset.rc===f);d.style.display=ok?'':'none'});$$('#page .dropcap').forEach(p=>p.style.display=f&&f!=='book'?'none':'')}
+function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+chips('rcat',RCAT.map(c=>[c[0],c[1]]),LS.get('rulesF',''))+(window.SCREEN||[]).map(c=>`<details class="rule scr-c" data-rc="${rcat(c[0])}" data-id="${c[0]}"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<p class="dropcap" style="font-size:16px;line-height:1.45">Здесь собраны правила, к которым ты будешь возвращаться чаще всего. Помни: Мастер — арбитр, а не противник игроков.</p>`+
+  RULES.map((r,i)=>`<details class="rule" data-rc="book"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`;rulesApply();bindChips(page,(n,v)=>{if(n==='rcat'){LS.set('rulesF',v);rRules()}})}
 
 /* ---------- render ---------- */
 const R=window.KM_PLAYER?[0,1,2,3,4].map(i=>()=>window.PRN&&PRN(i)):[()=>rSession(),()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>{rPcs();window.KM&&KM.table&&KM.table.panel&&KM.table.panel()},()=>rMap(),()=>rNotes(),()=>rRules()];
@@ -419,9 +424,9 @@ setTimeout(()=>{try{if(!window.SPART||!navigator.serviceWorker||!navigator.servi
 /* session.js */
 'use strict';
 /* ===== STAGE 3: Session home ===== */
-const SW_DEF=['party','init','dice','scene','npcs','log','quests','tables','timer','rest','backup'];
+const SW_DEF=['party','scene','npcs','log','quests','timer','rest','backup'];
 let sess=Object.assign({order:SW_DEF,scene:'Таверна «Пьяный грифон». Дождь барабанит по ставням, у камина шепчутся двое в капюшонах.',npcs:['Трактирщик Хольм'],log:[],quests:[{id:uid(),t:'Найти пропавших детей',st:0},{id:uid(),t:'Разведать старую дорогу',st:0}],day:1,min:8*60,weather:'Моросящий дождь, +9 °C',tStart:null,tAcc:0,cd:0,cdEnd:0,rnd:null,collapsed:{}},LS.get('sess',{}));
-SW_DEF.forEach(k=>{if(!sess.order.includes(k))sess.order.push(k)});
+SW_DEF.forEach(k=>{if(!sess.order.includes(k))sess.order.push(k)});sess.order=sess.order.filter(k=>SW_DEF.includes(k)||k==='clock');
 const saveS=()=>LS.set('sess',sess);
 const SW_T={party:'Отряд',init:'Инициатива',dice:'Проверка с живым кубом',scene:'Текущая сцена',npcs:'Активные НИП',log:'Журнал сессии',quests:'Задания',tables:'Случайные таблицы',clock:'Время и погода',timer:'Таймер',rest:'Отдых',backup:'Резервная копия'};
 const hhmm=m=>{m=((m%1440)+1440)%1440;return String(m/60|0).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
@@ -441,13 +446,10 @@ const W={
   <div class="hpbar big"><i style="width:${Math.max(0,Math.min(100,p.hp/p.maxhp*100))}%"></i>${p.temp?`<em style="width:${Math.min(100,p.temp/p.maxhp*100)}%"></em>`:''}<span>${p.hp}/${p.maxhp}${p.temp?' +'+p.temp:''}</span></div>
   <div class="pty-s"><span class="ac">КД ${p.ac}</span>${(p.conds||[]).map(c=>`<span class="cond">${esc(c)}</span>`).join('')}${p.slots?slotPips(p):''}</div></div>
   <div class="pty-q"><button class="rb" data-ph="dmg">−</button><button class="rb" data-ph="heal">+</button></div></div>`).join('')||'<div class="empty">Нет героев</div>',
- init:()=>{const L=combat.list;return L.length?`<div class="mini-init">${L.map((c,i)=>`<span class="${i===combat.turn?'cur':''}${c.hp<=0?' dead':''}">${c.init} ${esc(c.name)}</span>`).join('')}</div><div class="row"><span class="muted">Раунд ${combat.round} · ходит <b style="color:var(--gold2)">${esc(L[combat.turn]?.name||'—')}</b></span><button class="btn sm red" data-a="next" style="margin-left:auto">Следующий ход ▸</button><button class="btn sm" data-a="tocombat">Бой</button></div>`:`<div class="row"><span class="muted">Боя нет.</span><button class="btn sm red" data-a="startc" style="margin-left:auto">⚔ Начать бой с героями</button></div>`},
- dice:()=>`<div class="qd"><input class="inp" id="qd20" type="number" inputmode="numeric" placeholder="к20: 14"><span>+</span><input class="inp" id="qmod" type="number" inputmode="numeric" placeholder="мод: 3"><span>против</span><input class="inp" id="qdc" type="number" inputmode="numeric" placeholder="СЛ: 13"></div><div id="qres" class="qres muted">Введи, что выпало на живом кубе — я сложу и сравню.</div>`,
  scene:()=>`<textarea class="inp" id="sScene" rows="3">${esc(sess.scene)}</textarea><canvas id="miniMap" class="minimap" aria-label="Мини-карта"></canvas><div class="muted" style="font-size:12px">Мини-карта: ${esc(curMap().name)} — нажми, чтобы открыть</div>`,
  npcs:()=>`<div class="row">${sess.npcs.map((n,i)=>`<span class="npc-chip" data-n="${i}">${esc(n)}<button data-rmn="${i}" aria-label="Убрать">×</button></span>`).join('')}</div><div class="row" style="margin-top:6px"><input class="inp grow" id="nAdd" placeholder="Имя НИП, напр. Капитан стражи Вера"><button class="btn sm" data-a="addnpc">＋</button></div>`,
  log:()=>`<div class="row"><input class="inp grow" id="lAdd" placeholder="Что произошло, напр. Лис украл ключ у стражника"><button class="btn sm red" data-a="addlog">Записать</button></div><div class="slog">${sess.log.slice(0,30).map((l,i)=>`<div><time>${esc(l.tm)}</time><span>${esc(l.t)}</span><button data-rml="${i}" aria-label="Удалить">×</button></div>`).join('')||'<div class="muted">Пока тихо…</div>'}</div>`,
  quests:()=>`${sess.quests.map((q,i)=>`<div class="qst${q.st?' done':''}"><button data-qs="${i}" class="qbox" aria-label="Отметить">${q.st?'✓':''}</button><span>${esc(q.t)}</span><button data-rmq="${i}" aria-label="Удалить">×</button></div>`).join('')}<div class="row" style="margin-top:6px"><input class="inp grow" id="qAdd" placeholder="Задание, напр. Доставить письмо в Вороний Брод"><button class="btn sm" data-a="addq">＋</button></div>`,
- tables:()=>`<div class="row">${Object.keys(RT).map(k=>`<button class="btn sm" data-rt="${k}">🎲 ${k}</button>`).join('')}</div>${sess.rnd?`<div class="rt-out"><small>${esc(sess.rnd.k)}</small>${esc(sess.rnd.v)}<button class="btn sm" data-a="rtlog">В журнал</button></div>`:''}`,
  clock:()=>`<div class="clock"><div><b>${KM.cal?KM.cal.short():"День "+sess.day}</b><span>${hhmm(sess.min)} · ${sess.min%1440<300||sess.min%1440>=1260?'ночь 🌙':sess.min%1440<720?'утро ☀':'день ☀'}</span></div><div class="row">${[[10,'+10 мин'],[60,'+1 ч'],[480,'+8 ч'],[1440,'+1 день']].map(([v,l])=>`<button class="btn sm" data-tm="${v}">${l}</button>`).join('')}</div></div><div class="row" style="margin-top:6px"><span>🌦 ${esc(sess.weather)}</span><button class="btn sm" data-a="wx" style="margin-left:auto">Новая погода</button></div>`,
  timer:()=>`<div class="tmr"><div><small>Сессия идёт</small><b id="tSess">0:00:00</b><button class="btn sm" data-a="tss">${sess.tStart?'⏸ Пауза':(sess.tAcc?'▶ Продолжить':'▶ Старт')}</button>${sess.tStart||sess.tAcc?'<button class="btn sm" data-a="tsr">↺ Сброс</button>':''}<button class="btn sm red" data-a="nsess" style="margin-top:6px">✦ Новая сессия</button></div><div><small>Обратный отсчёт</small><b id="tCd">${sess.cdEnd?'':'—'}</b><div class="row">${[1,5,10].map(m=>`<button class="btn sm" data-cd="${m}">${m} мин</button>`).join('')}</div></div></div>`,
  rest:()=>`<div class="row"><button class="btn" data-a="short">☕ Короткий отдых</button><button class="btn" data-stl>🥷 Скрытность: каждый бросает</button><button class="btn red" data-a="long">🌙 Продолжительный отдых</button></div><div class="muted" style="font-size:12.5px;margin-top:6px">Продолжительный: все хиты, ячейки заклинаний и половина костей хитов, −1 истощение, +8 ч. Короткий: +1 ч, восстановление ячеек колдуна.</div>`,
@@ -466,27 +468,21 @@ function sessClick(e){const t=e.target,sw=t.closest('.sw');if(!sw)return;const k
  const ph=t.closest('[data-ph]');if(ph)return partyHp(players[+t.closest('.pty').dataset.p],ph.dataset.ph);
  if(t.closest('.pty-a,.pty-n'))return go(SECTIONS.findIndex(x=>x[0]==='pcs'));
  if(t.closest('#miniMap'))return go(SECTIONS.findIndex(x=>x[0]==='map'));
- const rt=t.closest('[data-rt]');if(rt){sess.rnd={k:rt.dataset.rt,v:RT[rt.dataset.rt]()};saveS();reW('tables');return}
  const tm=t.closest('[data-tm]');if(tm){adv(+tm.dataset.tm);return}
  const cd=t.closest('[data-cd]');if(cd){sess.cdEnd=Date.now()+cd.dataset.cd*60000;saveS();toast('Отсчёт: '+cd.dataset.cd+' мин');return}
  const rm=t.closest('[data-rmn],[data-rml],[data-rmq]');if(rm){const [arr,key,w]=rm.dataset.rmn!=null?['npcs','rmn','npcs']:rm.dataset.rml!=null?['log','rml','log']:['quests','rmq','quests'];const idx=+rm.dataset[key==='rmn'?'rmn':key==='rml'?'rml':'rmq'];const del=sess[arr].splice(idx,1)[0];saveS();reW(w);undoToast('Удалено',()=>{sess[arr].splice(idx,0,del);saveS();reW(w)});return}
  const qs=t.closest('[data-qs]');if(qs){const q=sess.quests[+qs.dataset.qs];q.st=q.st?0:1;saveS();if(q.st)logS('Задание выполнено: '+q.t);reW('quests');return}
  const a=t.closest('[data-a]')?.dataset.a;if(!a)return;const v=id=>$('#'+id).value.trim();
- if(a==='next'){const L=combat.list;let n=0;do{combat.turn++;if(combat.turn>=L.length){combat.turn=0;combat.round++}n++}while(L[combat.turn].hp<=0&&!L[combat.turn].pc&&n<L.length);save();reW('init')}
- if(a==='tocombat')go(SECTIONS.findIndex(x=>x[0]==='combat'));
- if(a==='startc'){players.forEach(p=>addCombatant({...p,n:p.name},true));reW('init');toast('Бросьте инициативу — значения можно поправить в «Бою»')}
  if(a==='addnpc'&&v('nAdd')){sess.npcs.push(v('nAdd'));saveS();reW('npcs')}
  if(a==='addlog'&&v('lAdd')){logS(v('lAdd'));reW('log')}
  if(a==='addq'&&v('qAdd')){sess.quests.push({id:uid(),t:v('qAdd'),st:0});saveS();reW('quests')}
- if(a==='rtlog'&&sess.rnd){logS(sess.rnd.k+': '+sess.rnd.v);reW('log');toast('В журнале')}
  if(a==='wx'){sess.weather=RT['Погода']();saveS();reW('clock')}
  if(a==='nsess'){newSession();return}if(a==='tsr'){if(!confirm('Сбросить таймер сессии на 0:00:00?'))return;const b={s:sess.tStart,a:sess.tAcc};sess.tStart=null;sess.tAcc=0;saveS();reW('timer');undoToast('Таймер сброшен',()=>{sess.tStart=b.s;sess.tAcc=b.a;saveS();reW('timer')});return}if(a==='tss'){if(sess.tStart){sess.tAcc+=Date.now()-sess.tStart;sess.tStart=null}else sess.tStart=Date.now();saveS();reW('timer')}
  if(a==='short'){adv(60);const L=[];players.forEach(p=>{KM.uses&&KM.uses.onRest(p,'s');if(p.slots&&/Колдун/i.test(p.cls))Object.values(p.slots).forEach(s=>s.used=0);if(KM.autoHD)L.push(KM.autoHD(p))});save();logS('Короткий отдых (1 ч)'+(L.length?': '+L.join('; '):''));rSession();toast('Короткий отдых'+(L.length?': '+L.join('; '):''))}
  if(a==='long'){adv(480);players.forEach(p=>{p.hp=p.maxhp;p.temp=0;if(p.slots)Object.values(p.slots).forEach(s=>s.used=0);p.exh=Math.max(0,(p.exh||0)-1);p.hdUsed=Math.max(0,(p.hdUsed||0)-Math.max(1,Math.floor((p.lvl||1)/2)))});save();logS('Продолжительный отдых (8 ч)');rSession();toast('Отряд отдохнул: хиты и ячейки восстановлены')}
  if(a==='exp')exportAll()}
 function sessInput(e){const t=e.target;if(t.id==='sScene'){sess.scene=t.value;saveS()}
- if(['qd20','qmod','qdc'].includes(t.id)){const d=+$('#qd20').value,m=+$('#qmod').value||0,dc=+$('#qdc').value;const o=$('#qres');if(!d){o.className='qres muted';o.textContent='Введи, что выпало на живом кубе — я сложу и сравню.';return}
-  const tot=d+m;o.className='qres '+(d===20?'crit':d===1?'fail':dc?(tot>=dc?'ok':'no'):'');o.innerHTML=`<b>${tot}</b> ${d===20?'— натуральная 20!':d===1?'— натуральная 1…':''} ${dc?(tot>=dc?'✓ Успех':'✗ Провал')+` (нужно ${dc})`:''}`;if(d===20)KM.summon&&KM.summon();if(d===1)KM.crack&&KM.crack()}}
+}
 function sessChange(e){if(e.target.id==='impF'&&e.target.files[0]){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(!o.km)throw 0;if(!confirm('Заменить все данные на этом устройстве данными из файла?'))return;Object.keys(localStorage).filter(k=>k.startsWith('km.')).forEach(k=>localStorage.removeItem(k));Object.entries(o.km).forEach(([k,v])=>localStorage.setItem(k,v));toast('Данные восстановлены');setTimeout(()=>location.reload(),700)}catch(_){toast('Файл не похож на копию «Ширмы Мастера»')}};fr.readAsText(e.target.files[0])}}
 function exportAll(){const km={};Object.keys(localStorage).filter(k=>k.startsWith('km.')).forEach(k=>km[k]=localStorage.getItem(k));const b=new Blob([JSON.stringify({app:'Книга Мастера',v:1,date:new Date().toISOString(),km})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='kniga-mastera-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();toast('Копия сохранена в Файлы')}
 function adv(m){sess.min+=m;while(sess.min>=1440){sess.min-=1440;sess.day++}saveS();reW('clock')}
@@ -693,7 +689,7 @@ const saveMaps=()=>{const cm=maps.find(x=>x.id===mapCur);if(cm)cm.rev=(cm.rev||0
 function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   page.innerHTML=header('Карта','конструктор подземелий','pent',0)+`
   <div class="row" style="margin-bottom:8px"><select class="inp grow" id="mSel">${maps.map(x=>`<option value="${x.id}"${x.id===m.id?' selected':''}>${esc(x.name)} (${x.W}×${x.H})</option>`).join('')}</select><button class="btn sm" id="mNew">＋</button><button class="btn sm" id="mMenu">⋯</button></div>
-  <div class="row" style="margin:8px 0"><button class="btn sm${mt.locked?'':' red'}" id="mLock">${mt.locked?'🔒 Редактировать':'🔓 Готово (заблокировать)'}</button><button class="btn sm" id="mUndo" aria-label="Отменить">↶ Отменить</button><button class="btn sm" id="mRedo" aria-label="Повторить">↷ Повторить</button></div>
+  <div class="row m-ctl" style="margin:6px 0;flex-wrap:nowrap"><button class="btn sm${mt.locked?'':' red'}" id="mLock" style="flex:1">${mt.locked?'🔒 Правка':'🔓 Готово'}</button><button class="btn sm" id="mUndo" aria-label="Отменить" style="min-width:48px">↶</button><button class="btn sm" id="mRedo" aria-label="Повторить" style="min-width:48px">↷</button></div>
   <div class="seg tools" id="mtools">${[['paint','🖌 Кисть'],['erase','⌫ Стереть'],['token','◉ Фишка'],['fog','☁ Туман'],['pan','✋ Двигать']].map(([k,l])=>`<button data-t="${k}" class="${!mt.locked&&mt.tool===k?'on':''}">${l}</button>`).join('')}</div>
     <div class="map-wrap" id="mw"><canvas id="mc"></canvas><div class="zoom"><button id="zi">＋</button><button id="zo">−</button><button id="zf">⤢</button></div></div>
 <div id="mopts"></div><label class="row muted" style="font-size:12.5px;margin-top:8px"><input type="checkbox" id="mAuto"${mt.autoLock?' checked':''}> Автоблокировка через 30 с бездействия</label>`;
@@ -703,7 +699,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   $('#mUndo').onclick=()=>{histMove(m,'hist','redo')?draw():toast('Нечего отменять')};$('#mRedo').onclick=()=>{histMove(m,'redo','hist')?draw():toast('Нечего повторять')};
   $('#mSel').onchange=e=>{mapCur=e.target.value;saveMaps();view={s:1,x:0,y:0};rMap()};
   $('#mNew').onclick=newMap;$('#mMenu').onclick=mapMenu;
-  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;if(mt.locked&&mt.tool!=='pan'){mt.locked=false;$('#mLock').textContent='🔓 Готово (заблокировать)';$('#mLock').classList.add('red')}$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
+  $('#mtools').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;mt.tool=b.dataset.t;if(mt.locked&&mt.tool!=='pan'){mt.locked=false;$('#mLock').textContent='🔓 Готово';$('#mLock').classList.add('red')}$$('#mtools button').forEach(x=>x.classList.toggle('on',x===b));opts()};
   const cv=$('#mc'),wrap=$('#mw');const dpr=Math.min(2,devicePixelRatio||1);const CS=32;
   function size(){const w=wrap.clientWidth,h=wrap.clientHeight;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';draw()}
   function fit(){const w=wrap.clientWidth,h=wrap.clientHeight;view.s=Math.min(w/(m.W*CS),h/(m.H*CS));view.x=(w-m.W*CS*view.s)/2;view.y=(h-m.H*CS*view.s)/2;draw()}
@@ -803,7 +799,7 @@ function runeRing(r=46,col='#d9b46a',n=24){const R='ᚠᚢᚦᚨᚱᚲᚷᚹᚺ�
  const ps=[...Array(26)].map((_,i)=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,v:.2+Math.random()*.6,s:Math.random()*1.8+.4,k:i%3,ph:Math.random()*6}));let last=0;
  function tick(t){requestAnimationFrame(tick);if(document.hidden||calm()||!FXS.amb||t-last<33)return;last=t;g.clearRect(0,0,W,H);
   for(const p of ps){p.y-=p.v*(p.k?0.6:1);p.x+=Math.sin(t/1400+p.ph)*.35;if(p.y<-10){p.y=H+10;p.x=Math.random()*W}
-   const a=.35+.35*Math.sin(t/400+p.ph);if(p.k===0){g.fillStyle=`rgba(255,${90+60*a|0},40,${a})`;g.shadowColor='rgba(255,60,20,.9)';g.shadowBlur=6}else{g.fillStyle=`rgba(200,180,160,${a*.35})`;g.shadowBlur=0}
+   const a=.35+.35*Math.sin(t/400+p.ph);if(p.k===0){g.fillStyle=`rgba(255,60,20,${a*.25})`;g.beginPath();g.arc(p.x,p.y,p.s*3,0,7);g.fill();g.fillStyle=`rgba(255,${90+60*a|0},40,${a})`}else{g.fillStyle=`rgba(200,180,160,${a*.35})`}
    g.beginPath();g.arc(p.x,p.y,p.s,0,7);g.fill()}}
  requestAnimationFrame(tick);applyFx();RM.addEventListener?.('change',applyFx)})();
 /* ink press ripple */
@@ -887,14 +883,14 @@ function slotTable(c,l){l=Math.max(1,Math.min(20,l||1));if(['Волшебник'
 function ensureSlots(p){const t=slotTable(heroCls(p),p.lvl);const o=p.slots||{};p.slots={};t.forEach((n,i)=>{if(n)p.slots[i+1]={max:n,used:Math.min(n,o[i+1]?.used||0)}});p.spells=p.spells||[];p.prep=p.prep||[];return p}
 players.forEach(ensureSlots);save();
 /* list */
-let MF=Object.assign({sc:'',tm:'',conc:'',rit:'',dt:'',cp:'',view:'all',hero:0},LS.get('mf',{}));
+let MF=Object.assign({sc:'',tm:'',conc:'',rit:'',dt:'',cp:'',view:'all',hero:0},LS.get('mf',{}));if(MF.lvl!=null)S.spLvl=MF.lvl;if(MF.cls!=null)S.spCls=MF.cls;
 rSpells=function(){page.oninput=null;page.onclick=null;const seg=`<div class="seg" id="mseg"><button data-v="all" class="${MF.view==='all'?'on':''}">Свод заклинаний</button><button data-v="book" class="${MF.view==='book'?'on':''}">Гримуар героя</button></div>`;
  if(MF.view==='book')return rGrimoire(seg);
  page.innerHTML=header('Заклинания','свод чар и заговоров','star',1)+seg+searchBox('spQ','Найти, напр. огненный шар',S.spQ)+
  chips('cls',[['','Все классы'],...[...new Set(CLASSES.concat(D.spells.some(s=>s.cl.includes('Изобретатель'))?['Изобретатель']:[]))].map(c=>[c,c])],S.spCls)+chips('lvl',[['','Все круги'],['0','Заговоры'],...[1,2,3,4,5,6,7,8,9].map(l=>[l,l+'-й круг'])],S.spLvl)+
  `<details class="mfil"${MF.sc||MF.tm||MF.conc||MF.rit||MF.dt||MF.cp?' open':''}><summary>Фильтры: школа, время, концентрация…</summary>`+chips('sc',[['','Любая школа'],...SCHOOLS.map(s=>[s,s])],MF.sc)+chips('tm',[['','Любое время'],['1 действие','Действие'],['1 бонусное действие','Бонусное'],['1 реакция','Реакция'],['long','Минуты и часы']],MF.tm)+
  chips('conc',[['','Концентрация: любая'],['1','Только концентрация'],['0','Без концентрации']],MF.conc)+chips('rit',[['','Ритуал: любой'],['1','Только ритуалы']],MF.rit)+chips('dt',[['','Любой урон'],...Object.keys(DT_C).map(d=>[d,d])],MF.dt)+chips('cp',[['','Любые компоненты'],['noV','Без вербального'],['noS','Без соматического'],['noM','Без материального']],MF.cp)+`</details><div class="list" id="spList"></div>`;
- bindChips(page,(n,v)=>{if(n==='lvl')S.spLvl=v;else if(n==='cls')S.spCls=v;else MF[n]=v;LS.set('mf',MF);rSpells()});bindSearch('spQ',q=>{S.spQ=q;fillSp()});
+ bindChips(page,(n,v)=>{if(n==='lvl')S.spLvl=MF.lvl=v;else if(n==='cls')S.spCls=MF.cls=v;else MF[n]=v;LS.set('mf',MF);rSpells()});bindSearch('spQ',q=>{S.spQ=q;fillSp()});
  $('#mseg').onclick=e=>{const b=e.target.closest('[data-v]');if(b){MF.view=b.dataset.v;LS.set('mf',MF);rSpells()}};fillSp()};
 fillSp=function(){let L=D.spells;let q=S.spQ;if(q){q=q.toLowerCase();const W=q.split(/\s+/).filter(Boolean);L=L.filter(s=>{const h=s._h||(s._h=[s.n,s.sc,s.dt,(s.cl||[]).join(' '),s.dmg,s.conc?'концентрация':'',s.rit?'ритуал':'','круг '+s.l,s.l?'':'заговор'].join(' ').toLowerCase());return W.every(w=>h.includes(w))});L.sort((a,b)=>(b.n.toLowerCase().includes(q)?1:0)-(a.n.toLowerCase().includes(q)?1:0))}if(!q&&S.spLvl!=='')L=L.filter(s=>s.l===+S.spLvl);if(!q&&S.spCls)L=L.filter(s=>s.cl.includes(S.spCls));
  if(MF.sc)L=L.filter(s=>s.sc===MF.sc);if(MF.tm)L=L.filter(s=>MF.tm==='long'?/мин|ч\./.test(s.t):s.t===MF.tm);if(MF.conc)L=L.filter(s=>s.conc===(MF.conc==='1'));if(MF.rit)L=L.filter(s=>s.rit);if(MF.dt)L=L.filter(s=>s.dt===MF.dt);if(MF.cp)L=L.filter(s=>!s.c.includes({noV:'В',noS:'С',noM:'М'}[MF.cp]));
@@ -958,9 +954,10 @@ let npcView=LS.get('npcview','beasts');let castQ='';
 const _rNpc=rNpc;
 rNpc=function(){page.oninput=null;page.onclick=null;
  if(npcView==='beasts'){_rNpc();$('.ph',page).insertAdjacentHTML('afterend',npcSeg());bindNpcSeg();return}
- page.innerHTML=header('Персонажи','лица, голоса и тайны мира','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div><div class="list" id="castList"></div>`;
+ if(npcView==='leg')return rLeg();
+ page.innerHTML=header('НПС','обычные жители, слуги и встречные','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div><div class="list" id="castList"></div>`;
  bindNpcSeg();bindSearch('castQ',q=>{castQ=q;fillCast()});$('#rndNpc').onclick=()=>{const L=allCast().filter(x=>x&&x.id);if(!L.length)return;const c=L[Math.floor(Math.random()*L.length)];showCast(c.id)};$('#newCast').onclick=()=>editCast();fillCast()};
-const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">Персонажи (${allCast().length})</button></div>`;
+const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">НПС (${allCast().length})</button><button data-nv="leg" class="${npcView==='leg'?'on':''}">Персонажи (${(window.LEGENDS||[]).length})</button></div>`;
 function bindNpcSeg(){$('#nseg').onclick=e=>{const b=e.target.closest('[data-nv]');if(b){npcView=b.dataset.nv;LS.set('npcview',npcView);rNpc()}}}
 function fillCast(){const q=castQ.toLowerCase();const L=allCast().filter(c=>!q||(c.n+' '+c.r+' '+c.look+' '+c.mot).toLowerCase().includes(q));
  lazyList($('#castList'),L,c=>{const rel=npcRel[c.id]?.v||0;return `<div class="card cast${c.base?'':' own'}" data-cid="${c.id}">${npcSigil(c,52)}<div class="t">${esc(c.n)}</div>${rel?`<span class="badge rel${rel}">${REL.find(x=>+x[0]===rel)[1]}</span>`:''}<div class="m">${esc(c.r)}</div><div class="m hand" style="opacity:.8">«${esc(c.ph[0])}»</div></div>`});
@@ -994,7 +991,33 @@ function randomNpc(){const R=a=>a[Math.floor(Math.random()*a.length)];const L=CA
 function editCast(c){const n=c||{id:'u'+uid(),n:'',r:'',look:'',nat:'',quirk:'',mot:'',sec:'',ph:[''],hook:'',stat:'commoner'};const F=[['n','Имя','напр. Мирон Кривой'],['r','Раса и роль','напр. человек · мельник'],['look','Внешность','напр. мука в бороде'],['nat','Характер','напр. ворчлив, но добр'],['quirk','Манера речи','напр. говорит пословицами'],['mot','Чего хочет','напр. вернуть дочь'],['sec','Тайна','напр. сам продал мельницу'],['ph','Фразы через «;»','напр. Мука — не мука!'],['hook','Завязка','напр. по ночам мельница крутится сама']];
  openSheet(`<div class="sb-title">${c?'Изменить персонажа':'Новый персонаж'}</div>${F.map(([k,l,p])=>`<label class="lbl">${l}</label><textarea class="inp" rows="${k==='n'||k==='r'?1:2}" data-f="${k}" placeholder="${p}">${esc(k==='ph'?n.ph.join(';'):n[k])}</textarea>`).join('')}<label class="lbl">Статблок</label><select class="inp" id="cStatS">${D.monsters.filter(m=>m.ty&&m.ty.startsWith('гуманоид')).map(m=>`<option value="${m.id}"${m.id===n.stat?' selected':''}>${esc(m.n)}</option>`).join('')}</select><button class="btn red" id="cSave" style="margin-top:12px">Сохранить</button>`,r=>{
   $('#cSave',r).onclick=()=>{$$('[data-f]',r).forEach(t=>{n[t.dataset.f]=t.dataset.f==='ph'?t.value.split(';').map(s=>s.trim()).filter(Boolean):t.value.trim()});if(!n.ph.length)n.ph=['…'];n.stat=$('#cStatS',r).value;if(!n.n)return toast('Нужно имя');if(!c)ownCast.unshift(n);saveCast();showCast(n.id);if(npcView==='cast')rNpc()}})}
-Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil});
+
+/* ===== Уникальные персонажи (data/legends.js) ===== */
+let legCat=LS.get('legcat',''),legSort=LS.get('legsort','n'),legQ='';
+const LEG=()=>window.LEGENDS||[];
+function rLeg(){const cats=[...new Set(LEG().map(m=>m.L.cat))];
+ page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div>`+
+ chips('legcat',[['','Все'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
+ bindNpcSeg();bindSearch('legQ',q=>{legQ=q;fillLeg()});
+ bindChips(page,(n,v)=>{if(n==='legcat'){legCat=v;LS.set('legcat',v)}else if(n==='legsort'){legSort=v;LS.set('legsort',v)}fillLeg()});
+ $('#rndLeg').onclick=()=>{const L=LEG();if(L.length)showLeg(L[Math.floor(Math.random()*L.length)].id)};fillLeg()}
+function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||m.L.cat===legCat)&&(!q||(m.n+' '+m.L.title+' '+m.L.cat+' '+m.ty).toLowerCase().includes(q)));
+ L=[...L].sort(legSort==='n'?(a,b)=>a.n.localeCompare(b.n,'ru'):legSort==='cr'?(a,b)=>a.cr-b.cr||a.n.localeCompare(b.n,'ru'):(a,b)=>b.cr-a.cr||a.n.localeCompare(b.n,'ru'));
+ const el=$('#legList');if(!L.length){el.innerHTML='<div class="muted">Никого не нашлось</div>';el.onclick=null;return}
+ lazyList(el,L,m=>`<div class="card cast leg" data-lid="${m.id}">${npcSigil({id:m.id,n:m.n,r:m.ty},52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div><div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div></div>`);
+ el.onclick=e=>{const c=e.target.closest('[data-lid]');if(c)showLeg(c.dataset.lid)}}
+function showLeg(id){const m=LEG().find(x=>x.id===id);if(!m)return;const L=m.L;
+ openSheet(`<div class="cast-head">${npcSigil({id:m.id,n:m.n,r:m.ty},110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
+ <div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
+ <div class="fld"><b>Внешность.</b> ${esc(L.look)}</div><div class="fld"><b>Характер.</b> ${esc(L.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(L.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(L.mot)}</div><div class="fld"><b>История.</b> ${esc(L.hist)}</div>
+ <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>
+ <div class="sec-h">Фразы</div>${L.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
+ <div class="sec-h">Завязка</div><div class="fld">${esc(L.hook)}</div>
+ <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>`,r=>{
+  $('#lFight',r).onclick=()=>{addCombatant(m);toast(`${m.n} — в инициативе`)};
+  $('#lStat',r).onclick=()=>showMon(m.id);
+  $('#lScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(m.n)||sess.npcs.push(m.n);LS.set('sess',sess)}toast(`${m.n} — в сцене`)}})}
+Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil,showLeg,LEGENDS:LEG});
 
 ;
 /* ink.js */

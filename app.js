@@ -45,6 +45,7 @@ const ICK=window.KM_PLAYER?['pcs','item','spell','notes','map']:['sess','npc','s
 
 /* ---------- state ---------- */
 const S={sec:0,npcQ:'',npcType:'',npcCR:'',npcOnlyTop:true,spQ:'',spCls:'',spLvl:'',itQ:'',itCat:'',itRar:'',noteTag:'',lim:60};
+/* фильтры разделов запоминаются */{const K=['npcType','npcCR','npcOnlyTop','spCls','spLvl','itCat','itRar','noteTag'];try{const v=JSON.parse(localStorage.getItem('km.sf')||'{}');K.forEach(k=>{if(k in v)S[k]=v[k]})}catch(e){}let t;document.addEventListener('click',()=>{clearTimeout(t);t=setTimeout(()=>{const o={};K.forEach(k=>o[k]=S[k]);localStorage.setItem('km.sf',JSON.stringify(o))},300)},true)}
 let ownNpcs=LS.get('npcs',[]);
 let combat=LS.get('combat',{list:[],turn:0,round:1});
 let players=LS.get('players',null)||[
@@ -63,9 +64,9 @@ const findMon=id=>allMonsters().find(m=>m.id===id);
 
 /* ---------- ribbons ---------- */
 const rib=$('#ribbons');
-rib.innerHTML=SECTIONS.map((s,i)=>`<button class="rib" data-i="${i}" aria-label="${s[1]}">${IC[ICK[i]]}<span>${s[2]}</span></button>`).join('');
+const ORD=window.KM_PLAYER||SECTIONS.length!==10?SECTIONS.map((_,i)=>i):[4,5,7,6,1,0,2,3,8,9];rib.innerHTML=ORD.map(i=>[SECTIONS[i],i]).map(([s,i])=>`<button class="rib" data-i="${i}" aria-label="${s[1]}">${IC[ICK[i]]}<span>${s[2]}</span></button>`).join('');
 rib.addEventListener('click',e=>{const b=e.target.closest('.rib');if(b)go(+b.dataset.i)});
-function markRib(){$$('.rib').forEach((b,i)=>b.classList.toggle('on',i===S.sec))}
+function markRib(){$$('.rib').forEach(b=>b.classList.toggle('on',+b.dataset.i===S.sec))}
 
 /* ---------- page flip ---------- */
 const page=$('#page'),book=$('#book');let flipping=false;if(go.q){const q=go.q;go.q=null;setTimeout(()=>go(q[0],q[1]),0)}
@@ -90,7 +91,7 @@ function go(i,dirHint){
  el.addEventListener('touchcancel',()=>{ok=false},{passive:true});
  el.addEventListener('touchend',e=>{if(!ok)return;ok=false;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
   const fromLeft=x0<=EDGE,fromRight=x0>=innerWidth-EDGE;
-  if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2.2&&Date.now()-t0<700&&((fromLeft&&dx>0)||(fromRight&&dx<0))){go(S.sec+(dx<0?1:-1),dx<0?1:-1)}},{passive:true});
+  if(Math.abs(dx)>80&&Math.abs(dx)>Math.abs(dy)*2.2&&Date.now()-t0<700&&((fromLeft&&dx>0)||(fromRight&&dx<0))){{const o=ORD,j=o.indexOf(S.sec)+(dx<0?1:-1);if(j>=0&&j<o.length)go(o[j],dx<0?1:-1)}}},{passive:true});
  window.KM_SWIPE={BLOCK,EDGE};})();
 
 /* ---------- sheet ---------- */
@@ -388,8 +389,12 @@ const RULES=window.RULES_KM=[
 ['Советы новому Мастеру',`<p><span class="tri"></span>Описывай сцену тремя чувствами и спрашивай: «Что вы делаете?»</p><p><span class="tri"></span>Говори «Да, и…» или «Да, но…» вместо «Нет».</p><p><span class="tri"></span>Дай каждому игроку момент славы за сессию.</p><p><span class="tri"></span>Для 3 героев 1-го уровня хороший бой — 3–4 гоблина, 2 волка или 4–5 скелетов/зомби. Сильный бой — багбир + 2 гоблина.</p><p><span class="tri"></span>Не знаешь правило — прими решение сейчас, проверь после игры.</p>`]];
 const CONDR=[['Ослеплённый','Ничего не видит, проваливает проверки, требующие зрения. Атаки по нему — с преимуществом, его атаки — с помехой.'],['Очарованный','Не может атаковать очаровавшего или делать его целью вредящих эффектов. Очаровавший совершает с преимуществом проверки взаимодействия с ним.'],['Оглохший','Ничего не слышит, проваливает проверки, требующие слуха.'],['Испуганный','Помеха на проверки и атаки, пока видит источник страха. Не может добровольно приблизиться к нему.'],['Схваченный','Скорость 0. Оканчивается, если схвативший недееспособен или цель вытолкнута из досягаемости.'],['Недееспособный','Не может совершать действия и реакции.'],['Невидимый','Его нельзя увидеть без магии. Атаки по нему — с помехой, его атаки — с преимуществом.'],['Парализованный','Недееспособен, не двигается и не говорит. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом; попадание в пределах 1,5 м — критическое.'],['Окаменел','Превращён в камень: недееспособен, сопротивление всему урону, иммунитет к яду и болезням.'],['Отравленный','Помеха на броски атаки и проверки характеристик.'],['Лежащий ничком','Может только ползти или встать (половина скорости). Его атаки с помехой. Атаки по нему в пределах 1,5 м — с преимуществом, издалека — с помехой.'],['Опутанный','Скорость 0. Атаки по нему с преимуществом, его атаки с помехой. Помеха на спасброски Ловкости.'],['Ошеломлённый','Недееспособен, не двигается, говорит запинаясь. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом.'],['Без сознания','Недееспособен, не двигается, роняет всё, падает ничком. Проваливает спасброски Силы и Ловкости. Атаки по нему с преимуществом; попадание в пределах 1,5 м — критическое.'],['Истощение','6 степеней: 1 — помеха на проверки; 2 — скорость вдвое; 3 — помеха на атаки и спасброски; 4 — максимум хитов вдвое; 5 — скорость 0; 6 — смерть. Продолжительный отдых снимает 1 степень.']];
 RULES[3][1]=CONDR.map(c=>`<p><span class="tri"></span><b>${c[0]}.</b> ${c[1]}</p>`).join('');
-function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+(window.SCREEN||[]).map(c=>`<details class="rule scr-c"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<p class="dropcap" style="font-size:16px;line-height:1.45">Здесь собраны правила, к которым ты будешь возвращаться чаще всего. Помни: Мастер — арбитр, а не противник игроков.</p>`+
-  RULES.map((r,i)=>`<details class="rule"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`}
+const RCAT=[['','Все'],['ess','⚔ Нужное в игре'],['fight','Бой'],['chk','Проверки'],['world','Мир и отдых'],['book','Своды правил']];
+const RC_F=new Set(['turn','actions','opp','cover','grapple','twf','death','conc','cond','zones']),RC_C=new Set(['dc','adv','mods','skills','dice','stealth']);
+function rcat(id){return RC_F.has(id)?'fight':RC_C.has(id)?'chk':'world'}
+function rulesApply(){const f=LS.get('rulesF','');const E=window.SCREEN_ESS||new Set();$$('#page [data-rc]').forEach(d=>{const id=(d.closest('[data-scr]')||d).dataset.scr;const ok=!f||(f==='ess'?d.classList.contains('scr-c')&&E.has(d.dataset.id):d.dataset.rc===f);d.style.display=ok?'':'none'});$$('#page .dropcap').forEach(p=>p.style.display=f&&f!=='book'?'none':'')}
+function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+chips('rcat',RCAT.map(c=>[c[0],c[1]]),LS.get('rulesF',''))+(window.SCREEN||[]).map(c=>`<details class="rule scr-c" data-rc="${rcat(c[0])}" data-id="${c[0]}"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<p class="dropcap" style="font-size:16px;line-height:1.45">Здесь собраны правила, к которым ты будешь возвращаться чаще всего. Помни: Мастер — арбитр, а не противник игроков.</p>`+
+  RULES.map((r,i)=>`<details class="rule" data-rc="book"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`;rulesApply();bindChips(page,(n,v)=>{if(n==='rcat'){LS.set('rulesF',v);rRules()}})}
 
 /* ---------- render ---------- */
 const R=window.KM_PLAYER?[0,1,2,3,4].map(i=>()=>window.PRN&&PRN(i)):[()=>rSession(),()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>{rPcs();window.KM&&KM.table&&KM.table.panel&&KM.table.panel()},()=>rMap(),()=>rNotes(),()=>rRules()];
