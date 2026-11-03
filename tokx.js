@@ -26,7 +26,7 @@ function card(t){
   document.querySelectorAll('[data-cd]').forEach(b=>b.onclick=()=>{const x=b.dataset.cd;if(c){const i=c.conds.findIndex(z=>z.n===x);i>=0?c.conds.splice(i,1):c.conds.push({n:x,r:0,end:'end'})}else{const a=p?p.conds:t.cd,i=a.indexOf(x);i>=0?a.splice(i,1):a.push(x)}b.classList.toggle('on');sv()});
   document.getElementById('tkBk').onclick=()=>card(t)};
  const f=document.getElementById('tkF');if(f)f.onclick=()=>{if(p){closeSheet();KM.heroSheet(p)}else{window.KM_sheetRet=()=>card(t);showMon(mo.id);window.KM_sheetRet=()=>card(t)}};
- const tr=document.getElementById('tkT');if(tr)tr.onclick=()=>{const b=combat.list.length;if(p)addCombatant(p,true);else if(mo){addCombatant(Object.assign({},mo,{n:t.nm||mo.n}));}else addCombatant({n:nm,hp:hp,maxhp:mx,ac:+ac||10,init:0});const nc=combat.list.find(z=>!combat.list.slice(0,0).includes(z)&&!m.tok.some(q=>q.cid===z.id)&&(z.base===(p?p.name:t.nm||(mo&&mo.n)||nm)));if(nc){t.cid=nc.id;if(!p){nc.hp=hp;nc.max=mx}}sv();toast('Добавлено в трекер');card(t)};
+ const tr=document.getElementById('tkT');if(tr)tr.onclick=()=>{const b=combat.list.length;if(p)addCombatant(p,true);else if(mo){addCombatant(Object.assign({},mo,{n:t.nm||mo.n}));}else addCombatant({n:nm,hp:hp,maxhp:mx,ac:+ac||10,init:0});const nc=p?combat.list.find(z=>z.pc&&z.pid===p.id):combat.list.find(z=>!m.tok.some(q=>q.cid===z.id)&&(z.base===(t.nm||(mo&&mo.n)||nm)));if(nc){t.cid=nc.id;if(!p){nc.hp=hp;nc.max=mx}}sv();toast('Добавлено в трекер');card(t)};
 }
 KM.tokCard=card;
 /* переходы */

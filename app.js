@@ -214,8 +214,8 @@ function showItem(id){const i=D.items.find(x=>x.id===id);if(!i){toast('Карт�
 
 /* ---------- COMBAT ---------- */
 const CONDS=['Ослеплён','Очарован','Оглохший','Испуган','Схвачен','Недееспособен','Невидим','Парализован','Окаменел','Отравлен','Сбит с ног','Опутан','Ошеломлён','Без сознания','Истощение','Концентрация'];
-function addCombatant(m,isPC){const dex=m.st?mod(m.st[1]):(m.init||0);const n=combat.list.filter(c=>c.base===m.n).length;
-  combat.list.push({id:uid(),base:m.n,name:n?`${m.n} ${n+1}`:m.n,init:rnd(20)+dex,dex,hp:m.hp,max:m.maxhp||m.hp,ac:m.ac,pc:!!isPC,mon:isPC?null:m.id,conds:[]});sortC();save();if(SECTIONS[S.sec][0]==='combat')rCombat()}
+function addCombatant(m,isPC){const dex=m.st?mod(m.st[1]):(m.init||0);if(isPC){const ex=combat.list.find(c=>c.pc&&c.pid===m.id);if(ex)return ex;const nm=window.heroName?heroName(m):(m.name||m.n||'Герой');combat.list.push({id:uid(),pid:m.id,base:nm,name:nm,init:rnd(20)+dex,dex,hp:m.hp,max:m.maxhp||m.hp,thp:m.thp||0,ac:m.ac,pc:true,conds:[]});sortC();save();if(SECTIONS[S.sec][0]==='combat')rCombat();return}const mn=m.n||m.name||'Существо';const n=combat.list.filter(c=>c.base===mn).length;
+  combat.list.push({id:uid(),base:mn,name:n?`${mn} ${n+1}`:mn,init:rnd(20)+dex,dex,hp:m.hp,max:m.maxhp||m.hp,ac:m.ac,pc:false,mon:m.id,conds:[]});sortC();save();if(SECTIONS[S.sec][0]==='combat')rCombat()}
 function sortC(){const cur=combat.list[combat.turn];combat.list.sort((a,b)=>b.init-a.init||b.dex-a.dex);combat.turn=Math.max(0,combat.list.indexOf(cur))}
 function rCombat(){const L=combat.list;
   page.innerHTML=header('Бой','трекер инициативы','pent',3)+`<div class="round"><div class="rn">Раунд <b>${combat.round}</b></div><div class="row"><button class="btn sm" id="cAdd">＋ Боец</button><button class="btn sm" id="cMenu">⋯</button></div></div>

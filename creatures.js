@@ -1,4 +1,8 @@
 'use strict';
+/* единое имя героя: старые сохранения/импорт/синхронизация могли хранить имя в другом поле */
+window.heroName=function(p){if(!p)return'Герой';const v=[p.name,p.n,p.nm,p.hero&&p.hero.name,p.cname,p.charName].find(x=>typeof x==='string'&&x.trim()&&x!=='undefined'&&x!=='null');return v?v.trim():'Герой'};
+window.KM_fixHeroes=function(){try{let ch=0;(players||[]).forEach((p,i)=>{if(!p)return;const n=heroName(p);if(p.name!==n&&!(typeof p.name==='string'&&p.name.trim()&&p.name!=='undefined')){p.name=n==='Герой'?'Герой '+(i+1):n;ch=1}if(!p.id){p.id='h'+Date.now().toString(36)+i;ch=1}});try{(maps||[]).forEach(m=>(m.tok||[]).forEach(t=>{const bad=x=>x==='undefined'||x==='null'||x==='u'&&t.pid;const p=t.pid&&players.find(z=>z.id===t.pid);if(bad(t.nm)){t.nm=p?heroName(p):'';ch=2}if(t.n==='u'||t.n==='undefined'||t.n==null&&p){t.n=p?heroName(p)[0]:'?';ch=2}}));if(ch===2&&typeof saveMaps==='function')saveMaps()}catch(e){}if(ch&&typeof save==='function')save();return ch}catch(e){return 0}};
+KM_fixHeroes();setInterval(KM_fixHeroes,1500);
 /* Существа: размеры фишек (занимаемые клетки), проходимость, список активных существ, ходы игроков */
 (function(){
 const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -13,7 +17,7 @@ const monOf=t=>{const c=cOf(t);return monById((c&&c.mon)||t.mid||t.mon)};
 const OV=()=>LS.get('creatOv',{});
 function tokSz(t){if(!t)return'M';if(t.sz&&FP[t.sz])return t.sz;if(t.cr){const o=OV()[t.cr];if(o&&o.sz)return o.sz}const c=cOf(t);if(c){const o=OV()['c:'+c.id];if(o&&o.sz)return o.sz}const mo=monOf(t);if(mo)return szOfText(mo.sz)||'M';return'M'}
 KM.tokSz=tokSz;KM.tokFp=t=>FP[tokSz(t)]||1;
-KM.tokName=t=>{const c=cOf(t);return String(t.nm||(c&&c.name)||'').slice(0,24)};
+const okS=x=>typeof x==='string'&&x.trim()&&x!=='undefined'&&x!=='null';KM.tokName=t=>{const c=cOf(t);let n=okS(t.nm)?t.nm:(c&&okS(c.name)?c.name:'');if(!n&&(t.pid||t.k==='pc')){const p=(players||[]).find(z=>z.id===t.pid);if(p)n=heroName(p)}return String(n||'').slice(0,24)};
 KM.tokHero=t=>{try{if(t.pid)return t.pid;const c=cOf(t);let p=null;if(c&&c.pc)p=players.find(z=>z.name===c.name||z.name===c.base);else if(t.k==='pc')p=players.find(z=>z.name&&(z.name===t.nm||(t.n&&z.name.startsWith(t.n))));return p?p.id:''}catch(e){return''}};
 const covers=(t,x,y)=>{const f=KM.tokFp(t);return x>=t.x&&y>=t.y&&x<t.x+f&&y<t.y+f};
 KM.tokAt=(m,x,y)=>{const a=m.tok||[];for(let i=a.length-1;i>=0;i--)if(covers(a[i],x,y))return a[i];return null};
@@ -45,8 +49,8 @@ KM.plMove=(k,h,d,push)=>{const m=KM.mapCur&&KM.mapCur();if(!m||!h)return;const t
  const f=KM.tokFp(t);const l=(m.links||[]).find(z=>z.x>=x&&z.y>=y&&z.x<x+f&&z.y<y+f&&maps.some(q=>q.id===z.to));
  if(l&&KM.mapTrans){toast('🚪 '+(h.name||k.name)+' у перехода «'+(l.n||'Переход')+'»');KM.mapTrans(m,l,t,o)}};
 /* ===== список «Существа» ===== */
-function entries(){const ov=OV(),out=[];
- (players||[]).forEach(p=>{const k='p:'+p.id,o=ov[k]||{};if(o.del)return;out.push({key:k,kind:'p',ref:p,n:o.n||p.name,ty:'pc',sz:o.sz||szOfText(p.sz||p.size)||'M',auto:1})});
+function entries(){KM_fixHeroes();const ov=OV(),out=[];
+ (players||[]).forEach(p=>{const k='p:'+p.id,o=ov[k]||{};if(o.del)return;out.push({key:k,kind:'p',ref:p,n:o.n||heroName(p),ty:'pc',sz:o.sz||szOfText(p.sz||p.size)||'M',auto:1})});
  (combat.list||[]).forEach(c=>{if(c.pc)return;const k='c:'+c.id,o=ov[k]||{};const mo=monById(c.mon);out.push({key:k,kind:'c',ref:c,n:c.name,ty:o.ty||(c.mon?'mon':'npc'),sz:o.sz||(mo&&szOfText(mo.sz))||'M',mon:c.mon})});
  LS.get('creat',[]).forEach(x=>{const mo=monById(x.mon);out.push({key:'x:'+x.id,kind:'x',ref:x,n:x.n,ty:x.ty||'npc',sz:x.sz||(mo&&szOfText(mo.sz))||'M',mon:x.mon})});return out}
 function tokensOf(m,e){return (m&&m.tok||[]).filter(t=>t.cr===e.key||(e.kind==='c'&&t.cid===e.ref.id)||(e.kind==='p'&&KM.tokHero(t)===e.ref.id))}
@@ -62,7 +66,7 @@ function toMap(e){const m=KM.mapCur&&KM.mapCur();if(!m)return toast('Снача�
  toast('Нет свободного места для такого размера');return false}
 function sheet(){const L=entries(),m=KM.mapCur&&KM.mapCur();
  openSheet(`<h2>Существа</h2><p class="muted" style="font-size:12.5px">Герои добавляются сами; монстры — из трекера боя. Размер задаёт клетки на карте: до среднего 1×1, большой 2×2, огромный 3×3, гигантский 4×4.</p>
- <div id="crL">${L.map((e,i)=>{const on=tokensOf(m,e).length;return `<div class="card" style="padding:8px;margin-bottom:6px"><div class="row" style="gap:6px;align-items:center"><b class="grow" data-crn="${i}" style="cursor:pointer">${E(e.n)} ✎</b>${e.mon&&monById(e.mon)?`<button class="btn sm" data-crst="${i}" aria-label="Карточка">📖</button>`:''}${on?`<small class="muted">на карте${on>1?' ×'+on:''}</small>`:''}<button class="btn sm" data-crdel="${i}" aria-label="Убрать">✕</button></div>
+ <div id="crL">${L.map((e,i)=>{const on=tokensOf(m,e).length;return `<div class="card" style="padding:8px;margin-bottom:6px"><div class="row" style="gap:6px;align-items:center"><b class="grow" data-crn="${i}" style="cursor:pointer">${E(e.n)} ✎</b>${e.mon&&monById(e.mon)?`<button class="btn sm" data-crst="${i}" aria-label="Карточка">📖</button>`:''}${on?`<small class="muted">на карте${on>1?' ×'+on:''}</small>`:''}${e.kind!=='p'?`<button class="btn sm" data-crsp="${i}" aria-label="Заклинания">✧</button>`:''}<button class="btn sm" data-crdel="${i}" aria-label="Убрать">✕</button></div>
  ${(()=>{const mo=e.mon&&monById(e.mon);return mo?`<div class="muted" style="font-size:12px;margin-top:2px">${statLine(mo)}</div>`:''})()}<div class="row" style="gap:6px;margin-top:6px;flex-wrap:wrap"><select class="inp" data-crt="${i}" style="flex:1"${e.kind==='p'?' disabled':''}>${TY.map(([k,l])=>`<option value="${k}"${e.ty===k?' selected':''}>${l}</option>`).join('')}</select><select class="inp" data-crs="${i}" style="flex:1">${SZ.map(([k,l])=>`<option value="${k}"${e.sz===k?' selected':''}>${l}</option>`).join('')}</select><button class="btn sm" data-crm="${i}">на карту</button></div></div>`}).join('')||'<p class="muted">Пока пусто</p>'}</div>
  <div class="sec-h">Добавить</div><button class="btn red" id="crB" style="margin-bottom:8px">📖 Из бестиария</button><div class="row" style="gap:6px;flex-wrap:wrap"><input class="inp grow" id="crN" placeholder="Имя или монстр (Гоблин, Огр…)" list="crML"><datalist id="crML">${(D().monsters||[]).slice(0,800).map(x=>`<option value="${E(x.n)}">`).join('')}</datalist>
  <select class="inp" id="crT">${TY.map(([k,l])=>`<option value="${k}"${k==='mon'?' selected':''}>${l}</option>`).join('')}</select><select class="inp" id="crS"><option value="">размер: авто</option>${SZ.map(([k,l])=>`<option value="${k}">${l}</option>`).join('')}</select><button class="btn" id="crA">＋ Добавить</button></div>`);
@@ -70,6 +74,7 @@ function sheet(){const L=entries(),m=KM.mapCur&&KM.mapCur();
  q('[data-crn]').forEach(b=>b.onclick=()=>{const e=L[+b.dataset.crn];const n=prompt('Имя',e.n);if(!n||!n.trim())return;const v=n.trim().slice(0,40);if(e.kind==='c'){e.ref.name=v;try{save()}catch(x){}}else if(e.kind==='x'){const a=LS.get('creat',[]);const z=a.find(y=>y.id===e.ref.id);if(z)z.n=v;LS.set('creat',a);const mm=KM.mapCur&&KM.mapCur();if(mm)tokensOf(mm,e).forEach(t=>t.crb=v)}else setOv(e.key,{n:v});e.n=v;syncTok(e);sheet()});
  q('[data-crs]').forEach(b=>b.onchange=()=>{const e=L[+b.dataset.crs];e.sz=b.value;if(e.kind==='x'){const a=LS.get('creat',[]);const z=a.find(y=>y.id===e.ref.id);if(z)z.sz=b.value;LS.set('creat',a)}else setOv(e.key,{sz:b.value});syncTok(e)});
  q('[data-crt]').forEach(b=>b.onchange=()=>{const e=L[+b.dataset.crt];if(e.kind==='x'){const a=LS.get('creat',[]);const z=a.find(y=>y.id===e.ref.id);if(z)z.ty=b.value;LS.set('creat',a)}else setOv(e.key,{ty:b.value})});
+ q('[data-crsp]').forEach(b=>b.onclick=()=>{const e=L[+b.dataset.crsp];if(!KM.csp)return;const k=e.kind==='c'?KM.csp.keyOfComb(e.ref):(e.mon&&monById(e.mon)?'m:'+monById(e.mon).id:e.key);KM.csp.edit(k,e.n,sheet)});
  q('[data-crst]').forEach(b=>b.onclick=()=>{const e=L[+b.dataset.crst];if(!window.showMon)return;window.KM_sheetRet=sheet;showMon(e.mon);window.KM_sheetRet=sheet});
  document.getElementById('crB').onclick=pick;
  q('[data-crm]').forEach(b=>b.onclick=()=>{if(toMap(L[+b.dataset.crm]))sheet()});

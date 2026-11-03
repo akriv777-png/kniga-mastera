@@ -38,10 +38,11 @@ function showCast(id){const c=findCast(id);if(!c)return;const rel=npcRel[id]||{v
  <div class="sec-h">Отношение к отряду</div>${chips('rel',REL,rel.v)}<textarea class="inp" id="relT" rows="2" placeholder="Заметка, напр. должен Борину 10 зм">${esc(rel.t)}</textarea>
  <div class="sec-h">Связи</div><div class="row">${lk.items.map(i=>`<button class="chip" data-li="${i}">◆ ${esc((D.items.find(x=>x.id===i)||{n:i}).n)}</button>`).join('')}${lk.spells.map(i=>`<button class="chip" data-ls="${i}">✦ ${esc((D.spells.find(x=>x.id===i)||{n:i}).n)}</button>`).join('')}</div>
  <div class="row"><input class="inp grow" id="lnkQ" placeholder="Привязать предмет или заклинание, напр. посох"></div><div id="lnkR"></div>
- <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="cScene">＋ В сцену</button><button class="btn" id="cInit">⚔ В инициативу</button><button class="btn" id="cMap">◉ На карту</button>${mon?`<button class="btn dark" id="cStat">Статблок: ${esc(mon.n)}</button>`:''}</div>
+ <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="cScene">＋ В сцену</button><button class="btn" id="cInit">⚔ В инициативу</button><button class="btn" id="cMap">◉ На карту</button><button class="btn" id="cSpl">✧ Заклинания</button>${mon?`<button class="btn dark" id="cStat">Статблок: ${esc(mon.n)}</button>`:''}</div>
  ${c.base?'':`<div class="row" style="margin-top:12px"><button class="btn sm dark" id="cEd">Изменить</button><button class="btn sm dark" id="cDel">🗑 Удалить</button></div>`}`,r=>{
   bindChips(r,(n,v)=>{npcRel[id]={...rel,v:+v};rel.v=+v;saveCast();$$('[data-chips=rel] .chip',r).forEach(b=>b.classList.toggle('on',b.dataset.v===v))});
   $('#relT',r).onchange=e=>{rel.t=e.target.value;npcRel[id]=rel;saveCast()};
+  {const b=$('#cSpl',r);if(b&&KM.csp)b.onclick=()=>KM.csp.edit('n:'+id,c.n,()=>showCast(id))}
   $('#cScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(c.n)||sess.npcs.push(c.n);LS.set('sess',sess)}toast(`${c.n} — в сцене`)};
   $('#cInit',r).onclick=()=>{const m=mon?{...mon,n:c.n}:{n:c.n,ac:10,hp:4,init:0};addCombatant(m);toast(`${c.n} в инициативе`)};
   $('#cMap',r).onclick=()=>{try{const m=curMap();m.tok.push({id:uid(),x:Math.floor(m.W/2),y:Math.floor(m.H/2),n:c.n.slice(0,2),c:'#5aa2ff',k:'npc'});saveMaps();toast(`${c.n} на карте`)}catch(e){toast('Сначала открой карту')}};

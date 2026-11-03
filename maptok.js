@@ -19,7 +19,7 @@ function menu(m,c){const t=(m.tok||[]).find(z=>z.x===c.x&&z.y===c.y);const cb=cO
   on('#tkH',()=>{t.hid=!t.hid;re();closeSheet()});
   on('#tkD',()=>{histPush(m);m.tok=m.tok.filter(z=>z!==t);re();closeSheet();toast('Фишка удалена — «↶» вернёт')});
   on('#tkC',()=>{closeSheet();KM.go(SECTIONS.findIndex(x=>x[0]==='combat'));setTimeout(()=>KM.combat&&KM.combat.cSheet&&KM.combat.cSheet(cb),350)});
-  on('#tkA',()=>{const mon=t.mon&&(window.DATA&&DATA.monsters||[]).find(x=>x.id===t.mon||x.n===t.mon);const p=t.k==='pc'&&players.find(x=>x.name[0]===t.n[0]||x.name===t.n);
+  on('#tkA',()=>{const mon=t.mon&&(window.DATA&&DATA.monsters||[]).find(x=>x.id===t.mon||x.n===t.mon);const p=t.k==='pc'&&((t.pid&&players.find(x=>x.id===t.pid))||players.find(x=>x.name===t.nm||x.name===t.n)||players.find(x=>String(x.name||'')[0]===String(t.n||'')[0]));
    if(p&&!combat.list.some(x=>x.pid===p.id)){combat.list.push({id:uid(),pid:p.id,base:p.name,name:p.name,init:0,dex:0,hp:p.hp,max:p.maxhp||p.max||p.hp,ac:p.ac||10,pc:true,conds:[],eco:{}});t.cid=combat.list[combat.list.length-1].id}
    else if(p){t.cid=combat.list.find(x=>x.pid===p.id).id}
    else{const hp=t.mhp||(mon&&mon.hp)||10;combat.list.push({id:uid(),base:t.n,name:mon?mon.n+(t.num?' '+t.num:''):t.n,init:Math.ceil(Math.random()*20)+(mon&&mon.st?Math.floor((mon.st[1]-10)/2):0),dex:0,hp:t.hp??hp,max:hp,ac:(mon&&mon.ac)||12,pc:false,mon:mon?mon.id:null,conds:[],eco:{}});t.cid=combat.list[combat.list.length-1].id}
