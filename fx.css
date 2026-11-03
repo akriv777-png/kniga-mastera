@@ -332,3 +332,20 @@ body:has(#sheet.open) #kdock,body:has(.as-box.on) #kdock{display:none}
 .spthumb{border-radius:50%;object-fit:cover;border:1px solid rgba(180,30,30,.55);box-shadow:0 0 8px rgba(160,0,0,.45);background:#120606}
 .spc .spthumb{position:absolute;left:12px;top:50%;margin-top:-23px}
 .it .spthumb{width:40px;height:40px;flex:0 0 40px;margin-right:10px}
+/* Ширма Мастера */
+#scrFab{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:60;width:50px;height:50px;border-radius:50%;border:1px solid rgba(200,30,30,.7);background:radial-gradient(circle at 35% 30%,#3a0d0d,#120404);color:#f3d9c0;font-size:21px;box-shadow:0 0 14px rgba(190,20,20,.55),0 4px 10px rgba(0,0,0,.6);touch-action:manipulation}
+#scrFab:active{transform:scale(.92)}
+body.sheet-open #scrFab,#sheet.open~#scrFab{opacity:0;pointer-events:none}
+.scr-hints{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 10px;margin:0 0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.scr-hints::-webkit-scrollbar{display:none}
+.scr-hints .scr-lbl{flex:none;align-self:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#b33}
+.scr-hints button{flex:none;font:inherit;font-size:13px;padding:6px 10px;border-radius:14px;border:1px solid rgba(170,30,30,.55);background:rgba(60,8,8,.35);color:inherit;white-space:nowrap}
+.scr-q{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:11px 14px;border-radius:12px;border:1px solid rgba(170,30,30,.6);background:rgba(0,0,0,.35);color:inherit;margin:8px 0 10px}
+.scr-t{width:100%;border-collapse:collapse;margin:6px 0;font-size:14px}
+.scr-t th,.scr-t td{padding:4px 6px;border-bottom:1px solid rgba(160,40,40,.25);text-align:left;vertical-align:top}
+.scr-t th{color:#c44;font-weight:600}
+.scr-ext{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.scr-ext button{font:inherit;font-size:13px;padding:6px 10px;border-radius:10px;border:1px solid rgba(170,30,30,.5);background:rgba(60,8,8,.3);color:inherit}
+.scr-big{width:100%;margin:4px 0 12px}
+.scr-names{font-size:15px;line-height:1.6;margin-bottom:8px}
+.scr-lbl2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#b33;margin:12px 0 6px}

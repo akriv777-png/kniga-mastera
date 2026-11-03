@@ -1,7 +1,7 @@
 'use strict';/*bundle*/
 /* table.js */
 'use strict';{
-/* «Стол»: живая связь Книги Мастера с Книгами Игроков (WebRTC через PeerJS, Мастер — хост) */
+/* «Стол»: живая связь Ширмы Мастера с Книгами Игроков (WebRTC через PeerJS, Мастер — хост) */
 const PREFIX='kniga-mastera-v1-';const PURL='https://akriv777-png.github.io/kniga-mastera/player/';
 const ALPH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const T=Object.assign({code:'',on:false,perm:{},link:{},lock:{},audit:[]},LS.get('table',{}));T.lock=T.lock||{};T.audit=T.audit||[];const sv=()=>LS.set('table',T);
@@ -89,7 +89,7 @@ function ui(){const url=PURL+'?room='+T.code;const cs=Object.entries(conns);cons
  r.querySelectorAll('[data-lk]').forEach(s=>s.onchange=()=>{T.link[s.dataset.lk]=s.value;sv();push(true);ui()});
  r.querySelectorAll('[data-pf]').forEach(b=>b.onclick=()=>{const [pid,f]=b.dataset.pf.split('|');const P=Object.assign({},DEF,T.perm[pid]||{});P[f]=PROT.includes(f)?(P[f]==='off'?'approve':'off'):(P[f]==='direct'?'approve':P[f]==='approve'?'off':'direct');T.perm[pid]=P;sv();push(true);ui()});
  r.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>{const c=code(players.find(p=>p.id===b.dataset.cp));(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Код героя скопирован'),()=>{$('#tbi',r).value=c;toast('Код в поле ниже')})});
- on('#tbib',()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#tbi',r).value.trim().replace(/^KP1:/,'')))));if(!h._sig||h._sig!==sig(h)){if(!confirm(h._sig?'⚠ Код героя изменён вне Книги Мастера (подпись не совпадает): характеристики, предметы или монеты могли быть подправлены. Принять всё равно?':'⚠ Код без подписи Мастера (создан игроком). Принять героя?'))return}const ex=players.find(p=>p.id===h.id)||players.find(p=>p.name===h.name);const keep=['name','lvl','hp','maxhp','thp','ac','spd','st','inv','coins','spells','slots','ds','insp','conds'];if(ex){keep.forEach(f=>{if(h[f]!=null)ex[f]=h[f]});if(h.notes)ex.pnotes=h.notes}else{const n={...h,id:h.id||uid(),pnotes:h.notes||'',notes:''};players.push(n)}save();rRefresh();toast('Герой принят');closeSheet()}catch(e){toast('Неверный код')}})})}
+ on('#tbib',()=>{try{const h=JSON.parse(decodeURIComponent(escape(atob($('#tbi',r).value.trim().replace(/^KP1:/,'')))));if(!h._sig||h._sig!==sig(h)){if(!confirm(h._sig?'⚠ Код героя изменён вне Ширмы Мастера (подпись не совпадает): характеристики, предметы или монеты могли быть подправлены. Принять всё равно?':'⚠ Код без подписи Мастера (создан игроком). Принять героя?'))return}const ex=players.find(p=>p.id===h.id)||players.find(p=>p.name===h.name);const keep=['name','lvl','hp','maxhp','thp','ac','spd','st','inv','coins','spells','slots','ds','insp','conds'];if(ex){keep.forEach(f=>{if(h[f]!=null)ex[f]=h[f]});if(h.notes)ex.pnotes=h.notes}else{const n={...h,id:h.id||uid(),pnotes:h.notes||'',notes:''};players.push(n)}save();rRefresh();toast('Герой принят');closeSheet()}catch(e){toast('Неверный код')}})})}
 function desc(p){const v=p.v;if(p.f==='rest')return v==='l'?'долгий отдых':'короткий отдых';if(p.f==='uses')return 'израсходовать заряды: '+Object.keys(v||{}).length;if(p.f==='build')return `${v.kind==='lvl'?'повышение уровня':'новый лист героя'}: ${v.name}, ${v.race||''} ${v.cls||''} ${v.lvl||1} ур., хиты ${v.maxhp}, КД ${v.ac}, хар. ${(v.st||[]).join('/')}`;if(p.f==='buy')return `купить «${v.real}»${v.q>1?' ×'+v.q:''} за ${v.pf} — «${v.sn}»`;if(p.f==='trade')return `передать «${v.n}» → ${v.toN}`;if(p.f==='lvl')return `ур. ${v.lvl}, опыт ${v.xp||0}, макс. хиты ${v.maxhp}, хар. ${(v.st||[]).join('/')}`;if(p.f==='hp')return `хиты ${v.hp}${v.thp?' +'+v.thp:''}`;if(p.f==='inv')return `предметов ${v.inv?.length||0}, ${Object.entries(v.coins||{}).filter(x=>x[1]).map(x=>x[1]+' '+x[0]).join(' ')}`;if(p.f==='conds')return (v||[]).join(', ')||'нет';if(p.f==='slots')return Object.entries(v||{}).map(([l,s])=>`${l}:${s.max-s.used}/${s.max}`).join(' ');return String(v).slice(0,80)}
 /* кнопка «Стол» в разделе Героев и бейдж */
 const fab=document.createElement('button');fab.id='tbfab';fab.setAttribute('aria-label','Стол игроков');fab.onclick=()=>{ui.sheet=1;ui()};document.body.append(fab);
@@ -278,7 +278,7 @@ const STEPS=P?[
  ['#hpc','Хиты','Коснитесь, чтобы получить урон или лечение. При 0 — спасброски от смерти.'],
  ['#link','Стол Мастера','Введите код от Мастера — лист будет синхронизироваться. Предметы, золото и уровни выдаёт Мастер.']
 ]:[
- [null,'Добро пожаловать, Мастер','«Книга Мастера» ведёт игру вместе с вами: бой, правила, погода, добыча. Покажу главное за 30 секунд.'],
+ [null,'Добро пожаловать, Мастер','«Ширма Мастера» ведёт игру вместе с вами: бой, правила, погода, добыча. Покажу главное за 30 секунд.'],
  ['#ribbons','Закладки разделов','Сессия, Бестиарий, Чары, Лут, Бой, Кубики, Герои, Карта, Заметки, Правила. Свайп листает страницы.'],
  ['#kdock-t','Инструменты: Око и Помощник','Шпаргалки, пошаговые сценарии (бой, проверка, отдых, уровень) и недавнее. Первый раз? Начните отсюда.'],
  ['#kdock-t','Око — поиск всего','Спросите что угодно: «фаербол», «хилка», «сколько хитов у гоблина». Понимает сленг.'],
