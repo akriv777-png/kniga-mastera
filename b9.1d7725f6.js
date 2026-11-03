@@ -635,5 +635,5 @@ const _sm=window.showMon;if(_sm)window.showMon=showMon=function(id){_sm(id);cons
 /* бой (хук из combat.js) */
 window.KM_kitCS=function(c,tab,r,cs){try{if(!c||c.pc)return;const m=monOf(c);if(!m)return;const h=html(m,c);if(!h)return;
  const row=r.querySelector('#cdl');const at=row&&row.closest('.row');at?at.insertAdjacentHTML('beforebegin',h):r.insertAdjacentHTML('beforeend',h);bind(r,()=>cs(c,tab),c)}catch(e){console.warn('kit',e)}};
-window.KM=window.KM||{};KM.kit={kit,has,html,bind,bio};
+window.KM=window.KM||{};KM.kit={kit,has,html,bind,bio,clr:id=>{delete cache[id]}};
 })();

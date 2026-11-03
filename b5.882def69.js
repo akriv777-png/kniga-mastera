@@ -999,27 +999,27 @@ function editCast(c){const n=c||{id:'u'+uid(),n:'',r:'',look:'',nat:'',quirk:'',
 
 /* ===== Уникальные персонажи (data/legends.js) ===== */
 let legCat=LS.get('legcat',''),legSort=LS.get('legsort','n'),legQ='';
-const LEG=()=>window.LEGENDS||[];
-function rLeg(){if(!window.LEGENDS&&window.KMP&&!KMP.ready()){page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+'<div class="skel"></div><div class="skel"></div><div class="skel"></div>';bindNpcSeg();KMP.then(()=>{if(npcView==='leg'&&$('#nseg'))rLeg()});return}const cats=[...new Set(LEG().map(m=>m.L.cat))];
- page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div>`+
- chips('legcat',[['','Все'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
+const LEG=()=>[...(KM.dmc?KM.dmc.mons():[]),...(window.LEGENDS||[])];KM.rLegSoft=()=>{if(npcView==='leg'&&$('#legList'))fillLeg()};
+function rLeg(){if(!window.LEGENDS&&window.KMP&&!KMP.ready()){page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+'<div class="skel"></div><div class="skel"></div><div class="skel"></div>';bindNpcSeg();KMP.then(()=>{if(npcView==='leg'&&$('#nseg'))rLeg()});return}const cats=[...new Set(LEG().map(m=>m.L.cat))].filter(c=>c!=='Мои');
+ page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div><button class="btn red dmc-new" id="newLeg" style="width:100%;margin:4px 0 8px">✦ Создать своего персонажа</button>`+
+ chips('legcat',[['','Все'],['Мои','★ Мои'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
  bindNpcSeg();bindSearch('legQ',q=>{legQ=q;fillLeg()});
  bindChips(page,(n,v)=>{if(n==='legcat'){legCat=v;LS.set('legcat',v)}else if(n==='legsort'){legSort=v;LS.set('legsort',v)}fillLeg()});
- $('#rndLeg').onclick=()=>{const L=LEG();if(L.length)showLeg(L[Math.floor(Math.random()*L.length)].id)};fillLeg()}
-function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||m.L.cat===legCat)&&(!q||(m.n+' '+m.L.title+' '+m.L.cat+' '+m.ty).toLowerCase().includes(q)));
+ $('#newLeg').onclick=()=>KM.dmc&&KM.dmc.create();$('#rndLeg').onclick=()=>{const L=LEG();if(L.length)showLeg(L[Math.floor(Math.random()*L.length)].id)};fillLeg()}
+function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||(legCat==='Мои'?m.my:m.L.cat===legCat))&&(!q||(m.n+' '+m.L.title+' '+m.L.cat+' '+m.ty).toLowerCase().includes(q)));
  L=[...L].sort(legSort==='n'?(a,b)=>a.n.localeCompare(b.n,'ru'):legSort==='cr'?(a,b)=>a.cr-b.cr||a.n.localeCompare(b.n,'ru'):(a,b)=>b.cr-a.cr||a.n.localeCompare(b.n,'ru'));
- const el=$('#legList');if(!L.length){el.innerHTML='<div class="muted">Никого не нашлось</div>';el.onclick=null;return}
- lazyList(el,L,m=>`<div class="card cast leg" data-lid="${m.id}">${avHtml(m,52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div><div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div></div>`);
+ const el=$('#legList');if(!L.length){el.innerHTML=legCat==='Мои'?'<div class="muted">Своих персонажей пока нет — нажмите «✦ Создать своего персонажа»</div>':'<div class="muted">Никого не нашлось</div>';el.onclick=null;return}
+ lazyList(el,L,m=>`<div class="card cast leg${m.my?' mine':''}" data-lid="${m.id}">${avHtml(m,52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div>${m.L.ph&&m.L.ph[0]?`<div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div>`:''}</div>`);
  el.onclick=e=>{const c=e.target.closest('[data-lid]');if(c)showLeg(c.dataset.lid)}}
 function showLeg(id){const m=LEG().find(x=>x.id===id);if(!m)return;const L=m.L;
  openSheet(`<div class="cast-head">${avHtml(m,110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
- ${KM.kit?KM.kit.bio(m):''}<div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
- <div class="fld"><b>Внешность.</b> ${esc(L.look)}</div><div class="fld"><b>Характер.</b> ${esc(L.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(L.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(L.mot)}</div><div class="fld"><b>История.</b> ${esc(L.hist)}</div>
- <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>
- <div class="sec-h">Фразы</div>${L.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
- <div class="sec-h">Завязка</div><div class="fld">${esc(L.hook)}</div>
- ${KM.kit?KM.kit.html(m):''}<div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>`,r=>{
-  KM.kit&&KM.kit.bind(r,()=>showLeg(id));$('#lFight',r).onclick=()=>{addCombatant(m);toast(`${m.n} — в инициативе`)};
+ ${KM.kit?KM.kit.bio(m):''}${L.tac?`<div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>`:''}
+ ${[['Внешность',L.look],['Характер',L.nat],['Манера речи',L.quirk],['Чего хочет',L.mot],['История',L.hist]].filter(x=>x[1]).map(([k,v])=>`<div class="fld"><b>${k}.</b> ${esc(v)}</div>`).join('')}
+ ${L.sec?`<details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>`:''}
+ ${(L.ph||[]).length?`<div class="sec-h">Фразы</div>${L.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}`:''}
+ ${L.hook?`<div class="sec-h">Завязка</div><div class="fld">${esc(L.hook)}</div>`:''}
+ ${KM.kit?KM.kit.html(m):''}<div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>${m.my?`<div class="row" style="margin-top:8px"><button class="btn" id="lHS">📜 Лист героя</button><button class="btn" id="lEd">✎ Изменить</button><button class="btn" id="lDu">⧉ Копия</button><button class="btn dark" id="lDe">🗑</button></div>`:''}`,r=>{if(m.my){const pid=m.pid0;$('#lHS',r).onclick=()=>KM.dmc.sheet(pid);$('#lEd',r).onclick=()=>KM.dmc.edit(pid,'main');$('#lDu',r).onclick=()=>KM.dmc.dup(pid);$('#lDe',r).onclick=()=>KM.dmc.del(pid)}
+  KM.kit&&KM.kit.bind(r,()=>showLeg(id));$('#lFight',r).onclick=()=>{if(m.my)return KM.dmc.fight(m.pid0);addCombatant(m);toast(`${m.n} — в инициативе`)};
   $('#lStat',r).onclick=()=>showMon(m.id);
   $('#lScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(m.n)||sess.npcs.push(m.n);LS.set('sess',sess)}toast(`${m.n} — в сцене`)}})}
 Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil,showLeg,LEGENDS:LEG});
