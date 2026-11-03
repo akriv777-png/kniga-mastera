@@ -67,7 +67,7 @@ function editCast(c){const n=c||{id:'u'+uid(),n:'',r:'',look:'',nat:'',quirk:'',
 /* ===== Уникальные персонажи (data/legends.js) ===== */
 let legCat=LS.get('legcat',''),legSort=LS.get('legsort','n'),legQ='';
 const LEG=()=>window.LEGENDS||[];
-function rLeg(){const cats=[...new Set(LEG().map(m=>m.L.cat))];
+function rLeg(){if(!window.LEGENDS&&window.KMP&&!KMP.ready()){page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+'<div class="skel"></div><div class="skel"></div><div class="skel"></div>';bindNpcSeg();KMP.then(()=>{if(npcView==='leg'&&$('#nseg'))rLeg()});return}const cats=[...new Set(LEG().map(m=>m.L.cat))];
  page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div>`+
  chips('legcat',[['','Все'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
  bindNpcSeg();bindSearch('legQ',q=>{legQ=q;fillLeg()});

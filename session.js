@@ -1,7 +1,7 @@
 'use strict';
 /* ===== STAGE 3: Session home ===== */
 const SW_DEF=['party','scene','npcs','log','quests','timer','rest','backup'];
-let sess=Object.assign({order:SW_DEF,scene:'Таверна «Пьяный грифон». Дождь барабанит по ставням, у камина шепчутся двое в капюшонах.',npcs:['Трактирщик Хольм'],log:[],quests:[{id:uid(),t:'Найти пропавших детей',st:0},{id:uid(),t:'Разведать старую дорогу',st:0}],day:1,min:8*60,weather:'Моросящий дождь, +9 °C',tStart:null,tAcc:0,cd:0,cdEnd:0,rnd:null,collapsed:{}},LS.get('sess',{}));
+let sess=Object.assign({order:SW_DEF,scene:'Таверна «Пьяный грифон». Дождь барабанит по ставням, у камина шепчутся двое в капюшонах.',npcs:['Трактирщик Хольм'],log:[],quests:[{id:uid(),t:'Найти пропавших детей',st:0},{id:uid(),t:'Разведать старую дорогу',st:0}],day:1,min:8*60,weather:'Моросящий дождь, +9 °C',tStart:null,tAcc:0,cd:0,cdEnd:0,rnd:null,collapsed:{timer:true}},LS.get('sess',{}));
 SW_DEF.forEach(k=>{if(!sess.order.includes(k))sess.order.push(k)});sess.order=sess.order.filter(k=>SW_DEF.includes(k)||k==='clock');
 const saveS=()=>LS.set('sess',sess);
 const SW_T={party:'Отряд',init:'Инициатива',dice:'Проверка с живым кубом',scene:'Текущая сцена',npcs:'Активные НИП',log:'Журнал сессии',quests:'Задания',tables:'Случайные таблицы',clock:'Время и погода',timer:'Таймер',rest:'Отдых',backup:'Резервная копия'};

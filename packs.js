@@ -1,5 +1,5 @@
 /* Ленивая догрузка контент-паков (≈1.6 МБ): после первого экрана, без блокировки запуска. Список заменяется бандлом при публикации. */
-(function(){const L=["pk.7f8d5896.js"];
+(function(){const L=["pk.dc06b4fa.js"];
 let st=0;const cbs=[];
 (function(){const go=()=>{const s=document.createElement('script');s.src='data/core.js';s.onload=()=>{const D=window.DATA;if(D&&D.items){delete D.items._dd;try{window.KM_dedupe&&KM_dedupe(D.items)}catch(e){}}try{window.KM_tc&&KM_tc()}catch(e){}(()=>{try{KM_clsNorm(window.DATA&&DATA.spells);(DATA.items||[]).forEach(x=>{if(typeof x.n==='string')x.n=x.n.replace(/\s*\((i{1,3}|iv|v)\)$/,(m,r)=>' '+r.toUpperCase())})}catch(e){}})(),dispatchEvent(new Event('kmpacks'))};document.head.appendChild(s)};document.readyState==='loading'?addEventListener('DOMContentLoaded',go):go()})();
 

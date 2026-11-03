@@ -411,3 +411,7 @@ body::after{animation:none!important;opacity:.8}
 @keyframes rise2{0%{opacity:0;transform:translateY(24px) scale(.9)}100%{opacity:1;transform:none}}
 .ph h1 .cap{text-shadow:0 0 10px rgba(255,70,30,.8),0 0 1px #ff6a40}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-iteration-count:1!important}}
+
+.cb-top.cb-idle .cb-rd,.cb-top.cb-idle .cb-tm,.cb-top.cb-idle #cbshow,.cb-top.cb-idle #cpv,.cb-add.cb-idle #cin2{display:none}
+.cb-top.cb-idle{justify-content:flex-end}
+.scr-sub{margin:18px 4px 8px;font-family:var(--hand,Georgia,serif);color:#c9a45a;font-size:15px;letter-spacing:.06em;border-bottom:1px solid rgba(196,161,90,.25);padding-bottom:6px}

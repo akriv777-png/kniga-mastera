@@ -395,8 +395,8 @@ const RCAT=[['','Все'],['ess','⚔ Нужное в игре'],['fight','Бо�
 const RC_F=new Set(['turn','actions','opp','cover','grapple','twf','death','conc','cond','zones']),RC_C=new Set(['dc','adv','mods','skills','dice','stealth']);
 function rcat(id){return RC_F.has(id)?'fight':RC_C.has(id)?'chk':'world'}
 function rulesApply(){const f=LS.get('rulesF','');const E=window.SCREEN_ESS||new Set();$$('#page [data-rc]').forEach(d=>{const id=(d.closest('[data-scr]')||d).dataset.scr;const ok=!f||(f==='ess'?d.classList.contains('scr-c')&&E.has(d.dataset.id):d.dataset.rc===f);d.style.display=ok?'':'none'});$$('#page .dropcap').forEach(p=>p.style.display=f&&f!=='book'?'none':'')}
-function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+chips('rcat',RCAT.map(c=>[c[0],c[1]]),LS.get('rulesF',''))+(window.SCREEN||[]).map(c=>`<details class="rule scr-c" data-rc="${rcat(c[0])}" data-id="${c[0]}"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<p class="dropcap" style="font-size:16px;line-height:1.45">Здесь собраны правила, к которым ты будешь возвращаться чаще всего. Помни: Мастер — арбитр, а не противник игроков.</p>`+
-  RULES.map((r,i)=>`<details class="rule" data-rc="book"${i===0?' open':''}><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`;rulesApply();bindChips(page,(n,v)=>{if(n==='rcat'){LS.set('rulesF',v);rRules()}})}
+function rRules(){page.oninput=null;page.innerHTML=header('Ширма Мастера','все справки под рукой · поиск в одно касание','tri',3)+`<button class="btn scr-big" onclick="openScreen('')">🔍 Поиск по правилам, чарам, монстрам</button>`+chips('rcat',RCAT.map(c=>[c[0],c[1]]),LS.get('rulesF',''))+(window.SCREEN||[]).map(c=>`<details class="rule scr-c" data-rc="${rcat(c[0])}" data-id="${c[0]}"><summary>${c[1]}</summary><div class="body">${c[3]}</div></details>`).join('')+`<div class="scr-sub" data-rc="book">📖 Своды правил — подробнее</div>`+
+  RULES.map((r,i)=>`<details class="rule" data-rc="book"><summary>${r[0]}</summary><div class="body">${r[1]}</div></details>`).join('')+glyphs(2)+`<p class="muted" style="font-size:12px">Источник правил: Справочный документ системы 5.1 «Подземелий и драконов» © «Визардс оф зе Кост», лицензия «Криэйтив Коммонс — с указанием авторства 4.0». Перевод, сокращение и адаптация — «Ширма Мастера».</p>`;rulesApply();bindChips(page,(n,v)=>{if(n==='rcat'){LS.set('rulesF',v);rRules()}})}
 
 /* ---------- render ---------- */
 const R=window.KM_PLAYER?[0,1,2,3,4].map(i=>()=>window.PRN&&PRN(i)):[()=>rSession(),()=>rNpc(),()=>rSpells(),()=>rItems(),()=>rCombat(),()=>rDice(),()=>{rPcs();window.KM&&KM.table&&KM.table.panel&&KM.table.panel()},()=>rMap(),()=>rNotes(),()=>rRules()];
@@ -425,7 +425,7 @@ setTimeout(()=>{try{if(!window.SPART||!navigator.serviceWorker||!navigator.servi
 'use strict';
 /* ===== STAGE 3: Session home ===== */
 const SW_DEF=['party','scene','npcs','log','quests','timer','rest','backup'];
-let sess=Object.assign({order:SW_DEF,scene:'Таверна «Пьяный грифон». Дождь барабанит по ставням, у камина шепчутся двое в капюшонах.',npcs:['Трактирщик Хольм'],log:[],quests:[{id:uid(),t:'Найти пропавших детей',st:0},{id:uid(),t:'Разведать старую дорогу',st:0}],day:1,min:8*60,weather:'Моросящий дождь, +9 °C',tStart:null,tAcc:0,cd:0,cdEnd:0,rnd:null,collapsed:{}},LS.get('sess',{}));
+let sess=Object.assign({order:SW_DEF,scene:'Таверна «Пьяный грифон». Дождь барабанит по ставням, у камина шепчутся двое в капюшонах.',npcs:['Трактирщик Хольм'],log:[],quests:[{id:uid(),t:'Найти пропавших детей',st:0},{id:uid(),t:'Разведать старую дорогу',st:0}],day:1,min:8*60,weather:'Моросящий дождь, +9 °C',tStart:null,tAcc:0,cd:0,cdEnd:0,rnd:null,collapsed:{timer:true}},LS.get('sess',{}));
 SW_DEF.forEach(k=>{if(!sess.order.includes(k))sess.order.push(k)});sess.order=sess.order.filter(k=>SW_DEF.includes(k)||k==='clock');
 const saveS=()=>LS.set('sess',sess);
 const SW_T={party:'Отряд',init:'Инициатива',dice:'Проверка с живым кубом',scene:'Текущая сцена',npcs:'Активные НИП',log:'Журнал сессии',quests:'Задания',tables:'Случайные таблицы',clock:'Время и погода',timer:'Таймер',rest:'Отдых',backup:'Резервная копия'};
@@ -1000,7 +1000,7 @@ function editCast(c){const n=c||{id:'u'+uid(),n:'',r:'',look:'',nat:'',quirk:'',
 /* ===== Уникальные персонажи (data/legends.js) ===== */
 let legCat=LS.get('legcat',''),legSort=LS.get('legsort','n'),legQ='';
 const LEG=()=>window.LEGENDS||[];
-function rLeg(){const cats=[...new Set(LEG().map(m=>m.L.cat))];
+function rLeg(){if(!window.LEGENDS&&window.KMP&&!KMP.ready()){page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+'<div class="skel"></div><div class="skel"></div><div class="skel"></div>';bindNpcSeg();KMP.then(()=>{if(npcView==='leg'&&$('#nseg'))rLeg()});return}const cats=[...new Set(LEG().map(m=>m.L.cat))];
  page.innerHTML=header('Персонажи','короли, боги, демоны, легенды','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('legQ','Найти, напр. король',legQ)}</div><button class="btn red" id="rndLeg">🎲</button></div>`+
  chips('legcat',[['','Все'],...cats.map(c=>[c,c])],legCat)+`<div class="row" style="margin:4px 0 8px">${chips('legsort',[['n','А–Я'],['cr','ПО ↑'],['crd','ПО ↓']],legSort)}</div><div class="list" id="legList"></div>`;
  bindNpcSeg();bindSearch('legQ',q=>{legQ=q;fillLeg()});

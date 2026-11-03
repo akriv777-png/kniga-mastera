@@ -1,6 +1,7 @@
 'use strict';/*bundle*/
 /* table.js */
 'use strict';{
+if(!window.qrcode)addEventListener('load',()=>setTimeout(()=>{const s=document.createElement('script');s.src='vendor/qrcode.js';document.head.appendChild(s)},600));
 /* «Стол»: живая связь Ширмы Мастера с Книгами Игроков (WebRTC через PeerJS, Мастер — хост) */
 const PREFIX='kniga-mastera-v1-';const PURL='https://akriv777-png.github.io/kniga-mastera/player/';
 const ALPH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
