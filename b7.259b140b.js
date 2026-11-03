@@ -305,8 +305,8 @@ function apply(p,v){if(!p||!v)return'нет данных';const P=pts(p);
  if(v.op==='p2s'){const l=+v.l,c=COST[l];if(!c)return'только 1–5 круг';if(!P||P.left<c)return'нужно '+c+' очк.';p.slots=p.slots||{};const s=p.slots[l]=p.slots[l]||{max:0,used:0};P.u.used+=c;s.max++;p.fom=p.fom||{};p.fom[l]=(p.fom[l]||0)+1;return''}
  if(v.op==='mm'){const c=(v.mm||[]).reduce((a,k)=>a+mmCost(k,+v.lvl),0);if(!c)return'';if(!P||P.left<c)return'нужно '+c+' очк.';P.u.used+=c;return''}
  if(v.op==='mmset'){const a=(v.mm||[]).filter(k=>MM.some(m=>m[0]===k)).slice(0,mmMax(p));p.mm=a;return''}
- if(v.op==='swap'){const a=spOf(v.from),b=spOf(v.to);p.spells=p.spells||[];if(!a||!b||!p.spells.includes(v.from))return'нет такого заклинания';if(a.l!==b.l)return'нужен тот же уровень';if(!(b.cl||[]).some(c=>/Чародей/i.test(c)))return'не из списка чародея';if(!P||P.left<1)return'нужно 1 очко';P.u.used+=1;p.spells=p.spells.map(x=>x===v.from?v.to:x);return''}
- if(v.op==='arc'){const l=+v.l,b=spOf(v.id);if(!ARC.some(([L,c])=>c===l&&p.lvl>=L))return'круг ещё не открыт';if(!b||b.l!==l||!(b.cl||[]).some(c=>/Колдун/i.test(c)))return'нужно заклинание колдуна '+l+' круга';p.arc=p.arc||{};p.arc[l]={id:v.id,used:false};return''}
+ if(v.op==='swap'){const a=spOf(v.from),b=spOf(v.to);p.spells=p.spells||[];if(!a||!b||!p.spells.includes(v.from))return'нет такого заклинания';if(a.l!==b.l)return'нужен тот же уровень';if(!(b.cl||[]).some(c=>/Чародей/i.test(c)))return'не из списка чародея';{const r=canSpell(p,b);if(!r.ok)return r.msg}if(!P||P.left<1)return'нужно 1 очко';P.u.used+=1;p.spells=p.spells.map(x=>x===v.from?v.to:x);return''}
+ if(v.op==='arc'){const l=+v.l,b=spOf(v.id);if(!ARC.some(([L,c])=>c===l&&p.lvl>=L))return'круг ещё не открыт';if(!b||b.l!==l||!(b.cl||[]).some(c=>/Колдун/i.test(c)))return'нужно заклинание колдуна '+l+' круга';{const r=canSpell(p,b);if(!r.ok)return r.msg}p.arc=p.arc||{};p.arc[l]={id:v.id,used:false};return''}
  if(v.op==='arcuse'){const l=+v.l;p.arc=p.arc||{};if(!p.arc[l])return'не выбран';p.arc[l].used=!!v.used;return''}
  return'неизвестно'}
 function desc(v){const n=id=>(spOf(id)||{}).n||id;if(!v)return'';if(v.op==='swap')return`заменить «${n(v.from)}» → «${n(v.to)}» (1 очко)`;if(v.op==='arc')return`арканум ${v.l} круга: «${n(v.id)}»`;if(v.op==='s2p')return`ячейка ${v.l} ур. → ${v.l} очк.`;if(v.op==='p2s')return`${COST[v.l]} очк. → ячейка ${v.l} ур.`;if(v.op==='mm')return'метамагия: '+(v.mm||[]).map(k=>(MM.find(m=>m[0]===k)||[])[1]).join(', ');if(v.op==='mmset')return'выбор метамагии';if(v.op==='arcuse')return'арканум '+v.l+(v.used?': использован':': снова готов');return v.op}
@@ -343,6 +343,22 @@ function cast(p,s,ctx,onSlot){const mm=p.mm||[];const P=pts(p);const lv=Object.k
   r.querySelectorAll('[data-cxt]').forEach(b=>b.onclick=()=>{const k=b.dataset.cxt;on.has(k)?on.delete(k):on.add(k);b.classList.toggle('on');const c=[...on].reduce((a,k)=>a+mmCost(k,s.l),0);if(N)N.textContent=on.size?`Стоимость: ${c} очк. · ${note([...on])}`:''});
   r.querySelectorAll('[data-cxl]').forEach(b=>b.onclick=()=>{const l=+b.dataset.cxl,a=[...on];const c=a.reduce((x,k)=>x+mmCost(k,s.l),0);if(c&&(!P||P.left<c))return(window.toast||alert)('Не хватает очков: нужно '+c);
    if(onSlot)onSlot(l);else if(l){setUsed(p.slots[l],slotUsed(p.slots[l])+1)}if(c)ctx.act({op:'mm',mm:a,lvl:s.l});else ctx.act(null);window.closeSheet&&closeSheet();(window.toast||alert)(s.n+' — сотворено'+(a.length?' · '+note(a):''))})})}
+
+/* ===== canSpell: может ли класс героя знать заклинание ===== */
+const CAST_AL=[['Волшебник',/волшеб|wizard|^маг$|^маг[\s/,(]|маг-?волш/i],['Чародей',/чародей|sorcer/i],['Жрец',/жрец|клирик|cleric/i],['Друид',/друид|druid/i],['Бард',/бард|bard/i],['Колдун',/колдун|чернокниж|warlock/i],['Паладин',/паладин|paladin/i],['Следопыт',/следопыт|рейнджер|ranger/i],['Изобретатель',/изобретат|артифи|artificer/i]];
+const NONCAST=/воин|fighter|плут|rogue|варвар|barbarian|монах|monk/i;
+function heroClasses(p){const raw=[p&&p.cls,...(Array.isArray(p&&p.mc)?p.mc.map(x=>x&&(x.cls||x)):[])].filter(Boolean).join(' / ');const parts=String(raw).split(/\s*(?:\/|,|\+|;|\s и\s)\s*/).map(x=>x.trim()).filter(Boolean);const out=new Set();let unknown=false,non=false;
+ parts.forEach(c=>{const f=CAST_AL.find(([,r])=>r.test(c));if(f)out.add(f[0]);else if(NONCAST.test(c))non=true;else unknown=true});
+ const sub=String((p&&(p.sub||p.subclass||p.arch))||'')+' '+raw;if(/мистическ\S* (рыцар|ловкач|плут)|eldritch knight|arcane trickster/i.test(sub))out.add('Волшебник');
+ return{list:[...out],unknown:unknown&&!out.size,non,raw:raw||'—'}}
+function canSpell(p,s){if(typeof s==='string')s=spOf(s);if(!p||!s)return{ok:false,msg:'Нет такого заклинания'};
+ const extra=[].concat(p.xspells||[],p.bonusSpells||[]);if(extra.includes(s.id))return{ok:true};
+ const cl=(s.cl||[]).filter(Boolean);if(!cl.length)return{ok:true,homebrew:true};
+ const H=heroClasses(p);if(H.unknown)return{ok:true,unknownCls:true};
+ if(cl.some(c=>H.list.includes(c)))return{ok:true};
+ return{ok:false,msg:`Класс ${H.raw} не умеет «${s.n}»`}}
+function guardSpell(p,s){const r=canSpell(p,s);if(!r.ok)(window.toast||alert)(r.msg);return r.ok}
+window.canSpell=canSpell;window.guardSpell=guardSpell;window.heroClasses=heroClasses;
 window.CLX={apply,desc,html,bind,cast,longRest,isSorc,isWar,MM,mmMax,COST};
 /* Мастер: долгий отдых сбрасывает созданные ячейки и арканум */
 const hook=()=>{if(window.KM&&KM.uses&&!KM.uses.__clx){const o=KM.uses.onRest;KM.uses.onRest=function(p,k){if(k==='l')try{longRest(p)}catch(e){}return o.apply(this,arguments)};KM.uses.__clx=1}};hook();setTimeout(hook,0);setTimeout(hook,1500);
