@@ -327,3 +327,4 @@ html,body{touch-action:pan-x pan-y}input,textarea,select{font-size:max(16px,1em)
 button,a,summary,label,select,.btn,.chip,[data-t],[data-tab],[role=button],[onclick]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
 i.ink,.ink{pointer-events:none}
 @media (hover:none){.btn:hover,.chip:hover,button:hover{filter:none}}
+#toast:not(:has(button)){pointer-events:none}
