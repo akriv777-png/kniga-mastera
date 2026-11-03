@@ -180,20 +180,19 @@ const FLOW={
 'Проверка':['Игрок описывает, ЧТО делает герой — не «я кидаю Убеждение».','Нужен ли бросок? Если провал невозможен или ничего не стоит — просто скажи «получилось».','Выбери навык (например Атлетика) и СЛ: 10 легко, 15 средне, 20 трудно.','Игрок бросает к20 + модификатор навыка.','Результат ≥ СЛ — успех. Провал — история идёт дальше, но с осложнением.'],
 'Отдых':['Спроси: короткий (1 час) или долгий (8 часов)? Где отдыхают? Безопасно ли?','Можно бросить случайную встречу (1 из 6 — кто-то приходит).','Короткий: каждый тратит кости хитов по желанию. Долгий: всё восстановлено.','Отметь в листах героев: хиты, ячейки, умения. Сдвинь календарь.'],
 'Повышение уровня':['Раздай опыт после боя или вехи (или повышай по сюжету — так проще).','Каждый герой: +кость хитов (бросок или среднее) + мод. ТЕЛ к максимуму хитов.','Новые умения класса — смотри таблицу класса; на 4, 8, 12… +2 к характеристике или черта.','Заклинатели: новые ячейки и заклинания. Бонус мастерства растёт на 5, 9, 13, 17.','Обнови лист героя в разделе «Герои».']};
-const NOW={0:'Начни сессию: зачитай краткое «в прошлый раз», затем опиши сцену тремя деталями.',1:'Ищешь врага? Фильтр «Опасность» ≈ уровню героев. ★ — запомнить на сессию.',2:'Игрок кастует? Найди заклинание поиском, проверь концентрацию и дальность.',3:'После боя: «Генератор лута» → выдай вещь герою одним касанием.',4:'Бой: следи за подсветкой — чей ход. Урон — тап по существу.',5:'Не знаешь, что кинуть? Атака/проверка — к20, урон — по оружию.',6:'Герои: держи открытым лист игрока — хиты и состояния под рукой.',7:'Карта: открой туман по мере того, как герои идут.',8:'Заметки: запиши имена, которые придумал на ходу, — игроки их запомнят.',9:'Правила: не помнишь — реши в пользу веселья, проверишь после игры.'};
 function card(t,rows){return `<div class="card nv-ref"><div class="t">${t}</div>${rows.map(([a,b])=>`<div class="nv-r"><b>${a}</b><span>${b}</span></div>`).join('')}</div>`}
 function hub(tab){tab=tab||'ref';const tabs=[['ref','Шпаргалки'],['flow','По шагам'],['rec','Недавнее']];
  openSheet(`<div class="sb-title">Помощник мастера</div><button class="btn red" id="nvs" style="width:100%;margin:8px 0">⌕ Найти что угодно (правило, монстр, заклинание…)</button><div class="seg">${tabs.map(([k,l])=>`<button class="${k===tab?'on':''}" data-nt="${k}">${l}</button>`).join('')}</div><div id="nvb" style="margin-top:10px">${
   tab==='ref'?Object.keys(REF).map(k=>`<button class="btn nv-big" data-rf="${k}">${k}</button>`).join(''):
   tab==='flow'?Object.keys(FLOW).map(k=>`<button class="btn nv-big" data-fl="${k}">▶ ${k} — шаг за шагом</button>`).join(''):
   (NV.rec.length?NV.rec.map(r=>`<button class="btn nv-big" data-rc="${esc(r.k)}|${esc(r.id)}">${esc(r.n)} <small>${esc(r.k)}</small></button>`).join(''):'<div class="empty">Здесь появится то, что ты открывал.</div>')
- }</div><button class="btn dark" id="nvbk2" style="width:100%;margin-top:12px">🛡 Сохранность данных и экскурсия</button><label class="nv-tg"><input type="checkbox" id="nvon" ${NV.on?'checked':''}> Режим новичка (подсказки «что делать сейчас»)</label>`,r=>{
+ }</div><button class="btn dark" id="nvbk2" style="width:100%;margin-top:12px">🛡 Сохранность данных и экскурсия</button><label class="nv-tg"><input type="checkbox" id="nvon" ${NV.on?'checked':''}> Подсказки «что делать сейчас» в бою</label>`,r=>{
   r.querySelector('#nvs').onclick=()=>{closeSheet();setTimeout(()=>document.getElementById('scrFab')?.click(),250)};
   r.querySelectorAll('[data-nt]').forEach(b=>b.onclick=()=>hub(b.dataset.nt));
   r.querySelectorAll('[data-rf]').forEach(b=>b.onclick=()=>openSheet(`<div class="sb-title">${b.dataset.rf}</div>${card('',REF[b.dataset.rf])}<button class="btn dark" id="nvbk" style="width:100%">← Назад</button>`,q=>q.querySelector('#nvbk').onclick=()=>hub('ref')));
   r.querySelectorAll('[data-fl]').forEach(b=>b.onclick=()=>flow(b.dataset.fl,0));
   r.querySelectorAll('[data-rc]').forEach(b=>b.onclick=()=>{const [k,id]=b.dataset.rc.split('|');closeSheet();setTimeout(()=>OPEN[k]&&OPEN[k](id),250)});
-  r.querySelector('#nvbk2').onclick=()=>KM.tour.ui();r.querySelector('#nvon').onchange=e=>{NV.on=e.target.checked?1:0;nsv();now()}})}
+  r.querySelector('#nvbk2').onclick=()=>KM.tour.ui()})}
 function flow(k,i){const st=FLOW[k];openSheet(`<div class="sb-title">${k}: шаг ${i+1} из ${st.length}</div><div class="nv-prog"><i style="width:${(i+1)/st.length*100}%"></i></div><p class="nv-step">${st[i]}</p>${k==='Проверка'&&i===2?`<div class="chips">${[['Легко',10],['Средне',15],['Трудно',20]].map(([l,v])=>`<button class="chip" data-dc="${v}">${l} · СЛ ${v}</button>`).join('')}</div>`:''}<div style="display:flex;gap:8px;margin-top:14px"><button class="btn dark" id="fp" style="flex:1">${i?'← Назад':'← Меню'}</button><button class="btn red" id="fn" style="flex:2">${i<st.length-1?'Дальше →':'Готово ✓'}</button></div>`,r=>{
  r.querySelector('#fp').onclick=()=>i?flow(k,i-1):hub('flow');r.querySelector('#fn').onclick=()=>{if(i<st.length-1)flow(k,i+1);else{closeSheet();toast('Готово! Сценарий «'+k+'» пройден');if(k==='Бой')KM.go(4)}};
  r.querySelectorAll('[data-dc]').forEach(b=>b.onclick=()=>{const d=1+Math.floor(Math.random()*20);toast(`СЛ ${b.dataset.dc}: на к20 выпало ${d} — добавь модификатор игрока`)})})}
@@ -202,10 +201,7 @@ function rec(k,id,n){NV.rec=NV.rec.filter(r=>!(r.k===k&&r.id===id));NV.rec.unshi
 const wm=window.showMon;if(wm)window.showMon=showMon=function(id){const m=DATA.monsters.find(x=>x.id===id);m&&rec('Монстр',id,m.n);return wm.apply(this,arguments)};
 const ws=window.showSpell;if(ws)window.showSpell=showSpell=function(id){const m=DATA.spells.find(x=>x.id===id);m&&rec('Заклинание',id,m.n);return ws.apply(this,arguments)};
 const wi=KM.showItem;if(wi)KM.showItem=function(id){const m=DATA.items.find(x=>x.id===id);m&&rec('Предмет',id,m.n);return wi.apply(this,arguments)};
-function now(){let b=document.getElementById('nvnow');if(!NV.on){b&&b.remove();return}const t=NOW[S.sec];if(!t)return;const h=page.querySelector(':scope>.ph');if(!b){b=document.createElement('div');b.id='nvnow'}b.innerHTML=`<span>✦</span><p>${t}</p><button aria-label="Помощник">?</button>`;b.querySelector('button').onclick=()=>hub();(h&&h.parentNode===page?h.after(b):page.prepend(b))}
-const og=KM.go;KM.go=function(){const r=og.apply(this,arguments);now();setTimeout(now,30);return r};
-const f=document.createElement('button');f.id='nvfab';f.textContent='?';f.setAttribute('aria-label','Помощник мастера');f.onclick=()=>hub();document.body.append(f);
-setTimeout(now,800);KM.novice={hub,flow,REF,FLOW,NV};}
+KM.novice={hub,flow,REF,FLOW,NV};}
 
 ;
 /* weather.js */
@@ -639,19 +635,13 @@ window.KM=window.KM||{};KM.paste={normRoom,normHero,pasteInto};
 ;
 /* dock.js */
 'use strict';{
-/* Компактный док: одна кнопка «Инструменты» (Помощник мастера) и отдельная — «Стол игроков» */
+/* Док ширмы: «?» помощник (шпаргалки) + стол игроков + поиск; всегда видим, одно касание */
 const d=document.createElement('div');d.id='kdock';d.setAttribute('data-noswipe','');
-const t=document.createElement('button');t.id='kdock-t';t.setAttribute('aria-label','Помощник мастера');t.textContent='?';t.onclick=()=>document.getElementById('nvfab')?.click();
-d.append(t);document.body.append(d);
+const t=document.createElement('button');t.id='kdock-t';t.setAttribute('aria-label','Помощник мастера');t.textContent='?';t.onclick=()=>KM.novice&&KM.novice.hub();
+const g=document.createElement('button');g.id='kdock-g';g.setAttribute('aria-label','Настройки раздела');g.textContent='⚙';g.onclick=()=>document.querySelector('#page .fx-gear')?.click();
+d.append(t,g);document.body.append(d);
 const grab=()=>{const f=document.getElementById('tbfab');if(f&&f.parentNode!==d)d.prepend(f)};grab();setTimeout(grab,500);
 }
-
-;(()=>{const d=document.getElementById('kdock');if(!d)return;let t;const pg=document.getElementById('page');const hide=()=>{d.classList.add('kd-hide');clearTimeout(t);t=setTimeout(()=>d.classList.remove('kd-hide'),900)};(pg||window).addEventListener('scroll',hide,{passive:true})})();
-;(()=>{const go=()=>{const d=document.getElementById('kdock');if(!d){return setTimeout(go,500)}let pt;const arm=()=>{clearTimeout(pt);pt=setTimeout(()=>d.classList.add('kd-peek'),2500)};
-d.addEventListener('click',e=>{if(d.classList.contains('kd-peek')){e.stopPropagation();e.preventDefault();d.classList.remove('kd-peek');arm()}},true);
-d.addEventListener('touchstart',()=>{if(!d.classList.contains('kd-peek'))arm()},{passive:true});
-new MutationObserver(()=>{if(!d.classList.contains('kd-hide')&&!d.classList.contains('kd-peek'))arm()}).observe(d,{attributes:true,attributeFilter:['class']});arm()};
-document.readyState==='loading'?addEventListener('DOMContentLoaded',go):go()})();
 
 ;
 /* uses.js */
