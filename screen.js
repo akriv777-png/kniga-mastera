@@ -93,6 +93,6 @@ function hints(){if(window.KM_PLAYER||typeof S==='undefined')return;const pg=doc
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.scr-hints [data-h]');if(b)open('',b.dataset.h)});
 if(!window.KM_PLAYER){const r0=window.render;if(typeof render==='function'){window.__scrRender=render}
  new MutationObserver(()=>hints()).observe(document.getElementById('page'),{childList:true});
- const f=document.createElement('button');f.id='scrFab';f.setAttribute('aria-label','Ширма: быстрый поиск правил');f.innerHTML='<span>🔍</span>';f.onclick=()=>open('');document.getElementById('app').appendChild(f);
+ const f=document.createElement('button');f.id='scrFab';f.setAttribute('aria-label','Ширма: быстрый поиск правил');f.innerHTML='<span>🔍</span>';f.onclick=()=>open('');const put=()=>{const k=document.getElementById('kdock');if(k){k.prepend(f)}else setTimeout(put,300)};put();
  hints()}
 })();

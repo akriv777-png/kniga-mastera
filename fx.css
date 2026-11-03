@@ -349,3 +349,5 @@ body.sheet-open #scrFab,#sheet.open~#scrFab{opacity:0;pointer-events:none}
 .scr-big{width:100%;margin:4px 0 12px}
 .scr-names{font-size:15px;line-height:1.6;margin-bottom:8px}
 .scr-lbl2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#b33;margin:12px 0 6px}
+#kdock #scrFab{position:static!important;width:42px!important;height:42px!important;font-size:18px;display:flex;align-items:center;justify-content:center;padding:0;opacity:1}
+#kdock #kdock-f{z-index:1;touch-action:manipulation}
