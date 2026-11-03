@@ -351,3 +351,8 @@ body.sheet-open #scrFab,#sheet.open~#scrFab{opacity:0;pointer-events:none}
 .scr-lbl2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#b33;margin:12px 0 6px}
 #kdock #scrFab{position:static!important;width:42px!important;height:42px!important;font-size:18px;display:flex;align-items:center;justify-content:center;padding:0;opacity:1}
 #kdock #kdock-f{z-index:1;touch-action:manipulation}
+
+.scr-cat{font-weight:700;color:#e8c77a;margin:10px 0 4px;font-size:14px;letter-spacing:.3px}.scr-other>summary{cursor:pointer;list-style:none;padding:6px 0;border-top:1px solid rgba(196,161,90,.3)}.scr-other>summary::-webkit-details-marker{display:none}.scr-hints .scr-more{opacity:.75;font-style:italic}.scr-oth{display:contents}.scr-oth[hidden]{display:none}
+.rx{margin-left:6px;font-size:12px;padding:1px 6px;border-radius:9px;border:1px solid rgba(196,161,90,.5);background:transparent;color:#e8c77a}.rx.used{opacity:.45;text-decoration:line-through;border-color:#7a2a20}
+
+.cb-row.surp{opacity:.45;filter:grayscale(.7)}

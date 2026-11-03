@@ -108,7 +108,7 @@ showItem=function(id){_showItem(id);const it=D.items.find(x=>x.id===id);if(!it)r
 const _fillIt=fillIt;fillIt=function(){_fillIt();$$('#itList .badge').forEach(b=>{const c=RCOL[b.textContent];if(c){b.style.color=c;b.style.borderColor=c+'66';b.style.background=c+'1f'}})};
 
 /* ================= MAP BUILDER ================= */
-const TILES=[['floor','Пол','#3b3430'],['wall','Стена','#141110'],['door','Дверь','#7a4a22'],['water','Вода','#1d4f73'],['tree','Деревья','#24502a'],['lava','Лава','#c2380e'],['stairs','Лестница','#6b625b'],['chest','Сундук','#3b3430'],['trap','Ловушка','#3b3430'],['grass','Трава','#3d5b2a']];
+const TILES=[['floor','Пол','#3b3430'],['wall','Стена','#141110'],['door','Дверь','#7a4a22'],['water','Вода','#1d4f73'],['tree','Деревья','#24502a'],['lava','Лава','#c2380e'],['stairs','Лестница','#6b625b'],['chest','Сундук','#3b3430'],['trap','Ловушка','#3b3430'],['grass','Трава','#3d5b2a'],['dt','Трудная местность (×2 к движению)','#b08a3a']];
 const TC=Object.fromEntries(TILES.map(t=>[t[0],t]));
 let maps=LS.get('maps',null);(maps||[]).forEach(m=>{if(m&&m.hist&&m.hist.length>25)m.hist=m.hist.slice(-25)});
 if(!maps){maps=[sampleMap()];LS.set('maps',maps)}
@@ -159,7 +159,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   const pts=new Map();let gest=null,drag=null,fogMode=null,last=null;
   const cell=(cx,cy)=>{const r=cv.getBoundingClientRect();const x=Math.floor(((cx-r.left)-view.x)/view.s/CS),y=Math.floor(((cy-r.top)-view.y)/view.s/CS);return x>=0&&y>=0&&x<m.W&&y<m.H?{x,y}:null};
   function apply(c){if(!c)return;const i=c.y*m.W+c.x;if(last===i)return;last=i;
-    if(mt.tool==='paint')m.g[i]=mt.tile;else if(mt.tool==='erase'){m.g[i]='';m.tok=m.tok.filter(t=>t.x!==c.x||t.y!==c.y)}
+    if(mt.tool==='paint'){if(mt.tile==='dt'){m.dt=m.dt||[];m.dt[i]=m.dt[i]?0:1}else m.g[i]=mt.tile}else if(mt.tool==='erase'){m.g[i]='';m.tok=m.tok.filter(t=>t.x!==c.x||t.y!==c.y)}
     else if(mt.tool==='fog'){if(fogMode==null)fogMode=m.fog[i]?0:1;m.fog[i]=fogMode}draw()}
   cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pts.size===2){if(drag&&drag.snap){const o=JSON.parse(drag.snap);m.g=o.g;m.fog=o.fog;m.tok=o.tok;if(m.hist&&m.hist.length)m.hist.pop();draw()}drag=null;dist(null);const [a,b]=[...pts.values()];gest={d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,v:{...view}};return}
