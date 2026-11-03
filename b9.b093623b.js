@@ -7,7 +7,7 @@ const ALPH='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const T=Object.assign({code:'',on:false,perm:{},link:{},lock:{},audit:[]},LS.get('table',{}));T.lock=T.lock||{};T.audit=T.audit||[];const sv=()=>LS.set('table',T);
 if(!T.code){T.code=Array.from({length:5},()=>ALPH[Math.floor(Math.random()*ALPH.length)]).join('');sv()}
 const DEF={notes:'direct',slots:'direct',conds:'direct',hp:'direct',inv:'approve',lvl:'approve',trade:'approve',rest:'off',uses:'off'};const PROT=['inv','lvl','trade','rest','uses'];/* защищённые: никогда не «сам» */
-const PL={notes:'Записи',slots:'Ячейки',conds:'Состояния',hp:'Текущие хиты',inv:'Сумка и монеты',lvl:'Уровень, опыт, характеристики',trade:'Обмен',rest:'Отдых',uses:'Заряды и умения'};
+const PL={notes:'Записи',slots:'Ячейки',conds:'Состояния',hp:'Текущие хиты',inv:'Сумка и монеты',lvl:'Уровень, опыт, характеристики',trade:'Обмен',rest:'Отдых',uses:'Заряды и умения',spell:'Заклинание'};
 function audit(who,hero,f,what,res){T.audit.unshift({t:Date.now(),who,hero,f,what:String(what).slice(0,140),res});T.audit.length=Math.min(T.audit.length,200);sv()}
 let peer=null,conns={},pend=LS.get('tbpend',[]),status='выкл',retry=0,last={};
 const permOf=pid=>{const P=Object.assign({},DEF,T.perm[pid]||{});PROT.forEach(f=>{if(P[f]==='direct')P[f]='approve'});if(T.strict)['hp','conds','slots','rest','uses','notes'].forEach(f=>{if(P[f]==='direct')P[f]='approve'});if(T.lock[pid])Object.keys(P).forEach(f=>P[f]=f==='notes'?P[f]:'off');return P};
