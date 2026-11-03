@@ -28,10 +28,10 @@ rNpc=function(){page.oninput=null;page.onclick=null;
 const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">НПС (${allCast().length})</button><button data-nv="leg" class="${npcView==='leg'?'on':''}">Персонажи (${(window.LEGENDS||[]).length})</button></div>`;
 function bindNpcSeg(){$('#nseg').onclick=e=>{const b=e.target.closest('[data-nv]');if(b){npcView=b.dataset.nv;LS.set('npcview',npcView);rNpc()}}}
 function fillCast(){const q=castQ.toLowerCase();const L=allCast().filter(c=>!q||(c.n+' '+c.r+' '+c.look+' '+c.mot).toLowerCase().includes(q));
- lazyList($('#castList'),L,c=>{const rel=npcRel[c.id]?.v||0;return `<div class="card cast${c.base?'':' own'}" data-cid="${c.id}">${npcSigil(c,52)}<div class="t">${esc(c.n)}</div>${rel?`<span class="badge rel${rel}">${REL.find(x=>+x[0]===rel)[1]}</span>`:''}<div class="m">${esc(c.r)}</div><div class="m hand" style="opacity:.8">«${esc(c.ph[0])}»</div></div>`});
+ lazyList($('#castList'),L,c=>{const rel=npcRel[c.id]?.v||0;return `<div class="card cast${c.base?'':' own'}" data-cid="${c.id}">${avHtml(c,52)}<div class="t">${esc(c.n)}</div>${rel?`<span class="badge rel${rel}">${REL.find(x=>+x[0]===rel)[1]}</span>`:''}<div class="m">${esc(c.r)}</div><div class="m hand" style="opacity:.8">«${esc(c.ph[0])}»</div></div>`});
  $('#castList').onclick=e=>{const c=e.target.closest('[data-cid]');if(c)showCast(c.dataset.cid)}}
 function showCast(id){const c=findCast(id);if(!c)return;const rel=npcRel[id]||{v:0,t:''};const lk=npcLinks[id]||{items:[],spells:[]};const mon=D.monsters.find(m=>m.id===c.stat);
- openSheet(`<div class="cast-head">${npcSigil(c,110)}<div><div class="sb-title">${esc(c.n)}</div><div class="sb-sub">${esc(c.r)}</div></div></div>
+ openSheet(`<div class="cast-head">${avHtml(c,110)}<div><div class="sb-title">${esc(c.n)}</div><div class="sb-sub">${esc(c.r)}</div></div></div>
  <div class="fld"><b>Внешность.</b> ${esc(c.look)}</div><div class="fld"><b>Характер.</b> ${esc(c.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(c.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(c.mot)}</div>
  <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(c.sec)}</details>
  <div class="sec-h">Фразы</div>${c.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
@@ -72,10 +72,10 @@ function rLeg(){const cats=[...new Set(LEG().map(m=>m.L.cat))];
 function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||m.L.cat===legCat)&&(!q||(m.n+' '+m.L.title+' '+m.L.cat+' '+m.ty).toLowerCase().includes(q)));
  L=[...L].sort(legSort==='n'?(a,b)=>a.n.localeCompare(b.n,'ru'):legSort==='cr'?(a,b)=>a.cr-b.cr||a.n.localeCompare(b.n,'ru'):(a,b)=>b.cr-a.cr||a.n.localeCompare(b.n,'ru'));
  const el=$('#legList');if(!L.length){el.innerHTML='<div class="muted">Никого не нашлось</div>';el.onclick=null;return}
- lazyList(el,L,m=>`<div class="card cast leg" data-lid="${m.id}">${npcSigil({id:m.id,n:m.n,r:m.ty},52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div><div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div></div>`);
+ lazyList(el,L,m=>`<div class="card cast leg" data-lid="${m.id}">${avHtml(m,52)}<div class="t">${esc(m.n)}</div><span class="badge">ПО ${crTxt(m.cr)}</span><div class="m">${esc(m.L.title)} · ${esc(m.L.cat)}</div><div class="m hand" style="opacity:.8">«${esc(m.L.ph[0])}»</div></div>`);
  el.onclick=e=>{const c=e.target.closest('[data-lid]');if(c)showLeg(c.dataset.lid)}}
 function showLeg(id){const m=LEG().find(x=>x.id===id);if(!m)return;const L=m.L;
- openSheet(`<div class="cast-head">${npcSigil({id:m.id,n:m.n,r:m.ty},110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
+ openSheet(`<div class="cast-head">${avHtml(m,110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
  <div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
  <div class="fld"><b>Внешность.</b> ${esc(L.look)}</div><div class="fld"><b>Характер.</b> ${esc(L.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(L.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(L.mot)}</div><div class="fld"><b>История.</b> ${esc(L.hist)}</div>
  <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>

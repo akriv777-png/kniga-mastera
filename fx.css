@@ -389,3 +389,25 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;back
 
 .hs-coins .cn{display:block;font-style:normal;font-size:11px;text-align:center;margin-top:3px;font-weight:600}.coin-мм .cn{color:#d0844a}.coin-см .cn{color:#cfd3d8}.coin-эм .cn{color:#d9cf8a}.coin-зм .cn{color:#f2c14e}.coin-пм .cn{color:#bfe3ea}.coin-rate{font-size:12px;opacity:.8;margin:6px 0;text-align:center}
 .cn.coin-мм{color:#d0844a}.cn.coin-см{color:#cfd3d8}.cn.coin-эм{color:#d9cf8a}.cn.coin-зм{color:#f2c14e}.cn.coin-пм{color:#bfe3ea}i.cn{display:block;font-style:normal;font-size:11px;font-weight:600}
+
+/* аватары */
+img.av{border-radius:50%;object-fit:cover;flex:none;mix-blend-mode:normal!important;border:2px solid rgba(196,161,90,.55);box-shadow:0 0 0 2px #120808,0 0 12px rgba(150,20,20,.45);background:#120808}
+.card.mon{position:relative;padding-left:70px!important;min-height:72px}.card.mon .mav,.card.mon .nsig{position:absolute;left:12px;top:12px}
+.cb-row .rav,.cb-row .nsig{margin:0 8px 0 2px;align-self:center}.cb-row svg.nsig{width:40px;height:40px}
+.cb-ch{gap:10px}.cb-ch .cav{align-self:center}.cb-row.dead img.av,.cb-cur.dead img.av{filter:grayscale(1) brightness(.5)}
+.cast-head img.av{width:110px;height:110px}
+.cb-ch>div:nth-child(2){flex:1}
+/* === производительность анимаций (iPhone) === */
+.aw:not(.anim-on),.aw:not(.anim-on)::before,.aw:not(.anim-on)::after,.aw:not(.anim-on) *,.aw:not(.anim-on) *::before,.aw:not(.anim-on) *::after{animation-play-state:paused!important}
+html.anim-pause *,html.anim-pause *::before,html.anim-pause *::after,html.anim-pause body::after{animation-play-state:paused!important}
+html.scrolling #smoke::before,html.scrolling #fxCandle{animation-play-state:paused!important}
+#smoke::before,#smoke::after{filter:none!important}
+#smoke::before{will-change:transform,opacity}
+#smoke::after{animation:none!important;opacity:.7}
+body::after{animation:none!important;opacity:.8}
+@keyframes pulseSig{50%{opacity:.75;transform:scale(1.03)}}
+@keyframes ember{0%,100%{opacity:1}50%{opacity:.78}}
+@keyframes pulseFlesh{50%{opacity:.94}}
+@keyframes rise2{0%{opacity:0;transform:translateY(24px) scale(.9)}100%{opacity:1;transform:none}}
+.ph h1 .cap{text-shadow:0 0 10px rgba(255,70,30,.8),0 0 1px #ff6a40}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-iteration-count:1!important}}

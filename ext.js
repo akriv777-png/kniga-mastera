@@ -11,7 +11,7 @@ const invW=p=>Math.round(p.inv.reduce((a,x)=>a+(x.w||0)*x.q,0)*10)/10;
 const kg=n=>String(Math.round(n*10)/10).replace('.',',')+' кг';
 function rPcs(){page.oninput=null;
   page.innerHTML=header('Герои','листы персонажей отряда · онлайн-стол — кнопка ◎','tri',1)+players.map((p,i)=>`<div class="hero" data-i="${i}">
-   <div class="hero-top"><label class="portrait">${p.photo?`<img src="${p.photo}" alt="">`:`<span>${esc((p.name||'?')[0])}</span>`}<input type="file" accept="image/*" data-photo hidden><i>📷</i></label>
+   <div class="hero-top"><label class="portrait">${p.photo?`<img src="${p.photo}" alt="">`:(KM.avUrl&&KM.avUrl(p)?`<img src="${KM.avUrl(p)}" alt="">`:`<span>${esc((p.name||'?')[0])}</span>`)}<input type="file" accept="image/*" data-photo hidden><i>📷</i></label>
     <div class="hero-id"><input class="pcn" data-k="name" value="${esc(p.name)}" placeholder="Имя"><div class="row" style="gap:6px;flex-wrap:nowrap"><input class="pcc" data-k="cls" value="${esc(p.cls)}" placeholder="Класс" style="flex:1;margin:0"><span class="lvl">ур.<input data-k="lvl" type="number" inputmode="numeric" value="${p.lvl}"></span></div>
     <div class="hpline"><div class="hpbar"><i style="width:${Math.max(0,Math.min(100,p.hp/p.maxhp*100))}%"></i></div></div></div></div>
    <div class="pcstats4"><div class="shield"><small>ХИТЫ</small><div class="hpin"><input data-k="hp" type="number" inputmode="numeric" value="${p.hp}"><em>/</em><input data-k="maxhp" type="number" inputmode="numeric" value="${p.maxhp}" class="mx"></div></div>
@@ -143,6 +143,7 @@ function rMap(){page.oninput=null;page.onclick=null;const m=curMap();
   const cv=$('#mc'),wrap=$('#mw');const dpr=Math.min(2,devicePixelRatio||1);const CS=32;
   function size(){const w=wrap.clientWidth,h=wrap.clientHeight;cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';draw()}
   function fit(){const w=wrap.clientWidth,h=wrap.clientHeight;view.s=Math.min(w/(m.W*CS),h/(m.H*CS));view.x=(w-m.W*CS*view.s)/2;view.y=(h-m.H*CS*view.s)/2;draw()}
+  KM.redrawMap=()=>{if(cv.isConnected)draw()};
   function draw(){const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#070505';g.fillRect(0,0,cv.width,cv.height);g.translate(view.x,view.y);g.scale(view.s,view.s);
     drawMap(g,m,CS,mt.fogView?1:.55);}
   function opts(){const O=$('#mopts');
