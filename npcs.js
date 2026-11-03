@@ -23,25 +23,26 @@ const _rNpc=rNpc;
 rNpc=function(){page.oninput=null;page.onclick=null;
  if(npcView==='beasts'){_rNpc();$('.ph',page).insertAdjacentHTML('afterend',npcSeg());bindNpcSeg();return}
  if(npcView==='leg')return rLeg();
- page.innerHTML=header('НПС','обычные жители, слуги и встречные','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div><div class="list" id="castList"></div>`;
- bindNpcSeg();bindSearch('castQ',q=>{castQ=q;fillCast()});$('#rndNpc').onclick=()=>{const L=allCast().filter(x=>x&&x.id);if(!L.length)return;const c=L[Math.floor(Math.random()*L.length)];showCast(c.id)};$('#newCast').onclick=()=>editCast();fillCast()};
+ page.innerHTML=header('НПС','обычные жители, слуги и встречные','eye',0)+npcSeg()+`<div class="row"><div class="grow">${searchBox('castQ','Найти, напр. кузнец',castQ)}</div><button class="btn red" id="rndNpc">🎲 Случайный</button></div><div class="row" style="margin:-2px 0 8px"><button class="btn sm dark" id="newCast">＋ Свой персонаж</button></div>${chips('castsort',[['','Как есть'],['n','А–Я'],['rel','Отношение'],['own','Мои сначала']],LS.get('castsort',''))}<div class="list" id="castList"></div>`;
+ bindNpcSeg();bindSearch('castQ',q=>{castQ=q;fillCast()});bindChips(page,(n,v)=>{if(n==='castsort'){LS.set('castsort',v);fillCast()}});$('#rndNpc').onclick=()=>{const L=allCast().filter(x=>x&&x.id);if(!L.length)return;const c=L[Math.floor(Math.random()*L.length)];showCast(c.id)};$('#newCast').onclick=()=>editCast();fillCast()};
 const npcSeg=()=>`<div class="seg" id="nseg"><button data-nv="beasts" class="${npcView==='beasts'?'on':''}">Бестиарий</button><button data-nv="cast" class="${npcView==='cast'?'on':''}">НПС (${allCast().length})</button><button data-nv="leg" class="${npcView==='leg'?'on':''}">Персонажи (${(window.LEGENDS||[]).length})</button></div>`;
 function bindNpcSeg(){$('#nseg').onclick=e=>{const b=e.target.closest('[data-nv]');if(b){npcView=b.dataset.nv;LS.set('npcview',npcView);rNpc()}}}
-function fillCast(){const q=castQ.toLowerCase();const L=allCast().filter(c=>!q||(c.n+' '+c.r+' '+c.look+' '+c.mot).toLowerCase().includes(q));
+function fillCast(){const q=castQ.toLowerCase();const L=allCast().filter(c=>!q||(c.n+' '+c.r+' '+c.look+' '+c.mot).toLowerCase().includes(q));const cs=LS.get('castsort','');if(cs==='n')L.sort((a,b)=>a.n.localeCompare(b.n,'ru'));else if(cs==='rel')L.sort((a,b)=>Math.abs(npcRel[b.id]?.v||0)-Math.abs(npcRel[a.id]?.v||0)||(npcRel[b.id]?.v||0)-(npcRel[a.id]?.v||0));else if(cs==='own')L.sort((a,b)=>(a.base?1:0)-(b.base?1:0));
  lazyList($('#castList'),L,c=>{const rel=npcRel[c.id]?.v||0;return `<div class="card cast${c.base?'':' own'}" data-cid="${c.id}">${avHtml(c,52)}<div class="t">${esc(c.n)}</div>${rel?`<span class="badge rel${rel}">${REL.find(x=>+x[0]===rel)[1]}</span>`:''}<div class="m">${esc(c.r)}</div><div class="m hand" style="opacity:.8">«${esc(c.ph[0])}»</div></div>`});
  $('#castList').onclick=e=>{const c=e.target.closest('[data-cid]');if(c)showCast(c.dataset.cid)}}
 function showCast(id){const c=findCast(id);if(!c)return;const rel=npcRel[id]||{v:0,t:''};const lk=npcLinks[id]||{items:[],spells:[]};const mon=D.monsters.find(m=>m.id===c.stat);
  openSheet(`<div class="cast-head">${avHtml(c,110)}<div><div class="sb-title">${esc(c.n)}</div><div class="sb-sub">${esc(c.r)}</div></div></div>
- <div class="fld"><b>Внешность.</b> ${esc(c.look)}</div><div class="fld"><b>Характер.</b> ${esc(c.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(c.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(c.mot)}</div>
+ <div class="fld bio" style="font-style:italic;opacity:.92">${esc(castBio(c,mon))}</div><div class="fld"><b>Внешность.</b> ${esc(c.look)}</div><div class="fld"><b>Характер.</b> ${esc(c.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(c.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(c.mot)}</div>
  <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(c.sec)}</details>
  <div class="sec-h">Фразы</div>${c.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
  <div class="sec-h">Завязка</div><div class="fld">${esc(c.hook)}</div>
  <div class="sec-h">Отношение к отряду</div>${chips('rel',REL,rel.v)}<textarea class="inp" id="relT" rows="2" placeholder="Заметка, напр. должен Борину 10 зм">${esc(rel.t)}</textarea>
  <div class="sec-h">Связи</div><div class="row">${lk.items.map(i=>`<button class="chip" data-li="${i}">◆ ${esc((D.items.find(x=>x.id===i)||{n:i}).n)}</button>`).join('')}${lk.spells.map(i=>`<button class="chip" data-ls="${i}">✦ ${esc((D.spells.find(x=>x.id===i)||{n:i}).n)}</button>`).join('')}</div>
  <div class="row"><input class="inp grow" id="lnkQ" placeholder="Привязать предмет или заклинание, напр. посох"></div><div id="lnkR"></div>
- <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="cScene">＋ В сцену</button><button class="btn" id="cInit">⚔ В инициативу</button><button class="btn" id="cMap">◉ На карту</button><button class="btn" id="cSpl">✧ Заклинания</button>${mon?`<button class="btn dark" id="cStat">Статблок: ${esc(mon.n)}</button>`:''}</div>
+ ${mon&&KM.kit?KM.kit.html(mon):''}<div class="sec-h">В игру</div><div class="row"><button class="btn red" id="cScene">＋ В сцену</button><button class="btn" id="cInit">⚔ В инициативу</button><button class="btn" id="cMap">◉ На карту</button><button class="btn" id="cSpl">✧ Заклинания</button>${mon?`<button class="btn dark" id="cStat">Статблок: ${esc(mon.n)}</button>`:''}</div>
  ${c.base?'':`<div class="row" style="margin-top:12px"><button class="btn sm dark" id="cEd">Изменить</button><button class="btn sm dark" id="cDel">🗑 Удалить</button></div>`}`,r=>{
   bindChips(r,(n,v)=>{npcRel[id]={...rel,v:+v};rel.v=+v;saveCast();$$('[data-chips=rel] .chip',r).forEach(b=>b.classList.toggle('on',b.dataset.v===v))});
+  mon&&KM.kit&&KM.kit.bind(r,()=>showCast(id));
   $('#relT',r).onchange=e=>{rel.t=e.target.value;npcRel[id]=rel;saveCast()};
   {const b=$('#cSpl',r);if(b&&KM.csp)b.onclick=()=>KM.csp.edit('n:'+id,c.n,()=>showCast(id))}
   $('#cScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(c.n)||sess.npcs.push(c.n);LS.set('sess',sess)}toast(`${c.n} — в сцене`)};
@@ -53,6 +54,9 @@ function showCast(id){const c=findCast(id);if(!c)return;const rel=npcRel[id]||{v
   r.onclick=e=>{const a=e.target.closest('[data-add]');if(a){const[t,i]=a.dataset.add.split(':');lk[t==='i'?'items':'spells'].push(i);npcLinks[id]=lk;saveCast();showCast(id);return}
    const li=e.target.closest('[data-li]');if(li)return showItem(li.dataset.li);const ls=e.target.closest('[data-ls]');if(ls)return showSpell(ls.dataset.ls)};
   if(!c.base){$('#cEd',r).onclick=()=>editCast(c);$('#cDel',r).onclick=()=>{const i=ownCast.indexOf(c);ownCast.splice(i,1);saveCast();closeSheet();rNpc();KM.undoToast(`«${c.n}» удалён`,()=>{ownCast.splice(i,0,c);saveCast();rNpc()})}}})}
+function castBio(c,mon){if(c.bio)return c.bio;const st=s=>String(s||'').trim().replace(/[.!]+$/,'');const lo=s=>{s=st(s);return s?s[0].toLowerCase()+s.slice(1):''};
+ const r=st(c.r).split('·').map(x=>x.trim()).filter(Boolean);const role=r.length>1?`${r.slice(1).join(', ')} (${r[0]})`:(r[0]||'житель');
+ return `${c.n} — ${role}${mon?`, в бою как «${mon.n}» (ПО ${crTxt(mon.cr)})`:''}. ${st(c.nat)?st(c.nat)+'. ':''}${c.mot?'Добивается одного: '+lo(c.mot)+'.':''}`}
 const SYL=['ра','ве','мир','бо','сла','гор','ди','ан','ти','ла','ке','зор','ми','на','ву','лен','ар','то','се','рин','мо','ха','ель','дан'];
 function randomNpc(){const R=a=>a[Math.floor(Math.random()*a.length)];const L=CAST;const nm=(R(SYL)+R(SYL)+(Math.random()<.5?R(SYL):'')).replace(/^./,x=>x.toUpperCase());
  const c={id:'u'+uid(),n:nm+' '+R(L).n.split(' ').slice(1).join(' '),r:R(L).r,look:R(L).look,nat:R(L).nat,quirk:R(L).quirk,mot:R(L).mot,sec:R(L).sec,ph:[R(L).ph[0],R(L).ph[1]||R(L).ph[0],R(L).ph[2]||R(L).ph[0]],hook:R(L).hook,stat:R(L).stat};c.n=c.n.trim();ownCast.unshift(c);saveCast();if(npcView==='cast')fillCast();return c}
@@ -76,13 +80,13 @@ function fillLeg(){const q=legQ.toLowerCase();let L=LEG().filter(m=>(!legCat||m.
  el.onclick=e=>{const c=e.target.closest('[data-lid]');if(c)showLeg(c.dataset.lid)}}
 function showLeg(id){const m=LEG().find(x=>x.id===id);if(!m)return;const L=m.L;
  openSheet(`<div class="cast-head">${avHtml(m,110)}<div><div class="sb-title">${esc(m.n)}</div><div class="sb-sub">${esc(L.title)}</div><div class="sb-sub">${esc(L.cat)} · ${esc(m.sz)} ${esc(m.ty)} · ПО ${crTxt(m.cr)} · КД ${m.ac} · ${m.hp} хитов</div></div></div>
- <div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
+ ${KM.kit?KM.kit.bio(m):''}<div class="kb-tip" style="margin:6px 0">🗡 <b>Тактика:</b> ${esc(L.tac)}</div>
  <div class="fld"><b>Внешность.</b> ${esc(L.look)}</div><div class="fld"><b>Характер.</b> ${esc(L.nat)}</div><div class="fld"><b>Манера речи.</b> ${esc(L.quirk)}</div><div class="fld"><b>Чего хочет.</b> ${esc(L.mot)}</div><div class="fld"><b>История.</b> ${esc(L.hist)}</div>
  <details class="fld secret"><summary>🔒 Тайна (только для Мастера)</summary>${esc(L.sec)}</details>
  <div class="sec-h">Фразы</div>${L.ph.map(p=>`<div class="phr hand">«${esc(p)}»</div>`).join('')}
  <div class="sec-h">Завязка</div><div class="fld">${esc(L.hook)}</div>
- <div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>`,r=>{
-  $('#lFight',r).onclick=()=>{addCombatant(m);toast(`${m.n} — в инициативе`)};
+ ${KM.kit?KM.kit.html(m):''}<div class="sec-h">В игру</div><div class="row"><button class="btn red" id="lFight">⚔ В бой</button><button class="btn dark" id="lStat">Статблок</button><button class="btn" id="lScene">＋ В сцену</button></div>`,r=>{
+  KM.kit&&KM.kit.bind(r,()=>showLeg(id));$('#lFight',r).onclick=()=>{addCombatant(m);toast(`${m.n} — в инициативе`)};
   $('#lStat',r).onclick=()=>showMon(m.id);
   $('#lScene',r).onclick=()=>{if(typeof sess!=="undefined"){sess.npcs.includes(m.n)||sess.npcs.push(m.n);LS.set('sess',sess)}toast(`${m.n} — в сцене`)}})}
 Object.assign(KM,{CAST,allCast,showCast,randomNpc,npcSigil,showLeg,LEGENDS:LEG});

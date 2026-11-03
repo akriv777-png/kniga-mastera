@@ -7,7 +7,7 @@ const ST=()=>LS.get('crsp',{});
 function parse(m){if(!m)return[];const t=JSON.stringify(m).toLowerCase();if(!/заклинан|колдовств|заговор/.test(t))return[];const out=[];
  SP().forEach(s=>{const n=(s.n||'').toLowerCase();if(n.length<4)return;const i=t.indexOf(n);if(i<0)return;const a=t[i-1]||' ',b=t[i+n.length]||' ';if(/[а-яёa-z]/.test(a)||/[а-яёa-z]/.test(b))return;out.push(s.id)});return out}
 function get(key){if(key.startsWith('n:')){try{const l=npcLinks[key.slice(2)];return (l&&l.spells)||[]}catch(e){return[]}}
- const s=ST();if(s[key])return s[key];if(key.startsWith('m:'))return parse(mon(key.slice(2)));return[]}
+ const s=ST();if(s[key])return s[key];if(key.startsWith('m:')){const mm=mon(key.slice(2));if(mm&&mm.spl)return [].concat(...mm.spl.map(g=>g.ids));return parse(mm)}return[]}
 function set(key,a){a=[...new Set(a)];if(key.startsWith('n:')){const id=key.slice(2);npcLinks[id]=npcLinks[id]||{items:[],spells:[]};npcLinks[id].spells=a;LS.set('npclinks',npcLinks);return}const s=ST();s[key]=a;LS.set('crsp',s)}
 const keyOfMonOr=(mid,fb)=>mid&&mon(mid)?'m:'+mon(mid).id:fb;
 const keyOfComb=c=>c.npc?'n:'+c.npc:keyOfMonOr(c.mon,'c:'+(c.base||c.name));
