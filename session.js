@@ -62,7 +62,7 @@ function sessClick(e){const t=e.target,sw=t.closest('.sw');if(!sw)return;const k
  if(a==='rtlog'&&sess.rnd){logS(sess.rnd.k+': '+sess.rnd.v);reW('log');toast('В журнале')}
  if(a==='wx'){sess.weather=RT['Погода']();saveS();reW('clock')}
  if(a==='nsess'){newSession();return}if(a==='tsr'){if(!confirm('Сбросить таймер сессии на 0:00:00?'))return;const b={s:sess.tStart,a:sess.tAcc};sess.tStart=null;sess.tAcc=0;saveS();reW('timer');undoToast('Таймер сброшен',()=>{sess.tStart=b.s;sess.tAcc=b.a;saveS();reW('timer')});return}if(a==='tss'){if(sess.tStart){sess.tAcc+=Date.now()-sess.tStart;sess.tStart=null}else sess.tStart=Date.now();saveS();reW('timer')}
- if(a==='short'){adv(60);players.forEach(p=>{if(p.slots&&/Колдун/i.test(p.cls))Object.values(p.slots).forEach(s=>s.used=0)});save();logS('Короткий отдых (1 ч)');rSession();toast('Короткий отдых: тратьте кости хитов')}
+ if(a==='short'){adv(60);const L=[];players.forEach(p=>{KM.uses&&KM.uses.onRest(p,'s');if(p.slots&&/Колдун/i.test(p.cls))Object.values(p.slots).forEach(s=>s.used=0);if(KM.autoHD)L.push(KM.autoHD(p))});save();logS('Короткий отдых (1 ч)'+(L.length?': '+L.join('; '):''));rSession();toast('Короткий отдых'+(L.length?': '+L.join('; '):''))}
  if(a==='long'){adv(480);players.forEach(p=>{p.hp=p.maxhp;p.temp=0;if(p.slots)Object.values(p.slots).forEach(s=>s.used=0);p.exh=Math.max(0,(p.exh||0)-1);p.hdUsed=Math.max(0,(p.hdUsed||0)-Math.max(1,Math.floor((p.lvl||1)/2)))});save();logS('Продолжительный отдых (8 ч)');rSession();toast('Отряд отдохнул: хиты и ячейки восстановлены')}
  if(a==='exp')exportAll()}
 function sessInput(e){const t=e.target;if(t.id==='sScene'){sess.scene=t.value;saveS()}
