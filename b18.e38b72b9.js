@@ -376,7 +376,7 @@ KM.oneshots=list;})();
 'use strict';
 /* «Кампании»: готовые кампании (data/camp*.js грузятся лениво), прогресс по главам, карты, встречи → трекер */
 (()=>{const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-const FILES=['data/camp1.js','data/camp2.js','data/camp3.js','data/camp4.js'];let ld=null;
+const FILES=['data/camp1.js','data/camp2.js','data/camp3.js','data/camp4.js','data/camp5.js'];let ld=null;
 function load(){if(window.CAMPAIGNS&&window.CAMPAIGNS.length>=FILES.length)return Promise.resolve();if(ld)return ld;window.CAMPAIGNS=window.CAMPAIGNS||[];
  ld=Promise.all(FILES.map(f=>new Promise(r=>{if(document.querySelector(`script[data-cf="${f}"]`))return r();const s=document.createElement('script');s.src=f;s.dataset.cf=f;s.onload=s.onerror=()=>r();document.head.appendChild(s)}))).then(()=>{const o=FILES.map(f=>f.match(/camp(\d)/)[1]);CAMPAIGNS.sort((a,b)=>parseInt(a.lvl)-parseInt(b.lvl))});return ld}
 const P=id=>LS.get('camp_'+id,null),setP=(id,v)=>LS.set('camp_'+id,v);
@@ -410,7 +410,7 @@ function chap(i,k){const c=CAMPAIGNS[i],h=c&&c.chapters[k];if(!h)return;let p=P(
  ${h.tip?`<p class="muted" style="font-size:13px">💡 ${E(h.tip)}</p>`:''}
  <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="cpC">← Кампания</button>${k>0?'<button class="btn" id="cpPv">‹ Пред.</button>':''}${k<c.chapters.length-1?'<button class="btn" id="cpNx">След. ›</button>':''}<button class="btn" id="cpN">📝 В заметки</button><button class="btn ${done?'':'red'}" id="cpD" style="width:100%;min-height:50px">${done?'✓ Глава пройдена (отменить)':'✓ Отметить главу пройденной'}</button></div>`,r=>{
   r.onclick=e=>{const mo=e.target.closest('[data-mon]');if(mo){showMon(mo.dataset.mon);window.KM_sheetRet=()=>chap(i,k);return}
-   const mb=e.target.closest('[data-map]');if(mb){const l=h.locs[+mb.dataset.map];return KM.preMap('cp-'+c.id+'-'+k+'-'+mb.dataset.map,{type:l.type,W:l.W||26,H:l.H||24,dang:l.dang||40,mon:l.mon,mons:l.mon.length?1:0,name:l.n})}
+   const mb=e.target.closest('[data-map]');if(mb){const l=h.locs[+mb.dataset.map];if(l.art){const m=(typeof maps!=='undefined'?maps:[]).find(x=>x.pre===l.art||x.id===l.art);if(m){mapCur=m.id;try{view={s:1,x:0,y:0}}catch(e){}saveMaps();closeSheet();const mi=SECTIONS.findIndex(s=>s[0]==='map');const fin=()=>{try{rMap()}catch(e){}toast('Открыта: '+m.name)};if(S.sec===mi)fin();else{KM.go(mi);setTimeout(fin,450)}return}return KM.preMap(l.art,{name:l.n,mon:l.mon||[]})}return KM.preMap('cp-'+c.id+'-'+k+'-'+mb.dataset.map,{type:l.type,W:l.W||26,H:l.H||24,dang:l.dang||40,mon:l.mon,mons:l.mon.length?1:0,name:l.n})}
    const eb=e.target.closest('[data-enc]');if(eb){const en=h.enc[+eb.dataset.enc];let n=0;en.mon.forEach(([id,q])=>{const m=D.monsters.find(z=>z.id===id);if(m)for(let t=0;t<q;t++){addCombatant(m);n++}});toast(`В трекер добавлено: ${n}`);return}};
   r.querySelector('#cpC').onclick=()=>camp(i);const pv=r.querySelector('#cpPv'),nx=r.querySelector('#cpNx');pv&&(pv.onclick=()=>chap(i,k-1));nx&&(nx.onclick=()=>chap(i,k+1));
   const ho=r.querySelector('#cpHo');ho&&(ho.onclick=()=>KM.showPlayers&&KM.showPlayers({i:'📜',n:h.handout.n,t:h.handout.t}));

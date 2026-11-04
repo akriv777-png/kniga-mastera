@@ -1,2 +1,18 @@
 /* Карты-картинки (фон). Регистрируются в списке карт при запуске (ext.js). */
-window.KM_IMGMAPS=[{"k": "img-world", "n": "Великий континент", "src": "img/maps/world.webp", "W": 40, "H": 22, "grid": false}, {"k": "img-abigail", "n": "Абигейл", "src": "img/maps/abigail.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-saluki", "n": "Салуки", "src": "img/maps/saluki.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-moros", "n": "Морос", "src": "img/maps/moros.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-dreamwood", "n": "Лес Грёз", "src": "img/maps/dreamwood.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-ashwhisper", "n": "Пепел Шёпотов", "src": "img/maps/ashwhisper.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-icepeak", "n": "Ледяной Пик", "src": "img/maps/icepeak.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-coalthroat", "n": "Горло Угля", "src": "img/maps/coalthroat.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-ghostlake", "n": "Озеро Призраков", "src": "img/maps/ghostlake.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-piratebay", "n": "Бухта Пиратов", "src": "img/maps/piratebay.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-crystalcaves", "n": "Хрустальные Пещеры", "src": "img/maps/crystalcaves.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-skyrift", "n": "Плато Небесного Разлома", "src": "img/maps/skyrift.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-spire", "n": "Старый Чародейский Шпиль", "src": "img/maps/spire.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-fortress", "n": "Пограничная Крепость", "src": "img/maps/fortress.webp", "W": 30, "H": 30, "grid": true}, {"k": "img-haven", "n": "Тихая Гавань", "src": "img/maps/haven.webp", "W": 30, "H": 30, "grid": true}];
+window.KM_IMGMAPS=[
+  {k:'wm-world',n:'Великий континент',src:'img/maps/world.webp',W:40,H:22,grid:false},
+  {k:'wm-abigail',n:'Абигейл',src:'img/maps/abigail.webp',W:40,H:40,grid:true},
+  {k:'wm-saluki',n:'Салуки',src:'img/maps/saluki.webp',W:40,H:40,grid:true},
+  {k:'wm-moros',n:'Морос',src:'img/maps/moros.webp',W:40,H:40,grid:true},
+  {k:'wm-dreamwood',n:'Лес Грёз',src:'img/maps/dreamwood.webp',W:40,H:40,grid:true},
+  {k:'wm-ash-whispers',n:'Пепел Шёпотов',src:'img/maps/ash-whispers.webp',W:40,H:40,grid:true},
+  {k:'wm-ice-peak',n:'Ледяной Пик',src:'img/maps/ice-peak.webp',W:40,H:40,grid:true},
+  {k:'wm-coalthroat',n:'Горло Угля',src:'img/maps/coalthroat.webp',W:40,H:40,grid:true},
+  {k:'wm-ghost-lake',n:'Озеро Призраков',src:'img/maps/ghost-lake.webp',W:40,H:40,grid:true},
+  {k:'wm-pirate-bay',n:'Бухта Пиратов',src:'img/maps/pirate-bay.webp',W:40,H:40,grid:true},
+  {k:'wm-crystal-caves',n:'Хрустальные Пещеры',src:'img/maps/crystal-caves.webp',W:40,H:40,grid:true},
+  {k:'wm-sky-rift',n:'Плато Небесного Разлома',src:'img/maps/sky-rift.webp',W:40,H:40,grid:true},
+  {k:'wm-wizard-spire',n:'Старый Чародейский Шпиль',src:'img/maps/wizard-spire.webp',W:40,H:40,grid:true},
+  {k:'wm-border-fort',n:'Пограничная Крепость',src:'img/maps/border-fort.webp',W:40,H:40,grid:true},
+  {k:'wm-quiet-harbor',n:'Тихая Гавань',src:'img/maps/quiet-harbor.webp',W:40,H:40,grid:true}
+];

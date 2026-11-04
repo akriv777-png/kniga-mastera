@@ -112,7 +112,7 @@ const TILES=[['floor','Пол','#3b3430'],['wall','Стена','#141110'],['door
 const TC=Object.fromEntries(TILES.map(t=>[t[0],t]));
 let maps=LS.get('maps',null);(maps||[]).forEach(m=>{if(m&&m.hist&&m.hist.length>25)m.hist=m.hist.slice(-25)});
 if(!maps){maps=[sampleMap()];LS.set('maps',maps)}
-(window.KM_IMGMAPS||[]).forEach(d=>{const m=maps.find(x=>x.pre===d.k);if(m){m.bg=d.src;return}maps.push({id:uid(),pre:d.k,name:d.n,W:d.W,H:d.H,g:Array(d.W*d.H).fill('floor'),fog:Array(d.W*d.H).fill(0),tok:[],bg:d.src,grid:d.grid,style:'dark',shared:false})});LS.set('maps',maps);
+(window.KM_IMGMAPS||[]).forEach(d=>{const m=maps.find(x=>x.id===d.k||x.pre===d.k||x.pre===('img-'+d.k.replace(/^wm-/,'')));if(m){if((m.rev||0)>0)return;m.bg=d.src;m.style='art';m.bgOnly=true;m.pre=d.k;if(!m.id||String(m.id).indexOf('wm-')!==0)m.id=d.k;return}maps.push({id:d.k,pre:d.k,name:d.n,W:d.W,H:d.H,g:Array(d.W*d.H).fill(''),fog:Array(d.W*d.H).fill(0),tok:[],bg:d.src,grid:d.grid!==false,style:'art',bgOnly:true,shared:false,rev:0})});LS.set('maps',maps);
 let mapCur=LS.get('mapcur',maps[0].id);
 let mt={tool:'pan',tile:'wall',fogView:false,tokKind:'pc',locked:true,autoLock:LS.get('autolock',true)};
 const snap=m=>JSON.stringify({g:m.g,fog:m.fog,tok:m.tok});
