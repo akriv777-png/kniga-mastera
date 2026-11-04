@@ -92,14 +92,15 @@ const _menu=mapMenu;window.mapMenu=mapMenu=function(){_menu();const m=curMap();c
 const PAL={dark:{stone:['#3a3633','#2e2a27','#151211','#4a4440'],sand:['#4a3e2e','#3d3325','#1a140d','#5c4d38'],moss:['#2f3a2c','#263023','#111510','#3e4a39'],blood:['#3a2826','#2e1f1d','#160c0b','#4a3230']},
  parch:{stone:['#e6d6b0','#dccaa0','#3a2a1a','#c9b588'],sand:['#ead8ac','#e0cb98','#4a3216','#cdb37e'],moss:['#dcdcb0','#cfd0a0','#2e3a1e','#b8bd88'],blood:['#e8d2b0','#dfc29e','#5a1810','#c9a888']}};
 const cache=new Map();
-function base(m,CS){const key=m.id+'|'+CS+'|'+(m.style||'dark')+(m.theme||'stone')+(m.grid!==false)+(m.gs||2)+(m.coord?'c':'')+'|'+m.g.join(',').length+'|'+hashG(m.g);const c0=cache.get(m.id);if(c0&&c0.key===key)return c0.cv;
+function base(m,CS){const BI=m.bg&&KM_BG(m.bg);const key=m.id+'|'+CS+'|'+(m.bg?m.bg+(BI&&BI.complete&&BI.naturalWidth?1:0):'')+'|'+(m.style||'dark')+(m.theme||'stone')+(m.grid!==false)+(m.gs||2)+(m.coord?'c':'')+'|'+m.g.join(',').length+'|'+hashG(m.g);const c0=cache.get(m.id);if(c0&&c0.key===key)return c0.cv;
  const cv=document.createElement('canvas');cv.width=m.W*CS;cv.height=m.H*CS;const g=cv.getContext('2d');paint(g,m,CS);{const o=cache.get(m.id);if(o&&o.cv!==cv)o.cv.width=o.cv.height=0}cache.set(m.id,{key,cv});if(cache.size>6){const k0=cache.keys().next().value;const o=cache.get(k0);o.cv.width=o.cv.height=0;cache.delete(k0)}return cv}
+const BGC={};window.KM_BG=src=>{let i=BGC[src];if(!i){i=BGC[src]=new Image();i.onload=()=>{try{rMap()}catch(e){}};i.src=src}return i};
 function hashG(a){let h=0;for(let i=0;i<a.length;i++){const s=a[i];h=(h*31+(s?s.charCodeAt(0)*7+s.length:1)+i)|0}return h}
 function paint(g,m,CS){const P=(PAL[m.style]||PAL.dark)[m.theme]||PAL.dark.stone,par=m.style==='parch',r=R(m.seed||7),W=m.W,H=m.H,get=(x,y)=>x>=0&&y>=0&&x<W&&y<H?m.g[y*W+x]:'';
- g.fillStyle=par?'#d9c49a':'#0b0807';g.fillRect(0,0,W*CS,H*CS);
+ g.fillStyle=par?'#d9c49a':'#0b0807';g.fillRect(0,0,W*CS,H*CS);const BI=m.bg&&KM_BG(m.bg);if(BI&&BI.complete&&BI.naturalWidth)g.drawImage(BI,0,0,W*CS,H*CS);
  if(par){for(let k=0;k<W*H/3;k++){g.fillStyle=`rgba(120,80,30,${r()*.08})`;g.beginPath();g.arc(r()*W*CS,r()*H*CS,r()*CS*1.5,0,7);g.fill()}}
  const isWall=t=>t==='wall'||!t;
- for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=m.g[y*W+x],X=x*CS,Y=y*CS;if(!t){if(!par){g.fillStyle=`rgba(255,255,255,${r()*.015})`;g.fillRect(X,Y,CS,CS)}else{g.strokeStyle='rgba(60,40,20,.18)';g.beginPath();for(let k=0;k<3;k++){const o=r()*CS;g.moveTo(X+o,Y);g.lineTo(X,Y+o)}g.stroke()}continue}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const t=m.g[y*W+x],X=x*CS,Y=y*CS;if(m.bg&&(t==='floor'||!t))continue;if(!t){if(!par){g.fillStyle=`rgba(255,255,255,${r()*.015})`;g.fillRect(X,Y,CS,CS)}else{g.strokeStyle='rgba(60,40,20,.18)';g.beginPath();for(let k=0;k<3;k++){const o=r()*CS;g.moveTo(X+o,Y);g.lineTo(X,Y+o)}g.stroke()}continue}
   const GG=window.KM_GROUND&&KM_GROUND[t];if(GG){g.fillStyle=par?GG[2]:GG[1];g.fillRect(X,Y,CS,CS);if(t==='wood'){g.strokeStyle='rgba(0,0,0,.35)';g.beginPath();for(let k=1;k<4;k++){g.moveTo(X,Y+k*CS/4);g.lineTo(X+CS,Y+k*CS/4)}g.stroke()}else for(let k=0;k<5;k++){g.fillStyle=`rgba(${r()<.5?'0,0,0':'255,255,255'},${.05+r()*.08})`;g.fillRect(X+r()*CS,Y+r()*CS,2,2)}continue}
   const fl=['floor','chest','trap','door','stairs','pillar','altar','table','torch','rubble','bones','crate','rug'].includes(t)||IN2.includes(t);
   if(fl){g.fillStyle=(x*7+y*13)%3?P[0]:P[1];g.fillRect(X,Y,CS,CS);// flagstones
