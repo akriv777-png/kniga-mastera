@@ -173,6 +173,7 @@ function heroClasses(p){const raw=[p&&p.cls,...(Array.isArray(p&&p.mc)?p.mc.map(
  const sub=String((p&&(p.sub||p.subclass||p.arch))||'')+' '+raw;if(/мистическ\S* (рыцар|ловкач|плут)|eldritch knight|arcane trickster/i.test(sub))out.add('Волшебник');
  return{list:[...out],unknown:unknown&&!out.size,non,raw:raw||'—'}}
 function canSpell(p,s){if(typeof s==='string')s=spOf(s);if(!p||!s)return{ok:false,msg:'Нет такого заклинания'};
+ if(s.abs||s.masterOnly)return{ok:false,msg:`«${s.n}» — абсолютная магия: её вручает только Мастер`};
  const extra=[].concat(p.xspells||[],p.bonusSpells||[]);if(extra.includes(s.id))return{ok:true};
  const cl=(s.cl||[]).filter(Boolean);if(!cl.length)return{ok:true,homebrew:true};
  const H=heroClasses(p);if(H.unknown)return{ok:true,unknownCls:true};

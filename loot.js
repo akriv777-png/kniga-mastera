@@ -23,7 +23,7 @@ const wpick=w=>{let t=Object.values(w).reduce((a,b)=>a+b,0),x=Math.random()*t;fo
 function rollEntry(type,t,src){if(type==='gem'){const v=pick(GV[t]);return {id:uid(),type,n:pick(GEMS[v]).replace(/^./,c=>c.toUpperCase()),val:v,w:0}}
  if(type==='art'){const v=pick(AV[t]);return {id:uid(),type,n:pick(ARTOBJ[v]).replace(/^./,c=>c.toUpperCase()),val:v,w:.5}}
  if(type==='coins'){const g=Math.round(COIN[0][src]*CM[t]*(.5+Math.random()));const c={pm:t>1?Math.floor(g*.2/10):0,zm:0,sm:Math.floor(Math.random()*g*.3),mm:Math.min(400,Math.floor(Math.random()*g*.5))};c.zm=Math.max(0,g-c.pm*10-Math.floor(c.sm/10));return {id:uid(),type,n:'Монеты',coins:c,val:c.pm*10+c.zm+c.sm/10+c.mm/100}}
- const rar=wpick(RW[t]);const arts=ART.filter(a=>a.rar===rar);let it=(arts.length&&Math.random()<.5)?pick(arts):null;if(!it){const L=D.items.filter(i=>i.cat==='Магические'&&i.rar===rar);it=L.length?pick(L):pick(arts.length?arts:ART)}
+ const rar=wpick(RW[t]);const arts=ART.filter(a=>a.rar===rar&&(!window.spLootSafe||spLootSafe(a)));let it=(arts.length&&Math.random()<.5)?pick(arts):null;if(!it){const L=D.items.filter(i=>i.cat==='Магические'&&i.rar===rar&&(!window.spLootSafe||spLootSafe(i)));it=L.length?pick(L):pick(arts.length?arts:ART)}
  return {id:uid(),type:'item',n:it.n,item:it.id,rar:it.rar,w:it.w||0}}
 function genLoot2(t,src,keep=[]){const c=CNT[src];const L=[...keep];if(!L.some(e=>e.type==='coins'))L.push(rollEntry('coins',t,src));
  const add=(ty,[a,b])=>{const n=ri(a,b)-keep.filter(e=>e.type===ty).length;for(let i=0;i<n;i++)L.push(rollEntry(ty==='i'?'item':ty==='g'?'gem':'art',t,src))};

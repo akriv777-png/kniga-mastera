@@ -328,3 +328,6 @@ button,a,summary,label,select,.btn,.chip,[data-t],[data-tab],[role=button],[oncl
 i.ink,.ink{pointer-events:none}
 @media (hover:none){.btn:hover,.chip:hover,button:hover{filter:none}}
 #toast:not(:has(button)){pointer-events:none}
+/* ранги заклинаний — цвета редкости предметов */
+.sp-tr{color:var(--tc);font-weight:700;letter-spacing:.2px;text-shadow:0 0 8px color-mix(in srgb,var(--tc) 35%,transparent)}
+.card.spc:has(.sp-tr[style*="#d9c2ff"]),.it:has(.sp-tr[style*="#d9c2ff"]){border-color:rgba(217,194,255,.45);box-shadow:0 0 18px rgba(160,110,255,.18),inset 0 0 22px rgba(120,70,220,.10)}

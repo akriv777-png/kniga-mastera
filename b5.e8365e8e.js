@@ -196,9 +196,9 @@ function fillSp(){if(!window.KM_core){const e=$('#spList');if(e)e.innerHTML='<di
 window.spThumb=s=>window.SPART&&SPART.has(s.id)?`<img class="spthumb" loading="lazy" decoding="async" width="46" height="46" alt="" src="${window.KM_PLAYER?'../':''}img/spt/${s.id}.webp" onerror="this.remove()">`:'';
 window.spArt=id=>window.SPART&&SPART.has(id)?`<div class="spx-art"><img loading="lazy" decoding="async" alt="" src="${window.KM_PLAYER?'../':''}img/sp/${id}.webp" onload="this.parentNode.classList.add('on')" onerror="this.parentNode.remove()"></div>`:'';
 function showSpell(id){const s=D.spells.find(x=>x.id===id);
-  openSheet(`<div class="sp-head"><div><div class="sb-title" style="margin-right:0">${esc(s.n)}</div><div class="sb-sub">${lvlName(s.l)}, ${esc(s.sc.toLowerCase())}${s.rit?' (ритуал)':''}</div></div></div>
+  openSheet(`<div class="sp-head"><div><div class="sb-title" style="margin-right:0">${esc(s.n)}</div><div class="sb-sub">${s.abs?'Абсолютная магия':lvlName(s.l)}${window.spTierTag&&!s.abs?' · '+spTierTag(s):''}, ${esc(s.sc.toLowerCase())}${s.rit?' (ритуал)':''}</div></div></div>
   ${spArt(s.id)}<div class="sp-circle"><img class="r1" src="${window.KM_PLAYER?'../':''}img/runecircle.webp" alt=""><div class="lvl">${s.l===0?'✶':s.l}</div></div>
-  <div class="sp-grid"><div><b>Время</b>${esc(s.t)}</div><div><b>Дистанция</b>${esc(s.r)}</div><div><b>Компоненты</b><span class="comp">${[...s.c].map(c=>`<span>${c}</span>`).join('')}</span></div><div><b>Длительность</b>${s.conc?'Концентрация, ':''}${esc(s.d)}</div>${s.dmg?`<div><b>Урон</b>${esc(s.dmg)}</div>`:''}<div><b>Классы</b><span style="font-size:14px">${esc(s.cl.join(', '))}</span></div></div>
+  <div class="sp-grid"><div><b>Время</b>${esc(s.t)}</div><div><b>Дистанция</b>${esc(s.r)}</div><div><b>Компоненты</b><span class="comp">${[...s.c].map(c=>`<span>${c}</span>`).join('')}</span></div><div><b>Длительность</b>${s.conc?'Концентрация, ':''}${esc(s.d)}</div>${s.dmg?`<div><b>Урон</b>${esc(s.dmg)}</div>`:''}<div><b>Классы</b><span style="font-size:14px">${s.abs?'только из рук Мастера':esc(s.cl.join(', '))}</span></div></div>
   ${s.m?`<div class="kv" style="font-size:13.5px"><b>М:</b> <i>${esc(s.m)}</i></div>`:''}<div class="redline"></div>
   <div class="desc dropcap">${esc(s.ds)}</div>`)}
 
