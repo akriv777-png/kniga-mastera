@@ -49,8 +49,11 @@ class Tracker:
             if msg.type == "error":
                 text = msg.text or ""
                 low = text.lower()
-                # Chromium/WebKit log a console error for expected mailbox 404s while polling.
+                # Chromium/WebKit log a console error for expected mailbox 404s while polling,
+                # and a CORS warning if the Contents API fallback is blocked.
                 if "404" in text or "failed to load resource" in low or "file not found" in low:
+                    return
+                if "access to fetch" in low or "blocked by cors" in low or "cross-origin" in low:
                     return
                 self.console_errors.append(text)
         except Exception:
