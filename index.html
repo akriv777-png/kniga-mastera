@@ -4,45 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <title>Днд</title>
-<meta name="theme-color" content="#120907">
+<meta name="theme-color" content="#10090a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Днд">
 <meta name="description" content="Книга Мастера и Книга Игрока">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="icon" href="img/icon-192.png">
 <link rel="stylesheet" href="fonts/fonts.css">
-<link rel="stylesheet" href="tg-app.css">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="app/css/book.css">
+<script src="vendor/telegram-web-app.js"></script>
 </head>
 <body class="dnd-home">
-  <div class="home">
+  <div class="home page" style="padding-bottom: calc(var(--sab) + 28px)">
     <header class="home-head">
-      <p class="home-kicker" data-k="kicker">Гримуар стола</p>
-      <h1 data-k="app_title">Днд</h1>
-      <p class="home-sub" data-k="app_subtitle">Книга Мастера и Книга Игрока</p>
+      <p class="kicker" data-greet>Гримуар стола</p>
+      <h1>Днд</h1>
+      <p class="sub">Книга Мастера и Книга Игрока</p>
     </header>
-    <p class="home-lead" data-k="choose_mode">Выбери режим</p>
-    <div class="home-cards">
-      <section class="home-card" id="card-player">
-        <h2 data-k="player.title">Игрок</h2>
-        <p data-k="player.hint">Введи код комнаты, который дал Мастер</p>
-        <label class="sr-only" for="room-code">Код комнаты</label>
-        <input id="room-code" class="home-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Код комнаты">
-        <button type="button" class="home-btn" id="btn-player" data-k="player.submit">Войти</button>
-        <button type="button" class="home-btn home-btn-ghost" id="btn-player-open" data-k="player.open_without_code">Открыть книгу без кода</button>
-      </section>
-      <section class="home-card" id="card-master">
-        <h2 data-k="master.title">Мастер</h2>
-        <p data-k="master.hint">Доступ только после подтверждения</p>
-        <button type="button" class="home-btn home-btn-red" id="btn-master" data-k="master.submit">Войти как Мастер</button>
-      </section>
+    <p class="sub" style="font-weight:700">Выбери режим</p>
+    <div class="card">
+      <h2>Игрок</h2>
+      <p class="muted">Введи код комнаты, который дал Мастер</p>
+      <label class="sr-only" for="room-code">Код комнаты</label>
+      <input id="room-code" class="inp code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="КОД КОМНАТЫ">
+      <button type="button" class="btn" id="btn-player">Войти</button>
     </div>
-    <p class="home-msg" id="home-msg" hidden></p>
-    <p class="home-note" data-k="outside_note">В браузере Книга Игрока открыта без Telegram. Книга Мастера — через бота @Nezich_dnd_bot.</p>
+    <div class="card">
+      <h2>Мастер</h2>
+      <p class="muted">За печатью — пароль гримуара. Доступ к столу подтверждает хозяин бота.</p>
+      <button type="button" class="btn" id="btn-master">Войти как Мастер</button>
+    </div>
+    <p class="err" id="home-msg" hidden></p>
+    <p class="muted center">Через бота @Nezich_dnd_bot книга открывается как приложение Telegram.</p>
   </div>
-<script src="tg-app.js"></script>
-<script src="launcher.js"></script>
+<script>window.DND_ROOT="./";</script>
+<script type="module" src="app/js/home.js"></script>
 </body>
 </html>
