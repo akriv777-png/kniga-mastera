@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "algo": "sha256",
+  "rooms": [
+    {
+      "hash": "d9838f7c53c7ecdc3006eada9eacdc7580b3b9f9599ac1a1f38487636ae5a926",
+      "open": true,
+      "created": 1794303656
+    }
+  ]
+}
