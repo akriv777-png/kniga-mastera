@@ -1,5 +1,7 @@
 /* Telegram Mini App book: player + master. Vanilla ES module. */
 import * as L from "./lib.js";
+import * as Spirit from "./spirit.js";
+import * as F from "./features.js";
 
 const MODE = window.DND_MODE === "master" ? "master" : "player";
 const store = L.createStore(MODE === "master" ? "dndm" : "dndp");
@@ -12,6 +14,7 @@ const PLAYER_SECS = [
   ["maps", "🗺", "Карты"],
   ["dice", "⚄", "Кубики"],
   ["notes", "✎", "Записи"],
+  ["table", "🗒", "Стол"],
   ["spirit", "👁", "Дух"]
 ];
 const MASTER_SECS = [
@@ -61,7 +64,12 @@ const S = {
   party: [],
   rolls: [],
   spirit: [],
-  pendingRoom: ""
+  pending: [],
+  pendingRoom: "",
+  screen: null,
+  sess: null,
+  handouts: [],
+  shop: null
 };
 
 function freshHero() {
@@ -99,6 +107,9 @@ function saveCombat() { store.set("combat", S.combat); }
 function saveParty() { store.set("party", S.party); }
 function saveRolls() { store.set("rolls", S.rolls.slice(0, 40)); }
 function saveSpirit() { store.set("spirit", S.spirit.slice(0, 40)); }
+function savePending() { store.set("pending", S.pending || []); }
+function saveSess() { store.set("sess", S.sess); }
+function saveHandouts() { store.set("handouts", S.handouts || []); }
 
 function toast(text) {
   let el = L.$("#toast");
@@ -398,7 +409,9 @@ function rHero() {
       return '<button type="button" class="chip' + (H.conds.indexOf(c) >= 0 ? " on" : "") + '" data-c="' + L.esc(c) + '">' + L.esc(c) + "</button>";
     }).join("") + "</div>" +
     '<div class="row" style="margin-top:12px"><button class="btn" id="sr" type="button">Короткий отдых</button><button class="btn ghost" id="lr" type="button">Долгий отдых</button></div>' +
-    '<button class="btn ghost" id="insp" type="button" style="margin-top:8px">' + (H.insp ? "Потратить вдохновение" : "Вдохновения нет") + "</button>";
+    '<button class="btn ghost" id="insp" type="button" style="margin-top:8px">' + (H.insp ? "Потратить вдохновение" : "Вдохновения нет") + "</button>" +
+    F.usesHtml(H) +
+    '<div class="row" style="margin-top:12px"><button class="btn ghost" id="hexp" type="button">Экспорт листа</button><button class="btn ghost" id="himp" type="button">Импорт листа</button></div>';
 }
 
 function bHero() {
@@ -435,17 +448,46 @@ function bHero() {
     const hd = /чародей|волшебник/i.test(H.cls) ? 6 : /варвар/i.test(H.cls) ? 12 : /воин|паладин|следопыт/i.test(H.cls) ? 10 : 8;
     const v = Math.max(1, L.rnd(hd) + L.mod(H.st[2]));
     H.hp = Math.min(H.maxhp, H.hp + v);
+    F.restoreUses(H, "short");
     saveHero(); render(); toast("Короткий отдых: +" + v + " хитов");
   });
   L.$("#lr").addEventListener("click", function () {
     H.hp = H.maxhp; H.thp = 0;
     Object.keys(H.slots).forEach(function (k) { H.slots[k].used = 0; });
     H.conds = H.conds.filter(function (c) { return c !== "Без сознания"; });
+    F.restoreUses(H, "long");
     saveHero(); render(); toast("Долгий отдых: всё восстановлено");
   });
   L.$("#insp").addEventListener("click", function () {
     if (!H.insp) { toast("Вдохновение выдаёт Мастер"); return; }
     H.insp = false; saveHero(); render(); toast("Вдохновение: бросьте 2к20 и возьмите больший");
+  });
+  L.$$("[data-use]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      F.syncUses(H);
+      const k = el.getAttribute("data-use");
+      const u = H.uses[k];
+      if (!u) return;
+      u.used = u.used >= u.max ? 0 : u.used + 1;
+      saveHero(); render();
+    });
+  });
+  const hexp = L.$("#hexp");
+  if (hexp) hexp.addEventListener("click", function () {
+    const raw = F.exportHero(H);
+    openSheet('<div class="sb-title">Экспорт листа</div><p class="muted">Скопируй код и храни его у себя. В нём лист героя, не тайны Мастера.</p><textarea class="inp" id="exout" readonly>' + L.esc(raw) + "</textarea>", function () {});
+  });
+  const himp = L.$("#himp");
+  if (himp) himp.addEventListener("click", function () {
+    openSheet('<div class="sb-title">Импорт листа</div><textarea class="inp" id="imin" placeholder="DND1:…"></textarea><button class="btn" id="imok" type="button" style="margin-top:10px">Загрузить</button>', function (r) {
+      L.$("#imok", r).addEventListener("click", function () {
+        try {
+          const next = F.importHero(L.$("#imin", r).value);
+          S.hero = Object.assign(freshHero(), next);
+          saveHero(); closeSheet(); render(); toast("Лист загружен");
+        } catch (err) { toast("Не удалось прочитать лист"); }
+      });
+    });
   });
 }
 
@@ -976,6 +1018,8 @@ function rDice() {
     '<div class="wrap">' + dice.map(function (d) { return '<button class="btn sm" data-d="' + d + '" type="button">к' + d + "</button>"; }).join("") + "</div>" +
     '<div class="row" style="margin-top:12px"><input class="inp grow" id="df" placeholder="например 2к6+3"><button class="btn sm" id="dgo" type="button">Бросить</button></div>' +
     '<div id="dres" class="center" style="font:400 64px var(--title);margin:16px 0">—</div>' +
+    "<h3>Атака и урон</h3><div class=\"row\"><input class=\"inp grow\" id=\"abon\" type=\"number\" placeholder=\"бонус атаки\"><input class=\"inp\" id=\"acdc\" type=\"number\" placeholder=\"КД\" style=\"max-width:90px\"><button class=\"btn sm\" id=\"aatk\" type=\"button\">Атака</button></div>" +
+    '<div class="row" style="margin-top:8px"><input class="inp grow" id="admg" placeholder="урон, например 2к6+3"><button class="btn sm" id="adgo" type="button">Урон</button></div>' +
     "<h3>История</h3><div class=\"card\">" + (S.rolls.length ? S.rolls.map(function (r) {
       return '<div class="row" style="padding:6px 0"><span class="grow">' + L.esc(r.expr) + '</span><b>' + r.total + "</b></div>";
     }).join("") : '<div class="empty">Пока пусто</div>') + "</div>";
@@ -991,6 +1035,20 @@ function bDice() {
   }
   L.$$("[data-d]").forEach(function (b) { b.addEventListener("click", function () { show(L.rollFormula("1d" + b.getAttribute("data-d"))); }); });
   L.$("#dgo").addEventListener("click", function () { show(L.rollFormula(L.$("#df").value || "1d20")); });
+  const atk = L.$("#aatk");
+  if (atk) atk.addEventListener("click", function () {
+    const bonus = +L.$("#abon").value || 0;
+    const ac = +L.$("#acdc").value || 0;
+    const d = L.rnd(20);
+    const total = d + bonus;
+    const hit = !ac || total >= ac || d === 20;
+    const label = "атака " + (d === 20 ? "крит" : d === 1 ? "провал" : hit ? "попадание" : "мимо") + (ac ? " против КД " + ac : "");
+    show({ expr: label, rolls: [d], bonus: bonus, total: total });
+  });
+  const dmg = L.$("#adgo");
+  if (dmg) dmg.addEventListener("click", function () {
+    show(L.rollFormula(L.$("#admg").value || "1d8"));
+  });
 }
 
 function rCampaigns() {
@@ -1037,13 +1095,56 @@ function rRules() {
   const T = tables();
   const keys = Object.keys(T);
   const labels = { enc: "Столкновения", quest: "Квесты", tavern: "Таверны", rumor: "Слухи", oneshot: "Ваншоты", weather: "Погода", city: "Город", wild: "Глушь", trap2: "Ловушки", puzzle: "Головоломки", riddle2: "Загадки", loot1: "Добыча 1", loot2: "Добыча 2", loot3: "Добыча 3", loot4: "Добыча 4", villain: "Злодеи", reaction: "Реакции", complication: "Осложнения", travel: "Путешествия", chase: "Погони" };
-  return header("Ширма", "таблицы, завязки и подсказки за ширмой") +
-    '<div class="wrap">' + keys.map(function (k) {
+  return header("Ширма", "правила стола, таблицы и завязки") +
+    '<div class="search"><input id="scrq" placeholder="Найти правило: укрытие, ход, зелье…"></div>' +
+    '<div id="scr"></div>' +
+    "<h3>Генераторы</h3><div class=\"wrap\">" + keys.map(function (k) {
       return '<button class="btn sm" data-tb="' + L.esc(k) + '" type="button">' + L.esc(labels[k] || k) + "</button>";
     }).join("") + '</div><div id="tb"></div>';
 }
 
-function bRules() {
+async function loadScreen() {
+  if (S.screen) return S.screen;
+  try { S.screen = await L.fetchJSON("content/public/screen.json"); }
+  catch (err) { S.screen = []; }
+  return S.screen;
+}
+
+function fillScreen() {
+  const box = L.$("#scr");
+  if (!box) return;
+  const q = L.$("#scrq") ? L.$("#scrq").value : "";
+  const cards = F.filterScreen(S.screen || [], q);
+  box.innerHTML = cards.map(function (c) {
+    return '<div class="card scr-card" data-scr="' + L.esc(c.id) + '"><div class="t">' + L.esc(c.n) + "</div></div>";
+  }).join("") || '<div class="empty">Ничего не нашлось</div>';
+  L.$$("[data-scr]", box).forEach(function (el) {
+    el.addEventListener("click", function () {
+      const c = (S.screen || []).find(function (x) { return x.id === el.getAttribute("data-scr"); });
+      if (c) openScreen(c);
+    });
+  });
+}
+
+function openScreen(c) {
+  openSheet('<div class="sb-title">' + L.esc(c.n) + '</div><div class="body">' + (c.html || "") + "</div>", function (r) {
+    const btn = r.querySelector("[data-scr-names]");
+    if (!btn) return;
+    function showNames() {
+      const dest = r.querySelector("#scrNames") || btn.previousElementSibling;
+      if (dest) dest.innerHTML = F.randomNames(tables()).map(function (n) { return "<div>" + L.esc(n) + "</div>"; }).join("");
+    }
+    btn.addEventListener("click", showNames);
+    showNames();
+  });
+}
+
+async function bRules(seq) {
+  await loadScreen();
+  if (seq && seq !== renderSeq) return;
+  fillScreen();
+  const inp = L.$("#scrq");
+  if (inp) inp.addEventListener("input", L.debounce(fillScreen, 180));
   L.$$("[data-tb]").forEach(function (b) { b.addEventListener("click", function () { showTable(b.getAttribute("data-tb")); }); });
 }
 
@@ -1113,7 +1214,41 @@ function rSession() {
         '<button class="btn sm ghost" data-px="' + p.id + '" type="button">✕</button></div>';
     }).join("") : '<p class="muted">Пока никого. Добавь героев, чтобы видеть их на сессии.</p>') +
     '<button class="btn ghost" id="padd" type="button">Добавить героя</button></div>' +
-    '<div class="card"><div class="t">Дух книги</div><p class="muted">Спроси совет, попроси найти правило или править гримуар. Ответ придёт сообщением от бота @Nezich_dnd_bot.</p><button class="btn ghost" id="ospirit" type="button">Открыть Духа</button></div>';
+    '<div class="card"><div class="t">Дух книги</div><p class="muted">Спроси совет, попроси найти правило или править гримуар. Ответ придёт и в книгу, и сообщением от бота.</p><button class="btn ghost" id="ospirit" type="button">Открыть Духа</button></div>' +
+    sessExtrasHtml();
+}
+
+function sessExtrasHtml() {
+  const X = S.sess || F.freshSess();
+  const left = X.timerEnd ? Math.max(0, Math.ceil((X.timerEnd - Date.now()) / 1000)) : 0;
+  const mm = String(Math.floor(left / 60)).padStart(2, "0");
+  const ss = String(left % 60).padStart(2, "0");
+  const kinds = F.shopTypes();
+  return '<div class="card" id="clock"><div class="t">Календарь стола</div>' +
+    '<div class="center" style="font:400 32px var(--title);margin:8px 0">День ' + X.day + " · " + F.hhmm(X.min) + "</div>" +
+    '<div class="row"><button class="btn sm" data-tick="10" type="button">+10 мин</button><button class="btn sm" data-tick="60" type="button">+1 час</button><button class="btn sm" data-tick="day" type="button">+день</button></div></div>' +
+    '<div class="card"><div class="t">Погода</div><p>' + L.esc(X.weather || "Ясно") + " — " + L.esc(X.weatherNote || "") + '</p><button class="btn ghost" id="wroll" type="button">Новая погода</button></div>' +
+    '<div class="card"><div class="t">Таймер</div><div class="center" style="font:400 28px var(--title)">' + (left ? mm + ":" + ss : "—") + "</div>" +
+    '<div class="row"><button class="btn sm" data-tm="60" type="button">1 мин</button><button class="btn sm" data-tm="300" type="button">5 мин</button><button class="btn sm" data-tm="600" type="button">10 мин</button><button class="btn sm ghost" id="tmstop" type="button">Стоп</button></div></div>' +
+    '<div class="card"><div class="t">Квесты</div>' +
+    ((X.quests || []).length ? X.quests.map(function (q, i) {
+      return '<div class="row" style="padding:6px 0"><span class="grow' + (q.done ? " muted" : "") + '">' + (q.done ? "✓ " : "○ ") + L.esc(q.t) + '</span><button class="btn sm" data-qd="' + i + '" type="button">✓</button></div>';
+    }).join("") : '<p class="muted">Пока нет активных квестов.</p>') +
+    '<div class="row"><input class="inp grow" id="qt" placeholder="Новый квест"><button class="btn sm" id="qadd" type="button">＋</button></div></div>' +
+    '<div class="card"><div class="t">Журнал сессии</div>' +
+    ((X.log || []).length ? X.log.slice(0, 12).map(function (line) {
+      return '<div class="m">' + L.esc(line) + "</div>";
+    }).join("") : '<p class="muted">Записывай ходы, чтобы не забыть.</p>') +
+    '<div class="row"><input class="inp grow" id="lg" placeholder="Что произошло?"><button class="btn sm" id="ladd" type="button">＋</button></div></div>' +
+    '<div class="card"><div class="t">Лавки</div><p class="muted">Собери витрину по типу лавки — ассортимент из справочника предметов.</p>' +
+    '<div class="wrap">' + kinds.map(function (s) {
+      return '<button class="btn sm" data-shop="' + s[0] + '" type="button">' + L.esc(s[1]) + "</button>";
+    }).join("") + "</div>" +
+    (S.shop && S.shop.items ? "<h3>" + L.esc((kinds.find(function (s) { return s[0] === S.shop.kind; }) || [,"Лавка"])[1]) + "</h3>" + S.shop.items.map(function (it) {
+      return '<div class="row" style="padding:6px 0"><span class="grow">' + L.esc(it.n) + '</span><b>' + L.esc(it.cost || it.p || "") + "</b></div>";
+    }).join("") : "") + "</div>" +
+    '<div class="card"><div class="t">Резервная копия стола</div><p class="muted">Сохраняет героев, квесты, журнал и бой на этом устройстве. Тайны гримуара в файл не попадают.</p>' +
+    '<div class="row"><button class="btn ghost" id="bkout" type="button">Скачать</button><button class="btn ghost" id="bkin" type="button">Восстановить</button></div></div>';
 }
 
 function bSession() {
@@ -1140,34 +1275,151 @@ function bSession() {
   });
   L.$$("[data-px]").forEach(function (b) { b.addEventListener("click", function () { S.party = S.party.filter(function (p) { return p.id !== b.getAttribute("data-px"); }); saveParty(); render(); }); });
   L.$("#ospirit").addEventListener("click", function () { go("spirit"); });
+  if (!S.sess) S.sess = F.freshSess();
+  L.$$("[data-tick]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const v = b.getAttribute("data-tick");
+      if (v === "day") { S.sess.day += 1; S.sess.min = 8 * 60; }
+      else S.sess.min += +v;
+      while (S.sess.min >= 1440) { S.sess.min -= 1440; S.sess.day += 1; }
+      sessionLog("Время: день " + S.sess.day + " " + F.hhmm(S.sess.min));
+      saveSess(); render();
+    });
+  });
+  const wroll = L.$("#wroll");
+  if (wroll) wroll.addEventListener("click", function () {
+    const w = F.pickWeather();
+    S.sess.weather = w[1];
+    S.sess.weatherNote = w[2];
+    sessionLog("Погода: " + w[1]);
+    saveSess(); render();
+  });
+  L.$$("[data-tm]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      S.sess.timerEnd = Date.now() + (+b.getAttribute("data-tm") * 1000);
+      saveSess(); render();
+    });
+  });
+  const tmstop = L.$("#tmstop");
+  if (tmstop) tmstop.addEventListener("click", function () { S.sess.timerEnd = 0; saveSess(); render(); });
+  const qadd = L.$("#qadd");
+  if (qadd) qadd.addEventListener("click", function () {
+    const text = (L.$("#qt").value || "").trim();
+    if (!text) return;
+    S.sess.quests = S.sess.quests || [];
+    S.sess.quests.push({ t: text, done: false });
+    saveSess(); render();
+  });
+  L.$$("[data-qd]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      const q = S.sess.quests[+b.getAttribute("data-qd")];
+      if (q) q.done = !q.done;
+      saveSess(); render();
+    });
+  });
+  const ladd = L.$("#ladd");
+  if (ladd) ladd.addEventListener("click", function () {
+    const text = (L.$("#lg").value || "").trim();
+    if (!text) return;
+    sessionLog(text);
+    saveSess(); render();
+  });
+  L.$$("[data-shop]").forEach(function (b) {
+    b.addEventListener("click", async function () {
+      await loadItems();
+      S.shop = { kind: b.getAttribute("data-shop"), items: F.stockShop(b.getAttribute("data-shop"), S.items || []) };
+      render();
+    });
+  });
+  const bkout = L.$("#bkout");
+  if (bkout) bkout.addEventListener("click", function () {
+    const data = {
+      v: 1, party: S.party, notes: S.notes, combat: S.combat, sess: S.sess, handouts: S.handouts
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dnd-session.json";
+    a.click();
+    toast("Копия стола скачана");
+  });
+  const bkin = L.$("#bkin");
+  if (bkin) bkin.addEventListener("click", function () {
+    openSheet('<div class="sb-title">Восстановить стол</div><textarea class="inp" id="bktxt" placeholder="Вставь JSON копии"></textarea><button class="btn" id="bkok" type="button" style="margin-top:10px">Загрузить</button>', function (r) {
+      L.$("#bkok", r).addEventListener("click", function () {
+        try {
+          const data = JSON.parse(L.$("#bktxt", r).value);
+          if (data.party) S.party = data.party;
+          if (data.notes) S.notes = data.notes;
+          if (data.combat) S.combat = data.combat;
+          if (data.sess) S.sess = data.sess;
+          if (data.handouts) S.handouts = data.handouts;
+          saveParty(); saveNotes(); saveCombat(); saveSess(); saveHandouts();
+          closeSheet(); render(); toast("Стол восстановлен");
+        } catch (err) { toast("Не удалось прочитать копию"); }
+      });
+    });
+  });
+}
+
+function sessionLog(line) {
+  if (!S.sess) S.sess = F.freshSess();
+  S.sess.log = S.sess.log || [];
+  S.sess.log.unshift(F.hhmm(S.sess.min) + " · " + line);
+  S.sess.log = S.sess.log.slice(0, 40);
+}
+
+function thinkingHtml() {
+  return '<div class="bubble bot thinking" data-thinking="1">дух думает<span class="dots"><i></i><i></i><i></i></span></div>';
 }
 
 function rSpirit() {
+  const pending = S.pending || [];
+  let bubbles = (S.spirit || []).map(function (m) {
+    if (m.thinking) return thinkingHtml();
+    return '<div class="bubble ' + (m.me ? "me" : "bot") + '">' + L.esc(m.t) + "</div>";
+  }).join("");
+  pending.forEach(function (p) {
+    const shown = (S.spirit || []).some(function (m) { return m.thinking && m.id === p.id; });
+    if (!shown) bubbles += thinkingHtml();
+  });
+  if (!bubbles) {
+    bubbles = '<div class="bubble bot">Я дух этих страниц. Спроси о правиле, существе, сцене или правке книги. Ответ появится здесь и продублируется в чат с ботом.</div>';
+  }
   return header("Дух книги", "шёпот с полей гримуара") +
-    '<div class="spirit-log">' + (S.spirit.length ? S.spirit.map(function (m) {
-      return '<div class="bubble ' + (m.me ? "me" : "bot") + '">' + L.esc(m.t) + "</div>";
-    }).join("") : '<div class="bubble bot">Я дух этих страниц. Спроси о правиле, существе, сцене или правке книги. Ответ придёт в чат с ботом — так антуражнее.</div>') + "</div>" +
+    '<div class="spirit-log">' + bubbles + "</div>" +
     '<textarea class="inp" id="sq" placeholder="' + (MODE === "master" ? "Спросить или попросить правку…" : "Спросить духа как игрока…") + '"></textarea>' +
     '<button class="btn" id="sask" type="button">Спросить духа</button>' +
-    '<p class="muted">Вопрос уходит боту @Nezich_dnd_bot через Telegram. В режиме игрока дух не выдаёт мастерские тайны.</p>';
+    '<p class="muted">Вопрос уходит боту @Nezich_dnd_bot. Если книга открыта из меню, а не с кнопки клавиатуры, вопрос копируется и открывается чат с глубокой ссылкой — вставь его следующим сообщением.</p>';
 }
 
-function applySpiritReply(text) {
+function onSpiritAnswer(p, text) {
   const t = String(text || "").trim();
-  if (!t) return;
-  S.spirit.push({ me: false, t: t });
+  if (!t || !p) return;
+  S.spirit = (S.spirit || []).filter(function (m) { return !(m.thinking && m.id === p.id); });
+  S.spirit.push({ me: false, t: t, id: p.id });
+  S.pending = (S.pending || []).filter(function (x) { return x.id !== p.id; });
   saveSpirit();
+  savePending();
+  if (S.sec === "spirit") render();
+  else toast("Дух ответил на страницах");
+  L.haptic("success");
+}
+
+function onSpiritTimeout(p) {
+  S.spirit = (S.spirit || []).filter(function (m) { return !(m.thinking && m.id === p.id); });
+  S.spirit.push({ me: false, t: "Дух молчит слишком долго. Спроси ещё раз.", id: p && p.id, timeout: true });
+  S.pending = (S.pending || []).filter(function (x) { return x.id !== p.id; });
+  saveSpirit();
+  savePending();
   if (S.sec === "spirit") render();
 }
 
-function installTestHooks() {
-  if (window.__dndHooksInstalled) return;
-  window.__dndHooksInstalled = true;
-  window.__dndApplySpiritReply = applySpiritReply;
-  window.addEventListener("message", function (ev) {
-    const d = ev && ev.data;
-    if (!d || d.type !== "dnd-spirit-reply") return;
-    applySpiritReply(d.text);
+function ensureSpiritWatch() {
+  Spirit.startWatch({
+    getPending: function () { return S.pending || []; },
+    onAnswer: onSpiritAnswer,
+    onTimeout: onSpiritTimeout
   });
 }
 
@@ -1175,18 +1427,61 @@ function bSpirit() {
   function send() {
     const q = L.$("#sq").value.trim();
     if (!q) return;
-    S.spirit.push({ me: true, t: q });
+    const req = Spirit.generateRequest();
+    const rec = { id: req.id, key: req.key, q: q, ts: Date.now(), mode: MODE };
+    S.pending = (S.pending || []).concat([rec]);
+    savePending();
+    S.spirit.push({ me: true, t: q, id: req.id });
+    S.spirit.push({ me: false, t: "дух думает", thinking: true, id: req.id });
     saveSpirit();
-    const payload = { v: 1, type: "spirit", mode: MODE, name: L.userFirstName() || "", q: q, path: S.sec };
-    const how = L.sendToBot(payload);
-    S.spirit.push({ me: false, t: how === "sent" ? "Вопрос ушёл Духу. Жди ответ в чате с ботом." : "Вопрос скопирован, открываю чат с ботом — вставь его, если нужно." });
-    saveSpirit();
+    const payload = {
+      v: 1, type: "spirit", mode: MODE, name: L.userFirstName() || "",
+      q: q, path: S.sec, id: req.id, key: req.key
+    };
+    const start = Spirit.startParam(req.id, req.key);
+    L.sendToBot(payload, { start: start, clipboard: q });
     L.$("#sq").value = "";
     render();
+    ensureSpiritWatch();
     L.haptic("success");
   }
   L.$("#sask").addEventListener("click", send);
   L.setMainButton("Спросить духа", send);
+}
+
+function rTable() {
+  return header("Стол", "раздатки и записки — живой стол теперь в Telegram") +
+    '<div class="card"><p class="muted">Живая карта с туманом войны, жетонами и WebRTC больше не в книге: она ломала iPhone внутри Telegram. Стол теперь — этот чат и эти страницы.</p></div>' +
+    '<div class="row"><input class="inp grow" id="ht" placeholder="Заголовок раздатки"></div>' +
+    '<textarea class="inp" id="hb" placeholder="Текст на пергаменте…"></textarea>' +
+    '<button class="btn" id="hadd" type="button">Сохранить раздатку</button>' +
+    ((S.handouts || []).length ? S.handouts.map(function (h) {
+      return '<div class="card" data-hid="' + h.id + '"><div class="t">' + L.esc(h.n) + '</div><div class="m">' + L.esc((h.t || "").slice(0, 160)) + "</div></div>";
+    }).join("") : '<div class="empty">Раздаток пока нет</div>');
+}
+
+function bTable() {
+  const add = L.$("#hadd");
+  if (add) add.addEventListener("click", function () {
+    const n = (L.$("#ht").value || "").trim();
+    const body = (L.$("#hb").value || "").trim();
+    if (!n && !body) return;
+    S.handouts.unshift({ id: L.uid(), n: n || "Раздатка", t: body, ts: Date.now() });
+    saveHandouts(); render();
+  });
+  L.$$("[data-hid]").forEach(function (c) {
+    c.addEventListener("click", function () {
+      const h = S.handouts.find(function (x) { return x.id === c.getAttribute("data-hid"); });
+      if (!h) return;
+      openSheet('<div class="sb-title">' + L.esc(h.n) + '</div><div class="pc-body">' + L.fmtBody(h.t) + "</div>" +
+        '<button class="btn ghost" id="hdel" type="button">Удалить</button>', function (r) {
+          L.$("#hdel", r).addEventListener("click", function () {
+            S.handouts = S.handouts.filter(function (x) { return x.id !== h.id; });
+            saveHandouts(); closeSheet(); render();
+          });
+        });
+    });
+  });
 }
 
 function rSettingsSheet() {
@@ -1197,7 +1492,7 @@ function rSettingsSheet() {
     '<button class="btn ghost" id="shome" type="button">На главную</button>' +
     '<p class="muted" style="margin-top:16px">@Nezich_dnd_bot · Книга Мастера и Книга Игрока</p>', function (r) {
       L.$("#sclr", r).addEventListener("click", function () {
-        ["hero", "notes", "favs", "recent", "combat", "party", "rolls", "spirit"].forEach(function (k) {
+        ["hero", "notes", "favs", "recent", "combat", "party", "rolls", "spirit", "pending", "sess", "handouts"].forEach(function (k) {
           try { localStorage.removeItem((MODE === "master" ? "dndm." : "dndp.") + k); } catch (err) {}
         });
         toast("Локальные данные очищены");
@@ -1227,6 +1522,7 @@ async function render() {
     items: [rItems, bItems],
     maps: [rMaps, bMaps],
     notes: [rNotes, bNotes],
+    table: [rTable, bTable],
     spirit: [rSpirit, bSpirit],
     session: [rSession, bSession],
     bestiary: [rBestiary, bBestiary],
@@ -1311,16 +1607,22 @@ async function enterBook() {
   S.party = await store.hydrate("party", []);
   S.rolls = await store.hydrate("rolls", []);
   S.spirit = await store.hydrate("spirit", []);
+  S.pending = await store.hydrate("pending", []);
+  if (!Array.isArray(S.pending)) S.pending = [];
+  S.sess = await store.hydrate("sess", F.freshSess());
+  if (!S.sess || typeof S.sess.day !== "number") S.sess = F.freshSess();
+  S.handouts = await store.hydrate("handouts", []);
+  if (!Array.isArray(S.handouts)) S.handouts = [];
   S.pendingRoom = store.get("pendingRoom", "");
   const saved = store.get("sec", S.sec);
   if (SECS.some(function (s) { return s[0] === saved; })) S.sec = saved;
   await L.loadSpellArtIndex();
+  ensureSpiritWatch();
   await render();
 }
 
 export async function startBook() {
   L.initTelegram();
-  installTestHooks();
   document.documentElement.classList.add("dnd-mode-" + MODE);
   if (MODE === "master") {
     showGate("master");

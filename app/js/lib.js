@@ -294,7 +294,22 @@ export function setSettingsButton(onClick) {
   return function () {};
 }
 
-export function sendToBot(payload) {
+export function bytesToB64(buf) {
+  const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  let bin = "";
+  for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+  return btoa(bin);
+}
+
+export function bytesToB64url(buf) {
+  return bytesToB64(buf).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+export function b64ToB64url(b64) {
+  return String(b64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+export function sendToBot(payload, opts) {
   const tg = webApp();
   const data = typeof payload === "string" ? payload : JSON.stringify(payload);
   if (tg && typeof tg.sendData === "function") {
@@ -303,17 +318,19 @@ export function sendToBot(payload) {
       return "sent";
     } catch (err) {}
   }
-  const text = (payload && payload.q) || data;
+  const text = (opts && opts.clipboard) || (payload && payload.q) || data;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).catch(function () {});
   }
+  const start = (opts && opts.start) || "spirit";
+  const link = "https://t.me/Nezich_dnd_bot?start=" + start;
   try {
     if (tg && tg.openTelegramLink) {
-      tg.openTelegramLink("https://t.me/Nezich_dnd_bot?start=spirit");
+      tg.openTelegramLink(link);
       return "copied";
     }
   } catch (err) {}
-  try { window.open("https://t.me/Nezich_dnd_bot?start=spirit", "_blank"); } catch (err) {}
+  try { window.open(link, "_blank"); } catch (err) {}
   return "copied";
 }
 

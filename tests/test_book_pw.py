@@ -9,7 +9,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from helpers.util import BASE, DND, MOCK_JS, REPO, master_password, redact, room_code
+from helpers.util import BASE, DND, MOCK_JS, PAGES, REPO, master_password, redact, room_code
 
 
 VIEWPORT = {"width": 390, "height": 844}
@@ -29,8 +29,15 @@ class Tracker:
         try:
             if res.status >= 400:
                 url = res.url
-                if "telegram.org" not in url:
-                    self.http_errors.append(f"{res.status} {url}")
+                if "telegram.org" in url:
+                    return
+                if "/mailbox-dev/" in url or "/mailbox/replies/" in url:
+                    return
+                if "raw.githubusercontent.com" in url and "/mailbox/" in url:
+                    return
+                if "api.github.com/repos/akriv777-png/kniga-mastera/contents/replies/" in url:
+                    return
+                self.http_errors.append(f"{res.status} {url}")
         except Exception:
             pass
 
@@ -40,7 +47,12 @@ class Tracker:
     def _on_console(self, msg):
         try:
             if msg.type == "error":
-                self.console_errors.append(msg.text)
+                text = msg.text or ""
+                low = text.lower()
+                # Chromium/WebKit log a console error for expected mailbox 404s while polling.
+                if "404" in text or "failed to load resource" in low or "file not found" in low:
+                    return
+                self.console_errors.append(text)
         except Exception:
             pass
 
@@ -53,8 +65,10 @@ class Tracker:
             raise AssertionError("http: " + redact(self.http_errors[0][:300]))
 
 
-def attach_mock(page):
+def attach_mock(page, mailbox_base=None):
     page.add_init_script(path=str(MOCK_JS))
+    if mailbox_base:
+        page.add_init_script(f"window.DND_MAILBOX_BASE = {json.dumps(mailbox_base)};")
 
     def handle(route):
         route.fulfill(path=str(MOCK_JS), content_type="application/javascript; charset=utf-8")
@@ -62,12 +76,33 @@ def attach_mock(page):
     page.route("**/vendor/telegram-web-app.js", handle)
 
 
-def new_page(browser):
+def new_page(browser, mailbox=True):
     context = browser.new_context(viewport=VIEWPORT)
     page = context.new_page()
-    attach_mock(page)
+    attach_mock(page, mailbox_base=(BASE + "/mailbox-dev") if mailbox else None)
     tracker = Tracker(page)
     return context, page, tracker
+
+
+def compose_spirit(mode, question):
+    raw = subprocess.check_output(
+        ["python3", str(REPO / "tools/spirit_reply.py"), "--mode", mode, "--q", question],
+        text=True,
+    )
+    return json.loads(raw)["text"]
+
+
+def publish_spirit(req_id, key, text, push=False):
+    env = os.environ.copy()
+    env["DND_MAILBOX_DIR"] = str(REPO / "mailbox-dev")
+    env["DND_MAILBOX_PUSH"] = "1" if push else "0"
+    if push:
+        env.pop("DND_MAILBOX_DIR", None)
+    subprocess.check_call(
+        ["python3", str(REPO / "tools/spirit_reply.py"), req_id, key, text],
+        env=env,
+        stdout=subprocess.DEVNULL,
+    )
 
 
 def go(page, sec):
@@ -164,6 +199,27 @@ def run_player_suite(page, tracker, browser_name):
 
     results.append(record("player_hero_edit", browser_name, edit_sheet))
 
+    def class_uses():
+        go(page, "hero")
+        body = page.inner_text("body")
+        assert "Второе дыхание" in body or "Умения и заряды" in body
+        tracker.assert_clean()
+        return "warrior charges visible"
+
+    results.append(record("player_class_uses", browser_name, class_uses))
+
+    def hero_export():
+        go(page, "hero")
+        page.click("#hexp")
+        page.wait_for_selector("#exout", timeout=5000)
+        raw = page.input_value("#exout")
+        assert raw.startswith("DND1:")
+        page.click("#sheet .x")
+        tracker.assert_clean()
+        return "exported DND1 sheet"
+
+    results.append(record("player_hero_export", browser_name, hero_export))
+
     def spells_search_fav():
         go(page, "spells")
         page.wait_for_selector("#q", timeout=20000)
@@ -240,6 +296,20 @@ def run_player_suite(page, tracker, browser_name):
 
     results.append(record("player_dice", browser_name, dice_roll))
 
+    def dice_attack():
+        go(page, "dice")
+        page.fill("#abon", "5")
+        page.fill("#acdc", "12")
+        page.click("#aatk")
+        page.wait_for_function("() => document.body.innerText.toLowerCase().includes('атака')", timeout=8000)
+        page.fill("#admg", "1к6+1")
+        page.click("#adgo")
+        page.wait_for_timeout(300)
+        tracker.assert_clean()
+        return "attack and damage rolled"
+
+    results.append(record("player_dice_attack", browser_name, dice_attack))
+
     def notes_favs():
         go(page, "notes")
         page.wait_for_selector("#nt", timeout=5000)
@@ -252,6 +322,19 @@ def run_player_suite(page, tracker, browser_name):
         return "notes + favourites/recent visible"
 
     results.append(record("player_notes_favs", browser_name, notes_favs))
+
+    def table_handout():
+        go(page, "table")
+        page.wait_for_selector("#ht", timeout=5000)
+        page.fill("#ht", "Письмо трактирщика")
+        page.fill("#hb", "Пиво в долг до новолуния")
+        page.click("#hadd")
+        page.wait_for_timeout(300)
+        assert "Письмо трактирщика" in page.inner_text("body")
+        tracker.assert_clean()
+        return "handout saved"
+
+    results.append(record("player_table_handout", browser_name, table_handout))
 
     def persist_reload():
         page.reload(wait_until="domcontentloaded")
@@ -280,23 +363,27 @@ def run_player_suite(page, tracker, browser_name):
         question = "Что такое укрытие?"
         page.fill("#sq", question)
         page.click("#sask")
-        page.wait_for_timeout(500)
+        page.wait_for_function("() => document.body.innerText.includes('дух думает')", timeout=8000)
+        hook = page.evaluate("() => typeof window.__dndApplySpiritReply")
+        assert hook == "undefined"
         sent = page.evaluate("() => window.__tgSent.slice()")
         assert sent, "sendData was not called"
         payload = json.loads(sent[-1])
         assert payload.get("type") == "spirit"
         assert payload.get("mode") == "player"
         assert payload.get("q") == question
-        out = Path(tempfile.mkdtemp()) / "spirit.json"
-        subprocess.check_call(
-            ["python3", str(REPO / "tools/spirit_reply.py"), "--mode", "player", "--q", question, "--out", str(out)],
-            stdout=subprocess.DEVNULL,
-        )
-        reply = json.loads(out.read_text(encoding="utf-8"))["text"]
-        page.evaluate("(t) => window.__dndApplySpiritReply(t)", reply)
-        page.wait_for_function("t => document.body.innerText.includes(t)", arg=reply[:40], timeout=8000)
+        assert payload.get("id")
+        assert payload.get("key")
+        page.reload(wait_until="domcontentloaded")
+        page.wait_for_selector("h1.ttl", timeout=30000)
+        go(page, "spirit")
+        page.wait_for_function("() => document.body.innerText.includes('дух думает')", timeout=8000)
+        reply = compose_spirit("player", question)
+        publish_spirit(payload["id"], payload["key"], reply, push=False)
+        page.wait_for_function("t => document.body.innerText.includes(t)", arg=reply[:40], timeout=20000)
+        page.wait_for_function("() => !document.querySelector('[data-thinking]')", timeout=8000)
         tracker.assert_clean()
-        return "sendData + spirit_reply.py + in-book answer"
+        return "mailbox poll+decrypt after reload, no injection hook"
 
     results.append(record("player_spirit_e2e", browser_name, spirit_e2e))
     return results
@@ -352,6 +439,22 @@ def run_master_suite(page, tracker, browser_name):
         return "room payload sent, hero added"
 
     results.append(record("master_session_room_party", browser_name, session_room_and_party))
+
+    def session_tools():
+        go(page, "session")
+        page.click('[data-tick="10"]')
+        page.wait_for_timeout(250)
+        assert "08:10" in page.inner_text("body")
+        page.click("#wroll")
+        page.wait_for_timeout(250)
+        page.click('[data-shop="inn"]')
+        page.wait_for_timeout(600)
+        body = page.inner_text("body")
+        assert "Кружка" in body or "эля" in body or "Трактир" in body
+        tracker.assert_clean()
+        return "clock + weather + inn stock"
+
+    results.append(record("master_session_tools", browser_name, session_tools))
 
     def bestiary():
         go(page, "bestiary")
@@ -420,6 +523,20 @@ def run_master_suite(page, tracker, browser_name):
 
     results.append(record("master_rules", browser_name, rules))
 
+    def screen_search():
+        go(page, "rules")
+        page.wait_for_selector("#scrq", timeout=15000)
+        page.fill("#scrq", "укрыт")
+        page.wait_for_timeout(500)
+        assert "Укрытие" in page.inner_text("#scr")
+        page.locator("[data-scr]").first.click()
+        page.wait_for_selector("#sheet.show", timeout=5000)
+        page.click("#sheet .x")
+        tracker.assert_clean()
+        return "screen card search"
+
+    results.append(record("master_screen_search", browser_name, screen_search))
+
     def notes():
         go(page, "notes")
         page.wait_for_selector("#ntitle", timeout=5000)
@@ -453,20 +570,18 @@ def run_master_suite(page, tracker, browser_name):
         go(page, "spirit")
         page.fill("#sq", "Найди барсука в бестиарии")
         page.click("#sask")
-        page.wait_for_timeout(400)
+        page.wait_for_function("() => document.body.innerText.includes('дух думает')", timeout=8000)
         sent = page.evaluate("() => window.__tgSent.slice()")
         payload = json.loads(sent[-1])
         assert payload.get("mode") == "master"
-        out = Path(tempfile.mkdtemp()) / "ms.json"
-        subprocess.check_call(
-            ["python3", str(REPO / "tools/spirit_reply.py"), "--mode", "master", "--q", payload["q"], "--out", str(out)],
-            stdout=subprocess.DEVNULL,
-        )
-        reply = json.loads(out.read_text(encoding="utf-8"))["text"]
-        page.evaluate("(t) => window.__dndApplySpiritReply(t)", reply)
-        page.wait_for_function("t => document.body.innerText.includes(t)", arg=reply[:40], timeout=8000)
+        assert payload.get("id") and payload.get("key")
+        reply = compose_spirit("master", payload["q"])
+        publish_spirit(payload["id"], payload["key"], reply, push=False)
+        page.wait_for_function("t => document.body.innerText.includes(t)", arg=reply[:40], timeout=20000)
+        hook = page.evaluate("() => typeof window.__dndApplySpiritReply")
+        assert hook == "undefined"
         tracker.assert_clean()
-        return "master spirit answered in book"
+        return "master mailbox poll+decrypt, no injection hook"
 
     results.append(record("master_spirit_e2e", browser_name, spirit_master))
     return results
@@ -528,6 +643,112 @@ def run_launcher(browser, browser_name):
     return record("launcher_home", browser_name, body)
 
 
+def _load_relay():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("relay_dnd", str(DND / "relay_dnd.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def wait_live_spirit_js(timeout=180):
+    import urllib.request
+    deadline = time.time() + timeout
+    last = "no fetch"
+    while time.time() < deadline:
+        try:
+            req = urllib.request.Request(
+                f"{PAGES}/app/js/spirit.js",
+                headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                body = resp.read().decode("utf-8", "replace")
+                if resp.getcode() == 200 and "fetchMailbox" in body:
+                    req2 = urllib.request.Request(
+                        f"{PAGES}/app/js/book.js",
+                        headers={"Cache-Control": "no-cache", "Pragma": "no-cache"},
+                    )
+                    with urllib.request.urlopen(req2, timeout=20) as resp2:
+                        js = resp2.read().decode("utf-8", "replace")
+                    if "ensureSpiritWatch" in js:
+                        return
+                    last = "book.js missing ensureSpiritWatch"
+                else:
+                    last = "spirit.js not ready"
+        except Exception as exc:
+            last = str(exc)[:120]
+        time.sleep(5)
+    raise AssertionError("live Pages spirit poller not deployed: " + last)
+
+
+def run_live_spirit_roundtrip(browser, browser_name):
+    def body():
+        wait_live_spirit_js()
+        context, page, tracker = new_page(browser, mailbox=False)
+        try:
+            page.goto(PAGES + "/player/", wait_until="domcontentloaded", timeout=45000)
+            page.wait_for_selector("#gate", timeout=20000)
+            page.fill("#gate", room_code())
+            page.click("#gok")
+            wait_book(page, "Герой", timeout=45000)
+            go(page, "spirit")
+            page.wait_for_selector("#sq", timeout=8000)
+            marker = "ZXLV" + secrets.token_hex(3)
+            question = "Живая проверка духа " + marker
+            page.fill("#sq", question)
+            page.click("#sask")
+            page.wait_for_function("() => document.body.innerText.includes('дух думает')", timeout=10000)
+            sent = page.evaluate("() => window.__tgSent.slice()")
+            assert sent, "sendData was not called on live book"
+            payload = json.loads(sent[-1])
+            assert payload.get("q") == question
+            assert payload.get("id") and payload.get("key")
+            mod = _load_relay()
+            update = {
+                "update_id": 9001,
+                "message": {
+                    "message_id": 11,
+                    "date": 1,
+                    "chat": {"id": 321, "type": "private"},
+                    "from": {"id": 321, "is_bot": False, "first_name": "Live"},
+                    "web_app_data": {
+                        "data": json.dumps(payload, ensure_ascii=False),
+                        "button_text": "Книга",
+                    },
+                },
+            }
+            prepared = mod.prepare_payload(update, owner=1)
+            assert prepared is not None
+            assert prepared.get("spirit_id") == payload["id"]
+            assert prepared.get("spirit_q") == question
+            answer = f"Страницы шепчут маркер {marker}."
+            t_pub = time.time()
+            env = os.environ.copy()
+            env["DND_MAILBOX_PUSH"] = "1"
+            env.pop("DND_MAILBOX_DIR", None)
+            subprocess.check_call(
+                ["python3", str(REPO / "tools/spirit_reply.py"), payload["id"], payload["key"], answer],
+                env=env,
+                stdout=subprocess.DEVNULL,
+            )
+            published_ms = int((time.time() - t_pub) * 1000)
+            t_wait = time.time()
+            page.wait_for_function(
+                "t => document.body.innerText.includes(t)",
+                arg=marker,
+                timeout=120000,
+            )
+            poll_ms = int((time.time() - t_wait) * 1000)
+            hook = page.evaluate("() => typeof window.__dndApplySpiritReply")
+            assert hook == "undefined"
+            tracker.assert_clean()
+            return f"relay hoist ok; publish {published_ms}ms; poll+decrypt {poll_ms}ms"
+        finally:
+            context.close()
+
+    return record("live_spirit_roundtrip", browser_name, body)
+
+
 def collect_book_results(playwright):
     os.environ.setdefault("PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS", "1")
     results = []
@@ -546,6 +767,8 @@ def collect_book_results(playwright):
             finally:
                 context.close()
             results.append(run_master_edit_suite(browser, browser_name))
+            if browser_name == "chromium" and os.environ.get("DND_SKIP_LIVE") != "1":
+                results.append(run_live_spirit_roundtrip(browser, browser_name))
         finally:
             browser.close()
     return results

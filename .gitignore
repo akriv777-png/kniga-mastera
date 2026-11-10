@@ -7,3 +7,6 @@ tests/last_results.txt
 
 __pycache__/
 *.pyc
+
+# local encrypted spirit mailbox used by tests
+mailbox-dev/

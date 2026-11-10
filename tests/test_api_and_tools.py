@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import importlib.util
 import json
 import os
+import secrets
 import shutil
 import subprocess
 import tempfile
@@ -47,6 +49,61 @@ def test_spirit_reply_master():
     assert data["mode"] == "master"
     assert "барсука" in data["text"].lower() or "гримуар" in data["text"].lower() or "Слышу" in data["text"]
     return "master reply composed"
+
+
+def test_spirit_mailbox_publish():
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    script = REPO / "tools/spirit_reply.py"
+    req_id = secrets.token_urlsafe(8).rstrip("=")
+    key = base64.b64encode(os.urandom(32)).decode("ascii")
+    text = "секретный ответ для проверки ящика"
+    dest = Path(tempfile.mkdtemp())
+    env = os.environ.copy()
+    env["DND_MAILBOX_DIR"] = str(dest)
+    env["DND_MAILBOX_PUSH"] = "0"
+    out = subprocess.check_output([script, req_id, key, text], env=env, text=True)
+    assert "published replies/" in out
+    digest = hashlib.sha256(req_id.encode("utf-8")).hexdigest()
+    path = dest / f"{digest}.json"
+    assert path.is_file()
+    file = json.loads(path.read_text(encoding="utf-8"))
+    assert file.get("alg") == "AES-GCM" and file.get("iv") and file.get("ct")
+    raw_key = base64.b64decode(key)
+    iv = base64.b64decode(file["iv"])
+    ct = base64.b64decode(file["ct"])
+    pt = AESGCM(raw_key).decrypt(iv, ct, None).decode("utf-8")
+    assert pt == text
+    raw = path.read_text(encoding="utf-8")
+    assert text not in raw
+    return "AES-GCM publish path = SHA-256(id)"
+
+
+def test_relay_spirit_deeplink():
+    pending = Path(tempfile.mkdtemp()) / "spirit_pending.json"
+    os.environ["DND_SPIRIT_PENDING"] = str(pending)
+    mod = _load_relay()
+    sid = "abcdefghijk"
+    skey = "K" * 43
+    parsed = mod.parse_start_spirit(f"/start sp_{sid}_{skey}")
+    assert parsed == (sid, skey)
+    assert mod.parse_start_spirit("/start") is None
+    mod.remember_spirit_start(555, sid, skey)
+    update = {
+        "update_id": 8,
+        "message": {
+            "message_id": 3,
+            "date": 1,
+            "chat": {"id": 555, "type": "private"},
+            "from": {"id": 555, "is_bot": False, "first_name": "Deep"},
+            "text": "Что такое укрытие?",
+        },
+    }
+    payload = mod.prepare_payload(update, owner=1)
+    assert payload["spirit_id"] == sid
+    assert payload["spirit_key"] == skey
+    assert payload["spirit_q"] == "Что такое укрытие?"
+    return "deep-link start parsed and hoisted onto next text"
 
 
 def test_sync_rooms():
@@ -131,7 +188,10 @@ def test_relay_alive():
 
 def test_relay_web_app_data():
     mod = _load_relay()
-    payload_obj = {"v": 1, "type": "spirit", "mode": "player", "q": "ping-spirit", "path": "spirit"}
+    payload_obj = {
+        "v": 1, "type": "spirit", "mode": "player", "q": "ping-spirit", "path": "spirit",
+        "id": "abcdefghijk", "key": "K" * 43,
+    }
     update = {
         "update_id": 42,
         "message": {
@@ -153,7 +213,9 @@ def test_relay_web_app_data():
     assert text.startswith("[web_app_data]")
     assert "ping-spirit" in text
     assert enriched.get("from_id") == 100
-    return "web_app_data enriched and prefixed"
+    assert enriched.get("spirit_id") == "abcdefghijk"
+    assert enriched.get("spirit_q") == "ping-spirit"
+    return "web_app_data enriched, prefixed, spirit fields hoisted"
 
 
 def test_bot_commands_and_menu():
@@ -214,8 +276,12 @@ def test_live_pages_assets():
         f"{PAGES}/app/js/lib.js",
         f"{PAGES}/app/js/boot.js",
         f"{PAGES}/app/js/home.js",
+        f"{PAGES}/app/js/spirit.js",
+        f"{PAGES}/app/js/features.js",
         f"{PAGES}/app/css/book.css",
         f"{PAGES}/content/public/spells.json",
+        f"{PAGES}/content/public/screen.json",
+        f"{PAGES}/PARITY.md",
         f"{PAGES}/content/public/items.json",
         f"{PAGES}/content/public/maps.json",
         f"{PAGES}/content/public/spart.json",
@@ -261,6 +327,8 @@ def collect_tool_results():
     tests = [
         ("spirit_reply_player_safe", test_spirit_reply_player_safe),
         ("spirit_reply_master", test_spirit_reply_master),
+        ("spirit_mailbox_publish", test_spirit_mailbox_publish),
+        ("relay_spirit_deeplink", test_relay_spirit_deeplink),
         ("sync_rooms", test_sync_rooms),
         ("encrypt_master_roundtrip", test_encrypt_master_roundtrip),
         ("relay_alive", test_relay_alive),

@@ -385,3 +385,34 @@ textarea.inp { min-height: 120px; resize: vertical; line-height: 1.45; }
 @media (min-width: 720px) {
   .page { max-width: 720px; margin: 0 auto; }
 }
+
+/* Spirit thinking */
+.bubble.thinking { color: var(--gold); }
+.dots { display: inline-flex; gap: 4px; margin-left: 8px; vertical-align: middle; }
+.dots i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold); opacity: 0.35;
+  animation: dnd-dot 1.2s infinite ease-in-out;
+}
+.dots i:nth-child(2) { animation-delay: .2s; }
+.dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes dnd-dot { 0%, 80%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+/* Class resource pips */
+.use-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.use-c {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 8px 10px; min-height: 48px; display: flex; flex-direction: column; gap: 4px;
+}
+.use-c.out { opacity: .55; }
+.use-c em { display: flex; gap: 3px; font-style: normal; }
+.use-c em i { width: 8px; height: 8px; border-radius: 50%; background: #4a3336; display: inline-block; }
+.use-c em i.on { background: var(--gold); }
+.use-c small { color: var(--tx2); font-size: 11px; }
+
+/* Screen / rules tables */
+.scr-t { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+.scr-t th, .scr-t td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+.scr-t th { color: var(--gold); font-weight: 600; }
+.scr-card { margin: 10px 0; }
+.scr-card .body { color: var(--tx2); font-family: var(--read); font-size: 16px; line-height: 1.45; }
