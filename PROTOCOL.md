@@ -85,6 +85,10 @@
 
 Публикация комнатных хешей: `python3 /home/box/telegram/dnd/sync_rooms.py`.
 
+Ответ Духа для тестов и для агента «Днд» можно собрать скриптом `tools/spirit_reply.py` (копия: `/home/box/telegram/dnd/spirit_reply.py`). В книге ответ появляется через `window.__dndApplySpiritReply` или `postMessage({type:'dnd-spirit-reply', text})` — так проверка видит реплику на страницах гримуара. В обычном Telegram ответ по-прежнему приходит сообщением от бота.
+
+Автотесты: `tests/run_suite.py` (Playwright Chromium + WebKit, релей, Bot API, живые Pages).
+
 Скрипты продублированы в `tools/encrypt_master.py` и `tools/sync_rooms.py`.
 
 ## Telegram-возможности Mini App

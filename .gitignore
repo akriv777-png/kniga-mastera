@@ -2,3 +2,5 @@
 # plaintext master sources must never be published
 master_src/
 *.password
+
+tests/last_results.txt

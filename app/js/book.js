@@ -1152,6 +1152,25 @@ function rSpirit() {
     '<p class="muted">Вопрос уходит боту @Nezich_dnd_bot через Telegram. В режиме игрока дух не выдаёт мастерские тайны.</p>';
 }
 
+function applySpiritReply(text) {
+  const t = String(text || "").trim();
+  if (!t) return;
+  S.spirit.push({ me: false, t: t });
+  saveSpirit();
+  if (S.sec === "spirit") render();
+}
+
+function installTestHooks() {
+  if (window.__dndHooksInstalled) return;
+  window.__dndHooksInstalled = true;
+  window.__dndApplySpiritReply = applySpiritReply;
+  window.addEventListener("message", function (ev) {
+    const d = ev && ev.data;
+    if (!d || d.type !== "dnd-spirit-reply") return;
+    applySpiritReply(d.text);
+  });
+}
+
 function bSpirit() {
   function send() {
     const q = L.$("#sq").value.trim();
@@ -1301,6 +1320,7 @@ async function enterBook() {
 
 export async function startBook() {
   L.initTelegram();
+  installTestHooks();
   document.documentElement.classList.add("dnd-mode-" + MODE);
   if (MODE === "master") {
     showGate("master");
