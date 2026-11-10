@@ -4,3 +4,6 @@ master_src/
 *.password
 
 tests/last_results.txt
+
+__pycache__/
+*.pyc
